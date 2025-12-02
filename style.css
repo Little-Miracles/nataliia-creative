@@ -1,0 +1,166 @@
+/* === ОБЩИЕ НАСТРОЙКИ === */
+body {
+    background-color: #161616; /* Твой фирменный графит */
+    color: #D4AF37; /* Золото */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* === МЕНЮ (HEADER) === */
+header {
+    padding: 30px 0;
+    border-bottom: 1px solid #333; /* Тонкая линия под меню */
+    background-color: #0d0d0d; /* Чуть темнее фона */
+}
+
+nav a {
+    color: #888; /* Серый цвет ссылок (неактивных) */
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    margin: 0 15px;
+    transition: 0.3s; /* Плавное изменение цвета */
+    letter-spacing: 1px;
+}
+
+nav a:hover, nav a.active {
+    color: #D4AF37; /* Золотой при наведении */
+}
+
+/* === HERO SECTION (ГЛАВНЫЙ ЭКРАН) === */
+.hero {
+    padding: 60px 20px;
+}
+
+.hero-logo {
+    width: 250px; /* Размер логотипа */
+    height: auto;
+    margin-bottom: 20px;
+    /* Легкое золотое свечение вокруг логотипа */
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.2));
+}
+
+h1 {
+    font-size: 48px;
+    letter-spacing: 5px; /* Широкие буквы - признак люкса */
+    margin: 10px 0;
+    font-weight: 300; /* Тонкий изящный шрифт */
+    color: #ffffff; /* Белый заголовок для контраста */
+}
+
+.slogan {
+    font-size: 18px;
+    color: #D4AF37;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 30px;
+}
+
+.description {
+    color: #aaa;
+    max-width: 600px;
+    margin: 0 auto 40px auto;
+    line-height: 1.6;
+}
+
+/* === ЗОЛОТАЯ КНОПКА (CTA) === */
+.cta-button {
+    display: inline-block;
+    padding: 15px 40px;
+    border: 1px solid #D4AF37;
+    color: #D4AF37;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 12px;
+    transition: 0.4s;
+}
+
+.cta-button:hover {
+    background-color: #D4AF37;
+    color: #000;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+}
+
+/* === ВИТРИНА (ТРИ КОЛОНКИ) === */
+.showcase {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Чтобы на телефоне переносилось */
+    gap: 40px;
+    padding: 50px 20px;
+}
+
+.showcase-item {
+    border: 1px solid #333;
+    padding: 30px;
+    width: 200px;
+    transition: 0.3s; 
+    /* Новые строчки для ссылок: */
+    display: block; /* Чтобы ссылка была квадратной коробкой */
+    text-decoration: none; /* Убираем подчеркивание */
+    color: inherit; /* Цвет текста берем от родителя (белый/золотой), а не синий */
+}
+
+.showcase-item:hover {
+    border-color: #D4AF37; /* Рамка загорается при наведении */
+    transform: translateY(-5px); /* Блок чуть всплывает */
+}
+
+.showcase-item h2 {
+    color: #fff;
+    font-size: 20px;
+}
+
+/* === ПОДВАЛ === */
+footer {
+    padding: 40px;
+    color: #555;
+    font-size: 12px;
+}
+hr { border-color: #333; opacity: 0.5; margin: 0; }
+/* === КНИЖНАЯ ПОЛКА === */
+.book-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 30px;
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    text-align: left;
+    transition: 0.3s;
+}
+
+.book-card:hover {
+    border-color: #D4AF37;
+    transform: translateX(5px);
+}
+
+.book-cover {
+    width: 150px;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.book-info h2 {
+    color: #fff;
+    margin-top: 0;
+    font-size: 24px;
+}
+
+.book-info p {
+    color: #aaa;
+    line-height: 1.5;
+}
+
+/* Если экран телефона маленький - делаем столбик */
+@media (max-width: 600px) {
+    .book-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
