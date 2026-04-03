@@ -1,0 +1,64 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def keyProperties = new Properties()
+def keyPropertiesFile = rootProject.file('key.properties')
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(new FileInputStream(keyPropertiesFile))
+}
+
+android {
+    namespace = "com.natalia.smart_body_life"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+
+    compileOptions {
+        // Добавь эту строку обязательно:
+        coreLibraryDesugaringEnabled true 
+        
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias = keyProperties['keyAlias']
+            keyPassword = keyProperties['keyPassword']
+            storeFile = keyProperties['storeFile'] ? file(keyProperties['storeFile']) : null
+            storePassword = keyProperties['storePassword']
+        }
+    }
+
+    defaultConfig {
+    applicationId = "com.natalia.smart_body_life"
+    
+    // Прямо указываем версию 26 (Android 8.0 Oreo)
+    minSdkVersion = 26 
+    
+    targetSdk = 34 
+    versionCode = 1 
+    versionName = "1.0.0"
+}
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.release
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+// ДОБАВЬ ЭТОТ БЛОК В САМЫЙ НИЗ ФАЙЛА:
+dependencies {
+    // Меняем 2.0.4 на 2.1.4
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+}

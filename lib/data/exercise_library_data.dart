@@ -1,0 +1,461 @@
+class ExerciseDescription {
+  final String id;
+  final String title;
+  final String info;      
+  final String build;     
+  final String technique; 
+  final String safety;    
+
+  ExerciseDescription({
+    required this.id,
+    required this.title,
+    required this.info,
+    required this.build,
+    required this.technique,
+    required this.safety,
+  });
+}
+
+class LibraryData {
+  // ==========================================
+  // БЛОК 1: ENERGY FLOW (M042 - M053)
+  // ==========================================
+  static List<ExerciseDescription> energyFlow = [
+    ExerciseDescription(
+      id: 'M042',
+      title: 'Prayer Pose',
+      info: 'Starting position for concentration and breathing.',
+      build: 'Centers the mind and improves posture balance.',
+      technique: 'Stand straight, feet together. Palms pressed firmly at heart center. Crown of the head reaches up.',
+      safety: 'Distribute weight evenly on both feet. Do not lock your knees.',
+    ),
+    ExerciseDescription(
+      id: 'M043',
+      title: 'Raised Arms Pose',
+      info: 'Opening the front of the body and lungs.',
+      build: 'Stretches the abdominal muscles and improves digestion.',
+      technique: 'Inhale, lift arms up and back. Push hips slightly forward. Look at your palms.',
+      safety: 'Avoid over-arching the lower back. Keep the core engaged.',
+    ),
+    ExerciseDescription(
+      id: 'M044',
+      title: 'Hand to Foot Pose',
+      info: 'Deep forward fold for spinal flexibility.',
+      build: 'Stretches the hamstrings and massages abdominal organs.',
+      technique: 'Exhale, fold from the hips. Keep your belly close to your thighs. Palms on the floor beside feet.',
+      safety: 'If hamstrings are tight, slightly bend your knees to protect the lower back.',
+    ),
+    ExerciseDescription(
+      id: 'M045',
+      title: 'Equestrian Pose',
+      info: 'Dynamic stretch for the hip flexors.',
+      build: 'Strengthens leg muscles and opens the pelvic area.',
+      technique: 'Step one leg back, knee on the floor. Front knee at 90°. Arch the back slightly, look forward.',
+      safety: 'Ensure the front knee is directly above the ankle, not beyond the toes.',
+    ),
+    ExerciseDescription(
+      id: 'M046',
+      title: 'Plank Pose',
+      info: 'Core stabilization and upper body strength.',
+      build: 'Builds arm, shoulder, and abdominal endurance.',
+      technique: 'Create a straight line from heels to crown. Hands directly under shoulders.',
+      safety: 'Do not let your hips sag or push your buttocks too high.',
+    ),
+    ExerciseDescription(
+      id: 'M047',
+      title: 'Eight-Limbed Pose',
+      info: 'Partial prostration for spinal mobility.',
+      build: 'Strengthens the arms and increases mid-back flexibility.',
+      technique: 'Lower knees, chest, and chin to the floor. Keep hips slightly raised. 8 points of contact.',
+      safety: 'Keep elbows tucked close to your ribs.',
+    ),
+    ExerciseDescription(
+      id: 'M048',
+      title: 'Cobra Pose',
+      info: 'Deep backbend to open the chest.',
+      build: 'Strengthens the spine and stimulates the nervous system.',
+      technique: 'Lie flat, push up with your hands. Keep shoulders down and chest reaching forward.',
+      safety: 'Keep your pubic bone on the floor to avoid lower back strain.',
+    ),
+    ExerciseDescription(
+      id: 'M049',
+      title: 'Downward Dog',
+      info: 'Inverted V-shape for total body stretch.',
+      build: 'Energizes the body and stretches the calves and spine.',
+      technique: 'Lift hips high. Body forms a "V". Press heels toward the floor, head between arms.',
+      safety: 'Spread fingers wide and press firmly into the floor to protect wrists.',
+    ),
+    ExerciseDescription(
+      id: 'M050',
+      title: 'Equestrian (Other Side)',
+      info: 'Balance the hip stretch on the opposite leg.',
+      build: 'Improves bilateral symmetry in the pelvis.',
+      technique: 'Repeat M045 by stepping the other leg forward between the hands.',
+      safety: 'Keep the back knee comfortable on the floor.',
+    ),
+    ExerciseDescription(
+      id: 'M051',
+      title: 'Forward Fold',
+      info: 'Returning to the deep stretch.',
+      build: 'Calms the nervous system before rising.',
+      technique: 'Same as M044. Bring the back foot forward and fold deeply.',
+      safety: 'Exhale deeply as you fold.',
+    ),
+    ExerciseDescription(
+      id: 'M052',
+      title: 'Raised Arms',
+      info: 'Final opening before closing the cycle.',
+      build: 'Expands lung capacity and lifts energy.',
+      technique: 'Same as M043. Inhale, reach up and back.',
+      safety: 'Maintain a stable base with your feet.',
+    ),
+    ExerciseDescription(
+      id: 'M053',
+      title: 'Mountain Pose',
+      info: 'Final point of focus and stillness.',
+      build: 'Builds awareness of the vertical axis of the body.',
+      technique: 'Stand straight, arms by your sides. Full concentration on the body.',
+      safety: 'Keep your breath steady and natural.',
+    ),
+  ];
+
+  // ==========================================
+  // БЛОК 2: DEEP RECOVERY (M054 - M065)
+  // ==========================================
+  static List<ExerciseDescription> deepRecovery = [
+    ExerciseDescription(
+      id: 'M054',
+      title: 'Shoulderstand',
+      info: 'The "Queen" of asanas. Inverted vertical pose.',
+      build: 'Improves blood circulation and thyroid function.',
+      technique: 'Weight on shoulders and elbows. Legs stretched to the ceiling, back straight.',
+      safety: 'Do not turn your head while in the pose. Protect your neck.',
+    ),
+    ExerciseDescription(
+      id: 'M055',
+      title: 'Plough Pose',
+      info: 'Deep spinal stretch from the shoulders.',
+      build: 'Massages internal organs and calms the brain.',
+      technique: 'Lower straight legs behind your head. Hips over shoulders, toes on the floor.',
+      safety: 'If toes don\'t touch the floor, support your back with your hands.',
+    ),
+    ExerciseDescription(
+      id: 'M056',
+      title: 'Fish Pose',
+      info: 'Counter-pose to shoulderstand to open the neck.',
+      build: 'Expands the chest and corrects rounded shoulders.',
+      technique: 'Lie down, arch the back. Support on elbows and top of the head. Chest up.',
+      safety: 'Weight should be on the elbows, not primarily on the head.',
+    ),
+    ExerciseDescription(
+      id: 'M057',
+      title: 'Sitting Forward Fold',
+      info: 'Deep stretch for the entire back body.',
+      build: 'Regulates blood sugar and calms the mind.',
+      technique: 'Sit with legs straight. Fold forward, belly on legs, hands reaching for feet.',
+      safety: 'Fold from the hips, not the lower back. Keep the spine long.',
+    ),
+    ExerciseDescription(
+      id: 'M058',
+      title: 'Cobra (Power Hold)',
+      info: 'Isometric back strengthening.',
+      build: 'Builds strong spinal muscles and improves posture.',
+      technique: 'Same as M048, but use back muscles more than arm strength.',
+      safety: 'Keep the back of the neck long; don\'t crunch the vertebrae.',
+    ),
+    ExerciseDescription(
+      id: 'M059',
+      title: 'Locust Pose',
+      info: 'Strengthening the lower back and glutes.',
+      build: 'Improves digestion and tones the lower spine.',
+      technique: 'Lie on belly. Lift straight legs and chest as high as possible. Body as an arc.',
+      safety: 'Do not jerk. Lift slowly with control.',
+    ),
+    ExerciseDescription(
+      id: 'M060',
+      title: 'Bow Pose',
+      info: 'Total body backbend using leg power.',
+      build: 'Massages the digestive system and opens the heart.',
+      technique: 'Lie on belly, grab ankles. Pull with legs to arch the back like a bow.',
+      safety: 'Do not hold your breath. Breathe into the belly.',
+    ),
+    ExerciseDescription(
+      id: 'M061',
+      title: 'Spinal Twist',
+      info: 'Detoxifying twist for spinal health.',
+      build: 'Improves spinal mobility and aids detoxification.',
+      technique: 'Sit, cross one leg over the other. Twist the torso 180° toward the top leg.',
+      safety: 'Keep both sitting bones on the floor during the twist.',
+    ),
+    ExerciseDescription(
+      id: 'M062',
+      title: 'Crow Pose',
+      info: 'Arm balance for focus and power.',
+      build: 'Strengthens wrists, arms, and core muscles.',
+      technique: 'Palms on floor, knees tucked into armpits. Lean forward to lift feet.',
+      safety: 'Keep your gaze forward, not down, to maintain balance.',
+    ),
+    ExerciseDescription(
+      id: 'M063',
+      title: 'Standing Fold',
+      info: 'Deep hamstring release.',
+      build: 'Relieves stress and improves blood flow to the brain.',
+      technique: 'Same as M044. Deep standing fold.',
+      safety: 'Let the weight of the head pull the spine down naturally.',
+    ),
+    ExerciseDescription(
+      id: 'M064',
+      title: 'Triangle Pose',
+      info: 'Lateral stretch for the body and legs.',
+      build: 'Strengthens legs and stretches the hips and sides.',
+      technique: 'Wide stance. One hand on foot, other arm up. Body in one plane.',
+      safety: 'Do not lean forward; stay in a straight "window" plane.',
+    ),
+    ExerciseDescription(
+      id: 'M065',
+      title: 'Corpse Pose',
+      info: 'Total relaxation and integration.',
+      build: 'Allows the body to absorb the benefits of the workout.',
+      technique: 'Lie flat on back. Arms and legs spread wide. Total stillness.',
+      safety: 'Stay warm and keep the eyes closed to avoid distraction.',
+    ),
+  ];
+
+  // ==========================================
+  // БЛОК 3: ZEN BREATH (M066 - M072)
+  // ==========================================
+  static List<ExerciseDescription> zenBreath = [
+    ExerciseDescription(
+      id: 'M066',
+      title: 'Lotus Pose (Base)',
+      info: 'Classic meditation posture.',
+      build: 'Stabilizes the body for long breathing sessions.',
+      technique: 'Sit cross-legged. Spine is straight like a string. Hands on knees.',
+      safety: 'If knees hurt, sit in a simple cross-legged position on a cushion.',
+    ),
+    ExerciseDescription(
+      id: 'M067',
+      title: 'Skull Shining',
+      info: 'Purifying abdominal breath.',
+      build: 'Clears the frontal brain and energizes the body.',
+      technique: 'Sitting. Focus on sharp, forceful abdominal contractions on each exhale.',
+      safety: 'Stop if you feel lightheaded. Not for pregnancy.',
+    ),
+    ExerciseDescription(
+      id: 'M068',
+      title: 'Bellows Breath',
+      info: 'Powerful energetic breathing.',
+      build: 'Increases oxygen levels and clears the lungs.',
+      technique: 'Sitting. Rapid, powerful, full inhales and exhales using the entire chest.',
+      safety: 'Ensure your back is straight to allow full lung expansion.',
+    ),
+    ExerciseDescription(
+      id: 'M069',
+      title: 'Alternate Nostril',
+      info: 'Balancing the nervous system.',
+      build: 'Reduces anxiety and balances left/right brain energy.',
+      technique: 'Hand at face. Use fingers to block one nostril at a time in a rhythmic pattern.',
+      safety: 'Do not force the breath; keep it smooth and silent.',
+    ),
+    ExerciseDescription(
+      id: 'M070',
+      title: 'Cooling Breath',
+      info: 'Temperature regulation technique.',
+      build: 'Cools the body and calms the mind.',
+      technique: 'Sit straight. Roll tongue into a tube and inhale through it.',
+      safety: 'If you can\'t roll your tongue, inhale through slightly parted lips.',
+    ),
+    ExerciseDescription(
+      id: 'M071',
+      title: 'Humming Bee',
+      info: 'Vibrational calming breath.',
+      build: 'Instantly reduces stress and lowers blood pressure.',
+      technique: 'Close ears with thumbs, eyes with fingers. Hum like a bee on exhale.',
+      safety: 'Keep the jaw relaxed and teeth slightly apart while humming.',
+    ),
+    ExerciseDescription(
+      id: 'M072',
+      title: 'Deep Meditation',
+      info: 'Final mental reset and silence.',
+      build: 'Improves focus and long-term emotional stability.',
+      technique: 'Sitting, eyes closed. Hands in Jnana Mudra (index and thumb touching).',
+      safety: 'Observe thoughts without judging them; return focus to the breath.',
+    ),
+  ];
+
+  // ==========================================
+  // БЛОК 4: GOLDEN VERTICAL (M073 - M083)
+  // ==========================================
+  static List<ExerciseDescription> goldenVertical = [
+    ExerciseDescription(
+      id: 'M073',
+      title: 'Golden Scan (Back)',
+      info: 'Lower your chin to your chest. Feel the elastic tension from head to heels.',
+      build: 'Deep spinal decompression and stretches the posterior fascia line.',
+      technique: 'Slowly lower the head (10 counts). Feel the "golden thread" stretching.',
+      safety: 'Do not press with your hands; let gravity do the work.',
+    ),
+    ExerciseDescription(
+      id: 'M074',
+      title: 'Golden Front',
+      info: 'Lean your head back gently to open the front line.',
+      build: 'Lifts the neck contour and corrects "dropped" posture.',
+      technique: 'Tilt back (10 counts). Imagine lines tightening down to big toes.',
+      safety: 'Hold onto a wall if you feel unstable during the back tilt.',
+    ),
+    ExerciseDescription(
+      id: 'M075',
+      title: 'Golden Side (R)',
+      info: 'Lateral stretch using the index finger as an anchor.',
+      build: 'Corrects "tech neck" and elongates the side neck line.',
+      technique: 'Right ear to shoulder. Left index finger reaches hard toward the floor.',
+      safety: 'Keep shoulders heavy and down; do not shrug.',
+    ),
+    ExerciseDescription(
+      id: 'M076',
+      title: 'Golden Side (L)',
+      info: 'Lateral stretch for the opposite side.',
+      build: 'Mirrors the lifting effect and balances the neck fascia.',
+      technique: 'Left ear to shoulder. Right index finger reaches toward the floor.',
+      safety: 'Breathe into the side of the neck being stretched.',
+    ),
+    ExerciseDescription(
+      id: 'M077',
+      title: 'Golden Sculpt (R)',
+      info: '45° back-right diagonal modeling.',
+      build: 'Deeply models the jawline and releases deep fascia knots.',
+      technique: 'Tilt 45° back. Phase: Clench fist (10s) then Open palm (10s flow to right leg).',
+      safety: 'Focus on the contrast between the fist tension and the palm release.',
+    ),
+    ExerciseDescription(
+      id: 'M078',
+      title: 'Golden Sculpt (L)',
+      info: '45° back-left diagonal modeling.',
+      build: 'Reduces asymmetry and tightens neck tissues.',
+      technique: 'Tilt 45° back. Phase: Clench fist (10s) then Open palm (10s flow to left leg).',
+      safety: 'Keep the movement extremely slow to catch the "flow" sensation.',
+    ),
+    ExerciseDescription(
+      id: 'M079',
+      title: 'Golden Release (R)',
+      info: '45° forward diagonal for scapula release.',
+      build: 'Releases shoulder blade tension and improves back mobility.',
+      technique: 'Nose to right armpit. Clench fist (10s), then Open palm (10s flow to right heel).',
+      safety: 'Do not round the whole back, focus the stretch on the shoulder blade area.',
+    ),
+    ExerciseDescription(
+      id: 'M080',
+      title: 'Golden Release (L)',
+      info: '45° forward diagonal for opposite side.',
+      build: 'Removes "weight" from shoulders and corrects scapula alignment.',
+      technique: 'Nose to left armpit. Clench fist (10s), then Open palm (10s flow to left heel).',
+      safety: 'Keep the stretching arm active and straight during the "palm" phase.',
+    ),
+    ExerciseDescription(
+      id: 'M081',
+      title: 'Golden Harmony (R)',
+      info: 'Full 360° circular stabilization.',
+      build: 'Harmonizes cervical vertebrae and stabilizes the vestibular system.',
+      technique: 'Start from right ear on shoulder. Perform 3 slow circles clockwise.',
+      safety: 'Roll the head weight smoothly; avoid any sharp movements.',
+    ),
+    ExerciseDescription(
+      id: 'M082',
+      title: 'Golden Harmony (L)',
+      info: 'Counter-clockwise stabilization circles.',
+      build: 'Balances neck muscles and provides final spinal traction.',
+      technique: 'Start from left ear on shoulder. Perform 3 slow circles counter-clockwise.',
+      safety: 'If you feel dizzy, slow down the rotation or stop.',
+    ),
+    ExerciseDescription(
+      id: 'M083',
+      title: 'Golden Axis',
+      info: 'Horizontal centering of the spine.',
+      build: 'Final alignment of the "Golden Vertical" axis.',
+      technique: 'Turn head slowly right and left 5 times. Eyes open.',
+      safety: 'Listen for the spine self-correcting. Do not force the rotation.',
+    ),
+  ];
+  static List<ExerciseDescription> taiChiLibrary = [
+  ExerciseDescription(
+    id: 'tc_01',
+    title: 'Commencing Form',
+    info: 'The foundational posture of Tai Chi that centers your energy and prepares the mind.',
+    build: 'Stand with feet shoulder-width apart, arms hanging naturally. Soften your knees.',
+    technique: 'Slowly raise your arms to shoulder height as you inhale, then gently press them down as you exhale.',
+    safety: 'Keep your movements slow and synchronized with your breath. Do not lock your elbows.',
+  ),
+  ExerciseDescription(
+    id: 'tc_02',
+    title: 'Parting Wild Horse\'s Mane',
+    info: 'A classic movement that focuses on weight shifting and coordination between upper and lower body.',
+    build: 'Step forward diagonally into a bow stance while "parting" your hands in opposite directions.',
+    technique: 'The lower hand brushes past the hip while the upper hand rises toward chest level in a smooth arc.',
+    safety: 'Ensure your front knee does not extend past your toes to protect the joint.',
+  ),
+  ExerciseDescription(
+    id: 'tc_03',
+    title: 'White Crane Spreads Wings',
+    info: 'A balance-focused posture that improves stability and opens the chest.',
+    build: 'Shift your weight to one leg and touch the toes of the other foot lightly on the ground.',
+    technique: 'One hand rises above the head while the other presses down by the hip, mimicking spreading wings.',
+    safety: 'Maintain a straight spine and avoid leaning forward or backward.',
+  ),
+  ExerciseDescription(
+    id: 'tc_04',
+    title: 'Brush Knee and Step',
+    info: 'Focuses on the connection between stepping forward and circular defensive movements.',
+    build: 'Step forward while one hand brushes past the knee and the other hand pushes forward.',
+    technique: 'The movement should be continuous. The pushing hand should follow the rotation of your waist.',
+    safety: 'Keep your shoulders relaxed and down. Do not overextend the pushing arm.',
+  ),
+  ExerciseDescription(
+    id: 'tc_05',
+    title: 'Cloud Hands (Yun Shou)',
+    info: 'One of the most essential movements in Tai Chi, emphasizing continuous, circular flow.',
+    build: 'Stand with feet shoulder-width apart. Shift weight side to side while rotating your torso.',
+    technique: 'Imagine your hands are following the path of drifting clouds. Movements should be soft but connected.',
+    safety: 'Keep your knees slightly bent and never locked. Breathe naturally through your nose.',
+  ),
+  ExerciseDescription(
+    id: 'tc_06',
+    title: 'Single Whip',
+    info: 'A posture that expands the body\'s energy and improves focus and reach.',
+    build: 'Form a "hook" with one hand while the other hand pushes outward to the side.',
+    technique: 'Focus on extending your energy from the center of your body through your fingertips.',
+    safety: 'Maintain your balance as you expand your stance. Keep the crown of your head lifted.',
+  ),
+  ExerciseDescription(
+    id: 'tc_07',
+    title: 'Grasp the Bird\'s Tail',
+    info: 'A comprehensive sequence combining ward off, roll back, press, and push.',
+    build: 'Start in a bow stance. Use circular movements to move through the four phases.',
+    technique: 'Coordinate the transition between each phase so the movement never truly stops.',
+    safety: 'Keep your movements rounded and avoid any sharp or jerky actions.',
+  ),
+  ExerciseDescription(
+    id: 'tc_08',
+    title: 'Golden Rooster Stands on One Leg',
+    info: 'A challenging balance posture that strengthens the legs and improves equilibrium.',
+    build: 'Lift one knee high while raising the same-side hand, palm facing forward.',
+    technique: 'Focus your gaze on a fixed point in front of you to maintain stability.',
+    safety: 'If balance is difficult, keep the lifted toes close to the floor for support.',
+  ),
+  ExerciseDescription(
+    id: 'tc_09',
+    title: 'Fair Lady Works at Shuttles',
+    info: 'A movement involving diagonal steps and blocks to improve agility.',
+    build: 'Step diagonally while one hand blocks above the head and the other pushes forward.',
+    technique: 'Synchronize the step with the rising block and the forward push.',
+    safety: 'Focus on the rotation of the waist to power the arm movements.',
+  ),
+  ExerciseDescription(
+    id: 'tc_10',
+    title: 'Closing Form',
+    info: 'Used to gather energy back to the Dan Tian (center) and end the practice.',
+    build: 'Stand still, slowly bring your hands together in front of your lower abdomen.',
+    technique: 'Take deep, calming breaths and feel your body returning to a neutral, centered state.',
+    safety: 'Take your time during this form to fully absorb the benefits of the session.',
+  ),
+];
+}

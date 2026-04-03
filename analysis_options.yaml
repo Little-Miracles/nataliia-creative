@@ -1,0 +1,11 @@
+# analysis_options.yaml
+
+# Используем стандартный набор правил Flutter
+include: package:flutter_lints/flutter.yaml
+
+# Этот блок analyzer: можно использовать для изменения правил,
+# но мы оставим его пустым, чтобы не создавать ошибок.
+analyzer:
+  # Если вы хотите игнорировать правила, их нужно добавлять здесь
+  # errors:
+  #   non_constant_identifier_names: ignore
