@@ -33,7 +33,7 @@ dependencies:
   permission_handler: ^12.0.1
 
   # ГРАФИКИ: Версия 0.70.0 — самая мощная для новых iPhone
-  fl_chart: ^1.2.0
+  fl_chart: ^0.69.2
   
   # КАЛЕНДАРЬ
   add_2_calendar: ^3.0.1
