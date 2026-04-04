@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
-
 import 'package:smart_body_life/providers/custom_workout_provider.dart';
 import 'package:smart_body_life/providers/evolution_manager.dart';
 import 'package:smart_body_life/providers/workout_library_provider.dart';
@@ -9,7 +8,6 @@ import 'package:smart_body_life/providers/metrics_provider.dart';
 import 'package:smart_body_life/providers/workout_tracker_provider.dart'; 
 import 'package:smart_body_life/providers/workout_provider.dart';
 import 'package:smart_body_life/providers/active_session_provider.dart';
-
 import 'package:smart_body_life/screens/main_hub_screen.dart';
 import 'package:smart_body_life/screens/welcome_screen.dart';
 import 'package:smart_body_life/screens/body_screen.dart';        
@@ -19,7 +17,6 @@ import 'package:smart_body_life/screens/settings_screen.dart';
 import 'package:smart_body_life/screens/progress_screen.dart';
 import 'package:smart_body_life/screens/workout_unified_hub.dart';
 import 'package:smart_body_life/utils/storage_service.dart';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 
@@ -47,7 +44,7 @@ void main() async {
   );
 
   await flutterLocalNotificationsPlugin.initialize(
-     settings: initializationSettings, 
+    initializationSettings, // <--- Просто название, без слова settings:
     onDidReceiveNotificationResponse: (NotificationResponse details) {
       if (details.payload == 'artifact_unlocked') {
         navigatorKey.currentState?.pushNamed('/body');
