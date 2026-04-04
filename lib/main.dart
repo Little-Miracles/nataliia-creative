@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
+
 import 'package:smart_body_life/providers/custom_workout_provider.dart';
 import 'package:smart_body_life/providers/evolution_manager.dart';
 import 'package:smart_body_life/providers/workout_library_provider.dart';
@@ -8,15 +9,17 @@ import 'package:smart_body_life/providers/metrics_provider.dart';
 import 'package:smart_body_life/providers/workout_tracker_provider.dart'; 
 import 'package:smart_body_life/providers/workout_provider.dart';
 import 'package:smart_body_life/providers/active_session_provider.dart';
+
 import 'package:smart_body_life/screens/main_hub_screen.dart';
 import 'package:smart_body_life/screens/welcome_screen.dart';
-import 'package:smart_body_life/screens/body_screen.dart';         
+import 'package:smart_body_life/screens/body_screen.dart';        
 import 'package:smart_body_life/screens/food_screen.dart';
 import 'package:smart_body_life/screens/gym_screen.dart'; 
 import 'package:smart_body_life/screens/settings_screen.dart';
 import 'package:smart_body_life/screens/progress_screen.dart';
 import 'package:smart_body_life/screens/workout_unified_hub.dart';
 import 'package:smart_body_life/utils/storage_service.dart';
+
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 
@@ -43,9 +46,8 @@ void main() async {
     iOS: initializationSettingsIOS,
   );
 
-  // Инициализация БЕЗ именованного параметра settings (требование v19.5.0)
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
+    initializationSettings, // Убрали settings: для версии 19.5
     onDidReceiveNotificationResponse: (NotificationResponse details) {
       if (details.payload == 'artifact_unlocked') {
         navigatorKey.currentState?.pushNamed('/body');
@@ -98,30 +100,26 @@ class SmartBodyLifeApp extends StatelessWidget {
   }
 }
 
+// Вспомогательная функция для уведомлений
 Future<void> showArtifactNotification(String title, String body) async {
-  // Исправлено: Описание канала (channelDescription) теперь передается КАК ИМЕНОВАННЫЙ параметр
   const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
     'artifact_channel',
     'Artifact Awards',
-    channelDescription: 'Notifications for unlocked artifacts', // <--- Добавлено имя параметра
+    channelDescription: 'Unlocked artifacts notifications', // Добавили описание
     importance: Importance.max,
     priority: Priority.high,
   );
 
   const NotificationDetails platformDetails = NotificationDetails(
     android: androidDetails,
-    iOS: DarwinNotificationDetails(), // Здесь оставляем пусто, v19.5 это любит
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
   );
 
-  await flutterLocalNotificationsPlugin.show(
-    DateTime.now().millisecond, 
-    title, 
-    body, 
-    platformDetails,
-    payload: 'artifact_unlocked', 
-  );
-}
-
+  // Исправлено: передаем параметры по порядку без имен (требование 19.5)
   await flutterLocalNotificationsPlugin.show(
     DateTime.now().millisecond, 
     title, 
@@ -176,4 +174,4 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-}        
+}
