@@ -17,9 +17,10 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
 
-      - name: Install CocoaPods
+      - name: Install CocoaPods and Generate Config
         run: |
-          sudo gem install cocoapods
+          flutter precache --ios
+          flutter pub get
           cd ios
           pod install --repo-update
 
