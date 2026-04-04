@@ -128,15 +128,12 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true,
+                        showTitles: true, 
                         reservedSize: 42,
                         getTitlesWidget: (double value, TitleMeta meta) {
-                          return SideTitleWidget(
-                            meta: meta,
-                            child: Text(
-                              value.toInt().toString(),
-                              style: const TextStyle(color: Colors.white24, fontSize: 10),
-                            ),
+                          return Text(
+                            value.toInt().toString(), 
+                            style: const TextStyle(color: Colors.white24, fontSize: 10),
                           );
                         },
                       ),
@@ -153,16 +150,12 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                             bool isFocused = touchedSessionId == -1 || touchedSessionId == stream[i]['sessionId'];
                             double opacity = isFocused ? 1.0 : 0.2;
 
-                            return SideTitleWidget(
-                              meta: meta,
-                              space: 4,
-                              child: Text(
-                                isCardio ? label : "x $label",
-                                style: TextStyle(
-                                  color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            return Text(
+                              isCardio ? label : "x $label", 
+                              style: TextStyle(
+                                color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity), 
+                                fontSize: 10, 
+                                fontWeight: FontWeight.bold,
                               ),
                             );
                           }
@@ -170,7 +163,7 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                         },
                       ),
                     ),
-                  ),
+                  ), // Закрывает titlesData
                   barGroups: List.generate(stream.length, (index) {
                     final item = stream[index];
                     final bool isFocused = touchedSessionId == -1 || touchedSessionId == item['sessionId'];
