@@ -99,23 +99,28 @@ class SmartBodyLifeApp extends StatelessWidget {
 }
 
 Future<void> showArtifactNotification(String title, String body) async {
-  // Исправлено: добавлены обязательные аргументы в правильном порядке
+  // Исправлено: Описание канала (channelDescription) теперь передается КАК ИМЕНОВАННЫЙ параметр
   const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
     'artifact_channel',
     'Artifact Awards',
-    'Notifications for unlocked artifacts', // channelDescription теперь тут
+    channelDescription: 'Notifications for unlocked artifacts', // <--- Добавлено имя параметра
     importance: Importance.max,
     priority: Priority.high,
   );
 
   const NotificationDetails platformDetails = NotificationDetails(
     android: androidDetails,
-    iOS: DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    ),
+    iOS: DarwinNotificationDetails(), // Здесь оставляем пусто, v19.5 это любит
   );
+
+  await flutterLocalNotificationsPlugin.show(
+    DateTime.now().millisecond, 
+    title, 
+    body, 
+    platformDetails,
+    payload: 'artifact_unlocked', 
+  );
+}
 
   await flutterLocalNotificationsPlugin.show(
     DateTime.now().millisecond, 
