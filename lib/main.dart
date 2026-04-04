@@ -10,7 +10,7 @@ import 'package:smart_body_life/providers/workout_provider.dart';
 import 'package:smart_body_life/providers/active_session_provider.dart';
 import 'package:smart_body_life/screens/main_hub_screen.dart';
 import 'package:smart_body_life/screens/welcome_screen.dart';
-import 'package:smart_body_life/screens/body_screen.dart';        
+import 'package:smart_body_life/screens/body_screen.dart';         
 import 'package:smart_body_life/screens/food_screen.dart';
 import 'package:smart_body_life/screens/gym_screen.dart'; 
 import 'package:smart_body_life/screens/settings_screen.dart';
@@ -43,8 +43,9 @@ void main() async {
     iOS: initializationSettingsIOS,
   );
 
+  // Инициализация БЕЗ именованного параметра settings (требование v19.5.0)
   await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings, // <--- Просто название, без слова settings:
+    initializationSettings,
     onDidReceiveNotificationResponse: (NotificationResponse details) {
       if (details.payload == 'artifact_unlocked') {
         navigatorKey.currentState?.pushNamed('/body');
@@ -97,11 +98,12 @@ class SmartBodyLifeApp extends StatelessWidget {
   }
 }
 
-// Вспомогательная функция для уведомлений (вызывается из провайдера)
 Future<void> showArtifactNotification(String title, String body) async {
+  // Исправлено: добавлены обязательные аргументы в правильном порядке
   const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
     'artifact_channel',
     'Artifact Awards',
+    'Notifications for unlocked artifacts', // channelDescription теперь тут
     importance: Importance.max,
     priority: Priority.high,
   );
@@ -112,10 +114,10 @@ Future<void> showArtifactNotification(String title, String body) async {
   );
 
   await flutterLocalNotificationsPlugin.show(
-    id: DateTime.now().millisecond, 
-    title: title, 
-    body: body, 
-    notificationDetails: platformDetails,
+    DateTime.now().millisecond, 
+    title, 
+    body, 
+    platformDetails,
     payload: 'artifact_unlocked', 
   );
 }
@@ -165,4 +167,4 @@ class _MainScreenState extends State<MainScreen> {
       ),
     );
   }
-}
+}        
