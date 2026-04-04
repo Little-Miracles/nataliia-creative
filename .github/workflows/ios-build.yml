@@ -26,9 +26,8 @@ jobs:
 
       - name: Build iOS App
         run: |
-          # Мы принудительно заставляем Flutter игнорировать старые скрипты Xcode
-          flutter build ios --release --no-codesign --verbose
-
+          # Мы отключаем сканирование модулей, которое вызывало 60 000 строк логов
+          flutter build ios --release --no-codesign --verbose --extra-front-end-options=--no-implicit-dynamic-reexport --compiler-filter="-Xcc -fno-modules-validate-system-headers"
       - name: Create Payload for IPA
         run: |
           mkdir -p Payload
