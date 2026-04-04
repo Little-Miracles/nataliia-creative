@@ -128,23 +128,25 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true, 
+                        showTitles: true,
                         reservedSize: 42,
-                        getTitlesWidget: (double v, TitleMeta meta) => SideTitleWidget(
-                          meta: meta, // <--- ВОТ ЭТА СТРОЧКА СПАСЕТ НАС ОТ ОШИБКИ
-                          child: Text(
-                            v.toInt().toString(), 
-                            style: const TextStyle(color: Colors.white24, fontSize: 10),
-                          ),
-                        ),
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return SideTitleWidget(
+                            meta: meta,
+                            child: Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(color: Colors.white24, fontSize: 10),
+                            ),
+                          );
+                        },
                       ),
                     ),
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 30,
-                        getTitlesWidget: (double v, TitleMeta meta) {
-                          int i = v.toInt();
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          int i = value.toInt();
                           if (i >= 0 && i < stream.length) {
                             final String label = stream[i]['reps'].toString();
                             bool isCardio = stream[i]['isCardio'] == true;
@@ -152,19 +154,19 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                             double opacity = isFocused ? 1.0 : 0.2;
 
                             return SideTitleWidget(
-                              meta: meta, 
+                              meta: meta,
                               space: 4,
                               child: Text(
-                                isCardio ? label : "x $label", 
+                                isCardio ? label : "x $label",
                                 style: TextStyle(
-                                  color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity), 
-                                  fontSize: 10, 
+                                  color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity),
+                                  fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             );
                           }
-                          return const SizedBox();
+                          return const SizedBox.shrink();
                         },
                       ),
                     ),
