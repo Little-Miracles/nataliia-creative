@@ -128,10 +128,14 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                     rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
-                        showTitles: true, reservedSize: 42,
+                        showTitles: true, 
+                        reservedSize: 42,
                         getTitlesWidget: (double v, TitleMeta meta) => SideTitleWidget(
-                          meta: meta,
-                          child: Text(v.toInt().toString(), style: const TextStyle(color: Colors.white24, fontSize: 10)),
+                          meta: meta, // <--- ВОТ ЭТА СТРОЧКА СПАСЕТ НАС ОТ ОШИБКИ
+                          child: Text(
+                            v.toInt().toString(), 
+                            style: const TextStyle(color: Colors.white24, fontSize: 10),
+                          ),
                         ),
                       ),
                     ),
