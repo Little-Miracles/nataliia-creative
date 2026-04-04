@@ -131,7 +131,7 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true, reservedSize: 42,
-                        getTitlesWidget: (double v, TitleMeta meta) => Text(v.toInt().toString(), ...),
+                        getTitlesWidget: (double v, TitleMeta meta) => Text(v.toInt().toString(), style: const TextStyle(color: Colors.white24, fontSize: 10)),
                       ),
                     ),
                     bottomTitles: AxisTitles(
