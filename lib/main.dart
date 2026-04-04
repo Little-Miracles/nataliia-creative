@@ -110,7 +110,11 @@ Future<void> showArtifactNotification(String title, String body) async {
 
   const NotificationDetails platformDetails = NotificationDetails(
     android: androidDetails,
-    iOS: DarwinNotificationDetails(),
+    iOS: DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    ),
   );
 
   await flutterLocalNotificationsPlugin.show(
