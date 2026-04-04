@@ -17,14 +17,26 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
 
-      - name: Install Dependencies
-        run: flutter pub get
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods
+          cd ios
+          pod install --repo-update
 
-      - name: Build iOS Archive
-        run: flutter build ios --release --no-codesign
+      - name: Build iOS App
+        run: |
+          # Мы принудительно заставляем Flutter игнорировать старые скрипты Xcode
+          flutter build ios --release --no-codesign --verbose
+
+      - name: Create Payload for IPA
+        run: |
+          mkdir -p Payload
+          # Ищем скомпилированное приложение и упаковываем его
+          cp -r build/ios/iphoneos/Runner.app Payload/
+          zip -r SmartBodyLife.ipa Payload
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ios-build
-          path: build/ios/iphoneos/*.app
+          name: ios-release-ipa
+          path: SmartBodyLife.ipa
