@@ -123,10 +123,11 @@ GestureDetector(
         const Text("Olympic Collars (2.5kg x 2)", style: TextStyle(color: Colors.white)),
         const Spacer(),
         Switch(
-          value: _includeCollars,
-          activeThumbColor: kAccentColor,
-          onChanged: (val) => setState(() => _includeCollars = val),
-        ),
+  value: _includeCollars,
+  activeTrackColor: kAccentColor.withOpacity(0.5), // Можно добавить это для красоты
+  activeColor: kAccentColor, // Это заменяет цвет "пимпочки" по-новому
+  onChanged: (val) => setState(() => _includeCollars = val),
+),
       ],
     ),
   ),
