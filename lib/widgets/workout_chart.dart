@@ -11,7 +11,7 @@ class WorkoutProgressChart extends StatefulWidget {
 }
 
 class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
-  int touchedSessionId = -1; // Теперь храним ID всей тренировки, а не одного столбика
+  int touchedSessionId = -1; 
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,6 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
 
     List<Map<String, dynamic>> stream = [];
     
-    // 1. ПАРСИНГ С ГРУППИРОВКОЙ ПО СЕССИЯМ
     for (int sIdx = 0; sIdx < widget.history.length; sIdx++) {
       String entry = widget.history[sIdx];
       try {
@@ -60,7 +59,7 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
               'kcal': kVal,
               'reps': repsLabel,
               'isCardio': isActuallyCardio,
-              'sessionId': sIdx, // Привязываем упражнение к конкретной тренировке в истории
+              'sessionId': sIdx, 
             });
           }
         }
@@ -69,7 +68,6 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
       }
     }
 
-    // Ограничим отображение последними 15-20 записями, чтобы не было слишком мелко
     if (stream.length > 20) stream = stream.sublist(stream.length - 20);
 
     double maxVal = 50;
@@ -108,7 +106,7 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                           return;
                         }
                         int index = barTouchResponse.spot!.touchedBarGroupIndex;
-                        touchedSessionId = stream[index]['sessionId']; // Выделяем всю сессию
+                        touchedSessionId = stream[index]['sessionId'];
                       });
                     },
                     touchTooltipData: BarTouchTooltipData(
@@ -122,7 +120,7 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                       },
                     ),
                   ),
-                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: dynamicMaxY / 5),
+                  gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: dynamicMaxY / 5 > 0 ? dynamicMaxY / 5 : 10),
                   borderData: FlBorderData(show: true, border: const Border(bottom: BorderSide(color: Colors.white24), left: BorderSide(color: Colors.white24))),
                   titlesData: FlTitlesData(
                     show: true,
@@ -131,42 +129,44 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true, reservedSize: 42,
-                        getTitlesWidget: (double v, TitleMeta meta) => Text(v.toInt().toString(), style: const TextStyle(color: Colors.white24, fontSize: 10)),
+                        getTitlesWidget: (double v, TitleMeta meta) => SideTitleWidget(
+                          meta: meta,
+                          child: Text(v.toInt().toString(), style: const TextStyle(color: Colors.white24, fontSize: 10)),
+                        ),
                       ),
                     ),
                     bottomTitles: AxisTitles(
-  sideTitles: SideTitles(
-    showTitles: true,
-    reservedSize: 30,
-    getTitlesWidget: (double v, TitleMeta meta) {
-      int i = v.toInt();
-      if (i >= 0 && i < stream.length) {
-        final String label = stream[i]['reps'].toString();
-        bool isCardio = stream[i]['isCardio'] == true;
-        bool isFocused = touchedSessionId == -1 || touchedSessionId == stream[i]['sessionId'];
-        double opacity = isFocused ? 1.0 : 0.2;
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                        getTitlesWidget: (double v, TitleMeta meta) {
+                          int i = v.toInt();
+                          if (i >= 0 && i < stream.length) {
+                            final String label = stream[i]['reps'].toString();
+                            bool isCardio = stream[i]['isCardio'] == true;
+                            bool isFocused = touchedSessionId == -1 || touchedSessionId == stream[i]['sessionId'];
+                            double opacity = isFocused ? 1.0 : 0.2;
 
-        return SideTitleWidget(
-  meta: meta, // <--- ТЕПЕРЬ ОН ТРЕБУЕТ ВЕСЬ ОБЪЕКТ meta
-  space: 4,
-  child: Text(
-    isCardio ? label : "x $label", 
-    style: TextStyle(
-      color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity), 
-      fontSize: 10, 
-      fontWeight: FontWeight.bold,
-    ),
-  ),
-);
-      }
-      return const SizedBox();
-    },
-  ),
-),
+                            return SideTitleWidget(
+                              meta: meta, 
+                              space: 4,
+                              child: Text(
+                                isCardio ? label : "x $label", 
+                                style: TextStyle(
+                                  color: (isCardio ? Colors.greenAccent : const Color(0xFF2196F3)).withOpacity(opacity), 
+                                  fontSize: 10, 
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox();
+                        },
+                      ),
+                    ),
                   ),
                   barGroups: List.generate(stream.length, (index) {
                     final item = stream[index];
-                    // ГРУППОВОЙ ФОКУС: подсвечиваем, если ID сессии совпадает с нажатой
                     final bool isFocused = touchedSessionId == -1 || touchedSessionId == item['sessionId'];
                     final double opacity = isFocused ? 1.0 : 0.2;
 
