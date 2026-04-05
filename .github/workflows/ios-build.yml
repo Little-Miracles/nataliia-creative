@@ -26,12 +26,13 @@ jobs:
 
       - name: Build iOS App
         run: |
-          # Мы отключаем Explicit Modules на уровне компилятора
-          flutter build ios --release --no-codesign --extra-gen-snapshot-options="--no-incremental-cc" --extra-front-end-options=--no-implicit-dynamic-reexport
-          
+          # Мы добавили --no-tree-shake-icons, чтобы исправить внутреннюю ошибку Flutter 3.29
+          flutter build ios --release --no-codesign --no-tree-shake-icons --extra-front-end-options=--no-implicit-dynamic-reexport
+
       - name: Create Payload for IPA
         run: |
           mkdir -p Payload
+          # Упаковываем скомпилированное приложение
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r SmartBodyLife.ipa Payload
 
