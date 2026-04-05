@@ -1,4 +1,4 @@
-name: iOS App Store Final Victory
+name: iOS App Store Absolute Victory
 
 on:
   workflow_dispatch:
@@ -10,29 +10,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Everything
+      - name: Install Distribution Certificate
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
-          P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
           PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
-          PROV_DEV: ${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          security create-keychain -p "$KEY_PASS" app.keychain-db
-          security set-keychain-settings -lut 21600 app.keychain-db
-          security unlock-keychain -p "$KEY_PASS" app.keychain-db
-          
-          echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          echo -n "$P12_DEV" | base64 --decode -o dev.p12
-          
-          security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
-          security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" app.keychain-db
-          
+          security create-keychain -p "$KEY_PASS" build.keychain
+          security unlock-keychain -p "$KEY_PASS" build.keychain
+          echo -n "$P12_DIST" | base64 --decode -o cert.p12
+          security import cert.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -40,11 +31,19 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Build IPA
+      - name: Force Project Settings (Server-side)
         run: |
           flutter pub get
-          
-          # Создаем ExportOptions.plist
+          # Мы ПРИНУДИТЕЛЬНО меняем настройки в файле проекта прямо на сервере Гитхаба
+          # 1. Меняем iPhone Developer на Apple Distribution
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' ios/Runner.xcodeproj/project.pbxproj
+          # 2. Включаем ручную подпись
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          # 3. Прописываем имя нашего профиля
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Build IPA
+        run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -65,7 +64,7 @@ jobs:
           </plist>
           EOF
           
-          # Самая простая и надежная команда сборки без лишних флагов
+          # Финальная команда сборки
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
