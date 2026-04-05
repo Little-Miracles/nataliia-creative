@@ -10,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Both Certificates
+      - name: Install Both Certificates and Profiles
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
           P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
@@ -23,23 +23,19 @@ jobs:
           PP_PATH=$RUNNER_TEMP/build.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
           
-          # Распаковываем наши новые файлы
           echo -n "$P12_DIST" | base64 --decode -o $DIST_PATH
           echo -n "$P12_DEV" | base64 --decode -o $DEV_PATH
           echo -n "$PROV_PROF" | base64 --decode -o $PP_PATH
           
-          # Создаем связку ключей
           security create-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           
-          # Импортируем оба сертификата паролем 1234
           security import $DIST_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security import $DEV_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" $KEYCHAIN_PATH
           
-          # Устанавливаем профиль SMART_DISTRIBUTION
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -54,7 +50,7 @@ jobs:
           flutter clean
           flutter pub get
           
-          # Создаем файл настроек экспорта (ExportOptions)
+          # Создаем ExportOptions. Здесь мы четко говорим: используй SMART_DISTRIBUTION для финала
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -75,8 +71,11 @@ jobs:
           </plist>
           EOF
           
-          # Собираем файл для магазина!
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # ГЛАВНОЕ ИЗМЕНЕНИЕ: Добавляем флаги, чтобы Котик не искал Development-профили при архивации
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define=MY_APP_MODE=release \
+            --code-sign-identity="Apple Distribution"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
