@@ -15,7 +15,7 @@ dependencies:
   provider: ^6.1.2
   shared_preferences: ^2.3.2
   intl: 0.19.0
-  image_picker: ^1.2.1
+  image_picker: ^1.2.0
 
   google_mlkit_commons: 0.5.0
   mobile_scanner: 3.5.2    # ГЛАЗА: Сканирует сам штрих-кod через камеру
