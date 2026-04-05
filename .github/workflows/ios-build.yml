@@ -14,7 +14,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          # Используем стабильную версию без ошибки Null check
           flutter-version: '3.27.0'
           channel: 'stable'
 
@@ -27,13 +26,18 @@ jobs:
 
       - name: Build iOS App
         run: |
-          # Собираем приложение без лишних проверок подписей
+          # Взламываем конфиг Flutter, чтобы принудительно убрать Null значение
+          echo "CODE_SIGNING_ALLOWED=NO" >> ios/Flutter/Generated.xcconfig
+          echo "CODE_SIGNING_REQUIRED=NO" >> ios/Flutter/Generated.xcconfig
+          echo "CODE_SIGN_IDENTITY=-" >> ios/Flutter/Generated.xcconfig
+          echo "EXPANDED_CODE_SIGN_IDENTITY=-" >> ios/Flutter/Generated.xcconfig
+          
+          # Собираем
           flutter build ios --release --no-codesign --no-tree-shake-icons --extra-front-end-options=--no-implicit-dynamic-reexport
             
       - name: Create Payload for IPA
         run: |
           mkdir -p Payload
-          # Копируем результат сборки в архив
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r SmartBodyLife.ipa Payload
 
