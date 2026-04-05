@@ -1,4 +1,4 @@
-name: iOS App Store Official
+name: iOS App Store Official Production
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Certificates & Profile
+      - name: Install Certificate and Profile
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
@@ -21,14 +21,19 @@ jobs:
           PP_PATH=$RUNNER_TEMP/build.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
           
+          # Декодируем сертификат и профиль из секретов
           echo -n "$P12_DIST" | base64 --decode -o $DIST_PATH
           echo -n "$PROV_PROF" | base64 --decode -o $PP_PATH
           
+          # Создаем временную связку ключей
           security create-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
+          
+          # Импортируем сертификат Распространителя
           security import $DIST_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           
+          # Устанавливаем профиль в нужную папку
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -38,16 +43,26 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Clean and Patch Project
+      - name: Logic Repair (Surgery)
         run: |
+          # Очистка проекта
           flutter clean
           flutter pub get
           
-          # 1. Принудительно вставляем стиль Manual и имя профиля в файл проекта
-          # Мы добавляем эти строки сразу после DEVELOPMENT_TEAM, так как она у вас точно есть
-          find . -name "project.pbxproj" -exec sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF;\n\t\t\t\tProvisioningStyle = Manual;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "smart_store";/g' {} +
+          # ХИРУРГИЯ ФАЙЛА ПРОЕКТА:
+          # 1. Меняем iPhone Developer на Apple Distribution (убираем требование разработки)
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # 2. Выключаем автоматическую подпись, которая мешает Котику
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # 3. Принудительно вставляем имя профиля smart_store после Team ID
+          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "smart_store";\n\t\t\t\tProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
 
-          # 2. Создаем ExportOptions.plist
+      - name: Build and Export IPA
+        run: |
+          # Создаем инструкции для экспорта в App Store
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -67,12 +82,11 @@ jobs:
           </dict>
           </plist>
           EOF
-
-      - name: Build IPA
-        run: |
+          
+          # Финальная сборка
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: Upload IPA
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-store-release
