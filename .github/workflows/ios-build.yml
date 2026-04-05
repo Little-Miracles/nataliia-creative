@@ -1,4 +1,4 @@
-name: iOS App Store Final Breakthrough
+name: iOS App Store Final Victory
 
 on:
   workflow_dispatch:
@@ -31,12 +31,8 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" app.keychain-db
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # РЕШАЮЩИЙ МОМЕНТ:
-          # Мы берем ваш профиль разработки и кладем его под системным именем, 
-          # чтобы Xcode не мог сказать, что не нашел его.
-          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store_dist.mobileprovision
-          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store_dev.mobileprovision
+          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -48,6 +44,7 @@ jobs:
         run: |
           flutter pub get
           
+          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -62,15 +59,17 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
-              <string>smart_store</string>
+              <string>SMART_DISTRIBUTION</string>
             </dict>
           </dict>
           </plist>
           EOF
           
-          # Команда сборки с ПРЯМЫМ указанием профиля для этапа архивации
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --build-name=1.0.0 \
-            --build-number=1 \
-            --code-sign-export-config=ios/ExportOptions.plist
+          # Самая простая и надежная команда сборки без лишних флагов
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-store-release
+          path: build/ios/ipa/*.ipa
