@@ -1,4 +1,4 @@
-name: iOS App Store Build
+name: iOS App Store Official
 
 on:
   workflow_dispatch:
@@ -27,7 +27,6 @@ jobs:
           security create-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
-          
           security import $DIST_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
@@ -39,14 +38,16 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Build IPA
+      - name: Clean and Patch Project
         run: |
-          # Принудительно выключаем автоподпись в проекте
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          
+          flutter clean
           flutter pub get
           
-          # Настройки экспорта именно для МАГАЗИНА
+          # 1. Принудительно вставляем стиль Manual и имя профиля в файл проекта
+          # Мы добавляем эти строки сразу после DEVELOPMENT_TEAM, так как она у вас точно есть
+          find . -name "project.pbxproj" -exec sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF;\n\t\t\t\tProvisioningStyle = Manual;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "smart_store";/g' {} +
+
+          # 2. Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -66,7 +67,9 @@ jobs:
           </dict>
           </plist>
           EOF
-          
+
+      - name: Build IPA
+        run: |
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload IPA
