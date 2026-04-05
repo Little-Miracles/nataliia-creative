@@ -57,11 +57,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-<<<<<<< HEAD
-  flutter_lints: ^4.0.0
-=======
   flutter_lints: ^5.0.0
->>>>>>> 2c3da47 (fix signing)
   flutter_launcher_icons: ^0.14.4
 
 
