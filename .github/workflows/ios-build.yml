@@ -10,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install the Apple certificate and provisioning profile
+      - name: Install Apple Certificate & Profile
         env:
           P12_BASE64: ${{ secrets.P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -20,13 +20,21 @@ jobs:
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          
+          # Декодируем паспорт и разрешение
           echo -n "$P12_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          
+          # Создаем временный сейф в памяти Котика
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          
+          # Импортируем сертификат
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
+          
+          # Кладем профиль в нужную папку Apple
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -36,17 +44,34 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Get dependencies
+      - name: Get Flutter dependencies
         run: flutter pub get
 
       - name: Build IPA
         run: |
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --code-sign-style=manual \
-            --provisioning-profile-uuid=smart
+          # Создаем файл настроек экспорта, чтобы Flutter не задавал лишних вопросов
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>smart</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+          
+          # Запускаем сборку через Flutter
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: Upload IPA
+      - name: Upload IPA to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: app-release
