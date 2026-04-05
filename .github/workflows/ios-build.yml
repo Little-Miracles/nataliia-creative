@@ -1,4 +1,4 @@
-name: iOS App Store Victory Final
+name: iOS App Store Final Breakthrough
 
 on:
   workflow_dispatch:
@@ -10,34 +10,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Both Certificates and Profiles
+      - name: Install Everything
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
           P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
-          PROV_PROF: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          PROV_DEV: ${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          DIST_PATH=$RUNNER_TEMP/dist.p12
-          DEV_PATH=$RUNNER_TEMP/dev.p12
-          PP_PATH=$RUNNER_TEMP/build.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
+          # Создаем временную связку ключей
+          security create-keychain -p "$KEY_PASS" app.keychain-db
+          security set-keychain-settings -lut 21600 app.keychain-db
+          security unlock-keychain -p "$KEY_PASS" app.keychain-db
           
-          echo -n "$P12_DIST" | base64 --decode -o $DIST_PATH
-          echo -n "$P12_DEV" | base64 --decode -o $DEV_PATH
-          echo -n "$PROV_PROF" | base64 --decode -o $PP_PATH
+          # Распаковываем сертификаты
+          echo -n "$P12_DIST" | base64 --decode -o dist.p12
+          echo -n "$P12_DEV" | base64 --decode -o dev.p12
           
-          security create-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
+          # Импортируем сертификаты
+          security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
+          security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" app.keychain-db
           
-          security import $DIST_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security import $DEV_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" $KEYCHAIN_PATH
-          
+          # Раскладываем ОБА профиля (Магазин и Разработка)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DEVELOPMENT.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -45,18 +44,17 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Project Surgery and Build
+      - name: Force Project Configuration
         run: |
-          flutter clean
           flutter pub get
-          
-          # ХИРУРГИЯ: Принудительно меняем в настройках проекта тип подписи на Distribution и наш профиль
-          # Это заставит Xcode использовать SMART_DISTRIBUTION даже для этапа архивации
+          # Принудительно выставляем ручную подпись и имя профиля в проекте
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Создаем ExportOptions
+
+      - name: Build IPA
+        run: |
+          # Создаем файл инструкций для экспорта в App Store
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -77,7 +75,7 @@ jobs:
           </plist>
           EOF
           
-          # Сборка
+          # Собираем финальный файл
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
