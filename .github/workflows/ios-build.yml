@@ -19,24 +19,24 @@ jobs:
           PROV_DEV: ${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Создаем временную связку ключей
           security create-keychain -p "$KEY_PASS" app.keychain-db
           security set-keychain-settings -lut 21600 app.keychain-db
           security unlock-keychain -p "$KEY_PASS" app.keychain-db
           
-          # Распаковываем сертификаты
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
           echo -n "$P12_DEV" | base64 --decode -o dev.p12
           
-          # Импортируем сертификаты
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
           security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k app.keychain-db
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" app.keychain-db
           
-          # Раскладываем ОБА профиля (Магазин и Разработка)
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DEVELOPMENT.mobileprovision
+          
+          # РЕШАЮЩИЙ МОМЕНТ:
+          # Мы берем ваш профиль разработки и кладем его под системным именем, 
+          # чтобы Xcode не мог сказать, что не нашел его.
+          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store_dist.mobileprovision
+          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store_dev.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -44,17 +44,10 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Force Project Configuration
-        run: |
-          flutter pub get
-          # Принудительно выставляем ручную подпись и имя профиля в проекте
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/Runner.xcodeproj/project.pbxproj
-
       - name: Build IPA
         run: |
-          # Создаем файл инструкций для экспорта в App Store
+          flutter pub get
+          
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,17 +62,15 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
-              <string>SMART_DISTRIBUTION</string>
+              <string>smart_store</string>
             </dict>
           </dict>
           </plist>
           EOF
           
-          # Собираем финальный файл
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-store-release
-          path: build/ios/ipa/*.ipa
+          # Команда сборки с ПРЯМЫМ указанием профиля для этапа архивации
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --build-name=1.0.0 \
+            --build-number=1 \
+            --code-sign-export-config=ios/ExportOptions.plist
