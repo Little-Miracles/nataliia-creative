@@ -1,4 +1,4 @@
-name: iOS App Store Final Victory Both Certs
+name: iOS App Store Absolute Victory
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Both Certificates and Profiles
+      - name: Install All Documents
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
           P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
@@ -23,7 +23,6 @@ jobs:
           security set-keychain-settings -lut 21600 build.keychain
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
-          # Распаковываем ОБА сертификата
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
           echo -n "$P12_DEV" | base64 --decode -o dev.p12
           
@@ -31,7 +30,6 @@ jobs:
           security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
-          # Распаковываем ОБА профиля
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
           echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store.mobileprovision
@@ -42,15 +40,24 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Disable Automatic Signing (Project Fix)
+      - name: Force Injection of Profiles
         run: |
           flutter pub get
-          # Главный секрет: мы ГЛОБАЛЬНО выключаем автоматику в проекте
-          # Это заставит Котика использовать наши файлы, не пытаясь зайти в интернет
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
+          PBX="ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Мы берем настройки и ПРИНУДИТЕЛЬНО вставляем их туда, где их нет
+          # Это заменяет любые попытки Xcode думать самостоятельно
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
+          
+          # Заменяем личность разработчика на личность магазина везде
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
+          
+          # Вставляем имя профиля в блоки настроек
+          sed -i '' '/DEVELOPMENT_TEAM = PCSW3AKAPF;/a \
+          PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";' "$PBX"
 
-      - name: Build IPA
+      - name: Build Final IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -72,10 +79,9 @@ jobs:
           </plist>
           EOF
           
-          # Собираем IPA
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: Upload
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-store-release
