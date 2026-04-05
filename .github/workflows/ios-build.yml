@@ -1,4 +1,4 @@
-name: iOS App Store Absolute Victory
+name: iOS App Store Absolute Victory FINAL
 
 on:
   workflow_dispatch:
@@ -10,29 +10,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install All Documents
+      - name: Install Certificates and Profiles
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
-          P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
           PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
-          PROV_DEV: ${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          # Создаем временную связку ключей
           security create-keychain -p "$KEY_PASS" build.keychain
           security set-keychain-settings -lut 21600 build.keychain
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
+          # Декодируем сертификат и импортируем его
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          echo -n "$P12_DEV" | base64 --decode -o dev.p12
-          
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
-          security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
+          # Устанавливаем профиль в нужную папку
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -40,25 +37,21 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Force Injection of Profiles
+      - name: Prepare Project Settings
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Мы берем настройки и ПРИНУДИТЕЛЬНО вставляем их туда, где их нет
-          # Это заменяет любые попытки Xcode думать самостоятельно
+          # Выключаем автоматику полностью
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
           sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           
-          # Заменяем личность разработчика на личность магазина везде
-          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
-          
-          # Вставляем имя профиля в блоки настроек
-          sed -i '' '/DEVELOPMENT_TEAM = PCSW3AKAPF;/a \
-          PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";' "$PBX"
+          # Указываем команду и профиль явно для всех конфигураций
+          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
 
-      - name: Build Final IPA
+      - name: Build IPA
         run: |
+          # Создаем файл настроек экспорта
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -79,7 +72,10 @@ jobs:
           </plist>
           EOF
           
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем с запретом на автоматическое обновление профилей
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --no-update-discovery
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
