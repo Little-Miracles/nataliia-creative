@@ -1,4 +1,4 @@
-name: iOS App Store Official Production
+name: iOS App Store Victory Final
 
 on:
   workflow_dispatch:
@@ -10,30 +10,36 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Certificate and Profile
+      - name: Install Both Certificates
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
+          P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
           PROV_PROF: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           DIST_PATH=$RUNNER_TEMP/dist.p12
+          DEV_PATH=$RUNNER_TEMP/dev.p12
           PP_PATH=$RUNNER_TEMP/build.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
           
-          # Декодируем сертификат и профиль из секретов
+          # Распаковываем наши новые файлы
           echo -n "$P12_DIST" | base64 --decode -o $DIST_PATH
+          echo -n "$P12_DEV" | base64 --decode -o $DEV_PATH
           echo -n "$PROV_PROF" | base64 --decode -o $PP_PATH
           
-          # Создаем временную связку ключей
+          # Создаем связку ключей
           security create-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEY_PASS" $KEYCHAIN_PATH
           
-          # Импортируем сертификат Распространителя
+          # Импортируем оба сертификата паролем 1234
           security import $DIST_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security import $DEV_PATH -P "$P12_PASS" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           
-          # Устанавливаем профиль в нужную папку
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" $KEYCHAIN_PATH
+          
+          # Устанавливаем профиль SMART_DISTRIBUTION
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -43,26 +49,12 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Logic Repair (Surgery)
+      - name: Build IPA
         run: |
-          # Очистка проекта
           flutter clean
           flutter pub get
           
-          # ХИРУРГИЯ ФАЙЛА ПРОЕКТА:
-          # 1. Меняем iPhone Developer на Apple Distribution (убираем требование разработки)
-          sed -i '' 's/iPhone Developer/Apple Distribution/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # 2. Выключаем автоматическую подпись, которая мешает Котику
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # 3. Принудительно вставляем имя профиля smart_store после Team ID
-          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF;\n\t\t\t\tPROVISIONING_PROFILE_SPECIFIER = "smart_store";\n\t\t\t\tProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-
-      - name: Build and Export IPA
-        run: |
-          # Создаем инструкции для экспорта в App Store
+          # Создаем файл настроек экспорта (ExportOptions)
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -77,13 +69,13 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
-              <string>smart_store</string>
+              <string>SMART_DISTRIBUTION</string>
             </dict>
           </dict>
           </plist>
           EOF
           
-          # Финальная сборка
+          # Собираем файл для магазина!
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
