@@ -34,11 +34,12 @@ post_install do |installer|
       config.build_settings['CODE_SIGNING_REQUIRED'] = "NO"
       config.build_settings['CODE_SIGNING_ALLOWED'] = "NO"
       
-      # --- ВОТ ВАША ВСТАВКА ---
+      # Добавляем еще одну важную строку против сканера:
+      config.build_settings['CLANG_MODULES_AUTOLINK'] = 'NO'
+
       config.build_settings['CLANG_ENABLE_MODULE_DEBUGGING'] = 'NO'
       config.build_settings['SCAN_ALL_SOURCE_FILES_FOR_INCLUDES'] = 'NO'
       config.build_settings['ONLY_ACTIVE_ARCH'] = 'NO'
-      # ------------------------
 
     end
   end
