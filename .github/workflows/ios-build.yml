@@ -50,7 +50,7 @@ jobs:
           flutter clean
           flutter pub get
           
-          # Создаем ExportOptions. Здесь мы четко говорим: используй SMART_DISTRIBUTION для финала
+          # 1. Создаем инструкции для экспорта (ExportOptions)
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -71,11 +71,13 @@ jobs:
           </plist>
           EOF
           
-          # ГЛАВНОЕ ИЗМЕНЕНИЕ: Добавляем флаги, чтобы Котик не искал Development-профили при архивации
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define=MY_APP_MODE=release \
-            --code-sign-identity="Apple Distribution"
+          # 2. ГЛАВНОЕ ИСПРАВЛЕНИЕ: Передаем параметры подписи через переменные окружения
+          # Это заменяет тот ошибочный флаг и работает надежно.
+          export CODE_SIGN_STYLE=Manual
+          export CODE_SIGN_IDENTITY="Apple Distribution"
+          export PROVISIONING_PROFILE_SPECIFIER="SMART_DISTRIBUTION"
+          
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
