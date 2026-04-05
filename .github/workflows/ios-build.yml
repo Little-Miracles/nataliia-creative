@@ -32,23 +32,24 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Heavy Project Surgery
+      - name: Ultimate Project Fix
         run: |
           flutter pub get
-          # ПРИНУДИТЕЛЬНО ВЫКЛЮЧАЕМ ВСЁ АВТОМАТИЧЕСКОЕ
-          # 1. Выключаем автоматический стиль подписи (два варианта написания)
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          # ПРИНУДИТЕЛЬНОЕ ОБНУЛЕНИЕ АВТОМАТИКИ ВО ВСЕХ УГОЛКАХ
+          # 1. Заменяем Automatic на Manual везде, включая системные ключи
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # 2. Устанавливаем личность Distribution для всех конфигураций
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/"CODE_SIGN_IDENTITY\[sdk=iphoneos\*\]" = "iPhone Developer"/"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Distribution"/g' ios/Runner.xcodeproj/project.pbxproj
+          # 2. Принудительно ставим Apple Distribution для ВСЕХ типов сборки (даже для Debug на сервере)
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # 3. Принудительно вписываем наш профиль
+          # 3. Вписываем наш профиль во все места, где Xcode ожидает увидеть имя профиля
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE = .*/PROVISIONING_PROFILE = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
 
       - name: Build IPA
         run: |
+          # Создаем ExportOptions
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,7 +70,7 @@ jobs:
           </plist>
           EOF
           
-          # Собираем IPA
+          # Сама сборка. Добавил флаги, которые принудительно отключают авто-подпись в процессе
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
