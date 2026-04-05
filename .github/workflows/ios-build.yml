@@ -21,20 +21,16 @@ jobs:
           PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           
-          # Декодируем паспорт и разрешение
           echo -n "$P12_BASE64" | base64 --decode -o $CERTIFICATE_PATH
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
           
-          # Создаем временный сейф в памяти
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           
-          # Импортируем сертификат
           security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security list-keychain -d user -s $KEYCHAIN_PATH
           
-          # Кладем профиль в папку Apple
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -49,8 +45,7 @@ jobs:
 
       - name: Build IPA
         run: |
-          # 1. Создаем файл настроек экспорта (ExportOptions.plist)
-          # Здесь мы четко прописываем ID команды и название профиля
+          # Создаем файл настроек экспорта, куда переносим ВСЕ данные подписи
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -62,6 +57,8 @@ jobs:
             <string>manual</string>
             <key>teamID</key>
             <string>PCSW3AKAPF</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
@@ -71,11 +68,8 @@ jobs:
           </plist>
           EOF
           
-          # 2. Запускаем сборку Flutter
-          # Мы принудительно говорим использовать Apple Distribution (магазин)
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --code-sign-identity="Apple Distribution"
+          # Теперь команда запуска чистая и короткая, без лишних флагов
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload IPA to GitHub
         uses: actions/upload-artifact@v4
