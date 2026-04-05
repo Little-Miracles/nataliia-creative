@@ -14,7 +14,8 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          # Используем стабильную версию без ошибки Null check
+          flutter-version: '3.27.0'
           channel: 'stable'
 
       - name: Install Dependencies
@@ -26,12 +27,13 @@ jobs:
 
       - name: Build iOS App
         run: |
-          # Собираем каркас приложения без проверки подписей
+          # Собираем приложение без лишних проверок подписей
           flutter build ios --release --no-codesign --no-tree-shake-icons --extra-front-end-options=--no-implicit-dynamic-reexport
             
       - name: Create Payload for IPA
         run: |
           mkdir -p Payload
+          # Копируем результат сборки в архив
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r SmartBodyLife.ipa Payload
 
