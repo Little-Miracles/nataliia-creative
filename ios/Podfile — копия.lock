@@ -1,0 +1,311 @@
+PODS:
+  - add_2_calendar (0.0.1):
+    - Flutter
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - device_info_plus (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
+  - flutter_timezone (0.0.1):
+    - Flutter
+  - google_mlkit_barcode_scanning (0.9.0):
+    - Flutter
+    - google_mlkit_commons
+    - GoogleMLKit/BarcodeScanning (~> 4.0.0)
+  - google_mlkit_commons (0.5.0):
+    - Flutter
+    - MLKitVision
+  - google_mlkit_object_detection (0.10.0):
+    - Flutter
+    - google_mlkit_commons
+    - GoogleMLKit/ObjectDetection (~> 4.0.0)
+    - GoogleMLKit/ObjectDetectionCustom (~> 4.0.0)
+  - google_mlkit_translation (0.8.0):
+    - Flutter
+    - google_mlkit_commons
+    - GoogleMLKit/Translate (~> 4.0.0)
+  - GoogleDataTransport (9.4.1):
+    - GoogleUtilities/Environment (~> 7.7)
+    - nanopb (< 2.30911.0, >= 2.30908.0)
+    - PromisesObjC (< 3.0, >= 1.2)
+  - GoogleMLKit/BarcodeScanning (4.0.0):
+    - GoogleMLKit/MLKitCore
+    - MLKitBarcodeScanning (~> 3.0.0)
+  - GoogleMLKit/MLKitCore (4.0.0):
+    - MLKitCommon (~> 9.0.0)
+  - GoogleMLKit/ObjectDetection (4.0.0):
+    - GoogleMLKit/MLKitCore
+    - MLKitObjectDetection (~> 3.0.0)
+  - GoogleMLKit/ObjectDetectionCustom (4.0.0):
+    - GoogleMLKit/MLKitCore
+    - MLKitObjectDetectionCustom (~> 3.0.0)
+  - GoogleMLKit/Translate (4.0.0):
+    - GoogleMLKit/MLKitCore
+    - MLKitTranslate (~> 3.0.0)
+  - GoogleToolboxForMac/DebugUtils (2.3.2):
+    - GoogleToolboxForMac/Defines (= 2.3.2)
+  - GoogleToolboxForMac/Defines (2.3.2)
+  - GoogleToolboxForMac/Logger (2.3.2):
+    - GoogleToolboxForMac/Defines (= 2.3.2)
+  - "GoogleToolboxForMac/NSData+zlib (2.3.2)":
+    - GoogleToolboxForMac/Defines (= 2.3.2)
+  - "GoogleToolboxForMac/NSDictionary+URLArguments (2.3.2)":
+    - GoogleToolboxForMac/DebugUtils (= 2.3.2)
+    - GoogleToolboxForMac/Defines (= 2.3.2)
+    - "GoogleToolboxForMac/NSString+URLArguments (= 2.3.2)"
+  - "GoogleToolboxForMac/NSString+URLArguments (2.3.2)"
+  - GoogleToolboxForMac/StringEncoding (2.3.2):
+    - GoogleToolboxForMac/Defines (= 2.3.2)
+  - GoogleUtilities/Environment (7.13.3):
+    - GoogleUtilities/Privacy
+    - PromisesObjC (< 3.0, >= 1.2)
+  - GoogleUtilities/Logger (7.13.3):
+    - GoogleUtilities/Environment
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (7.13.3)
+  - GoogleUtilities/UserDefaults (7.13.3):
+    - GoogleUtilities/Logger
+    - GoogleUtilities/Privacy
+  - GoogleUtilitiesComponents (1.1.0):
+    - GoogleUtilities/Logger
+  - GTMSessionFetcher/Core (2.3.0)
+  - health (1.0.4):
+    - Flutter
+  - image_picker_ios (0.0.1):
+    - Flutter
+  - MLImage (1.0.0-beta4)
+  - MLKitBarcodeScanning (3.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitVision (~> 5.0)
+  - MLKitCommon (9.0.0):
+    - GoogleDataTransport (~> 9.0)
+    - GoogleToolboxForMac/Logger (~> 2.1)
+    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
+    - "GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)"
+    - GoogleUtilities/UserDefaults (~> 7.0)
+    - GoogleUtilitiesComponents (~> 1.0)
+    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
+  - MLKitImageLabelingCommon (5.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitVision (~> 5.0)
+  - MLKitNaturalLanguage (5.0.0):
+    - GoogleToolboxForMac/Logger (~> 2.1)
+    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
+    - "GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)"
+    - GoogleToolboxForMac/StringEncoding (~> 2.1)
+    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
+    - MLKitCommon (~> 9.0)
+  - MLKitObjectDetection (3.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitObjectDetectionCommon (~> 5.0)
+    - MLKitVision (~> 5.0)
+    - MLKitVisionKit (~> 6.0)
+  - MLKitObjectDetectionCommon (5.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitVision (~> 5.0)
+  - MLKitObjectDetectionCustom (3.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitObjectDetectionCommon (~> 5.0)
+    - MLKitVision (~> 5.0)
+    - MLKitVisionKit (~> 6.0)
+  - MLKitTranslate (3.0.0):
+    - MLKitNaturalLanguage (~> 5.0)
+    - SSZipArchive (< 2.2, >= 2.1)
+  - MLKitVision (5.0.0):
+    - GoogleToolboxForMac/Logger (~> 2.1)
+    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
+    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
+    - MLImage (= 1.0.0-beta4)
+    - MLKitCommon (~> 9.0)
+  - MLKitVisionKit (6.0.0):
+    - MLKitCommon (~> 9.0)
+    - MLKitImageLabelingCommon (~> 5.0)
+    - MLKitObjectDetectionCommon (~> 5.0)
+    - MLKitVision (~> 5.0)
+  - mobile_scanner (3.5.2):
+    - Flutter
+    - GoogleMLKit/BarcodeScanning (~> 4.0.0)
+  - nanopb (2.30910.0):
+    - nanopb/decode (= 2.30910.0)
+    - nanopb/encode (= 2.30910.0)
+  - nanopb/decode (2.30910.0)
+  - nanopb/encode (2.30910.0)
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - PromisesObjC (2.4.0)
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
+  - SSZipArchive (2.1.5)
+  - TensorFlowLiteC (2.12.0):
+    - TensorFlowLiteC/Core (= 2.12.0)
+  - TensorFlowLiteC/Core (2.12.0)
+  - TensorFlowLiteC/CoreML (2.12.0):
+    - TensorFlowLiteC/Core
+  - TensorFlowLiteC/Metal (2.12.0):
+    - TensorFlowLiteC/Core
+  - TensorFlowLiteSwift (2.12.0):
+    - TensorFlowLiteSwift/Core (= 2.12.0)
+  - TensorFlowLiteSwift/Core (2.12.0):
+    - TensorFlowLiteC (= 2.12.0)
+  - TensorFlowLiteSwift/CoreML (2.12.0):
+    - TensorFlowLiteC/CoreML (= 2.12.0)
+    - TensorFlowLiteSwift/Core (= 2.12.0)
+  - TensorFlowLiteSwift/Metal (2.12.0):
+    - TensorFlowLiteC/Metal (= 2.12.0)
+    - TensorFlowLiteSwift/Core (= 2.12.0)
+  - tflite_flutter (0.0.1):
+    - Flutter
+    - TensorFlowLiteSwift (= 2.12.0)
+    - TensorFlowLiteSwift/CoreML (= 2.12.0)
+    - TensorFlowLiteSwift/Metal (= 2.12.0)
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - video_player_avfoundation (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - add_2_calendar (from `.symlinks/plugins/add_2_calendar/ios`)
+  - audioplayers_darwin (from `.symlinks/plugins/audioplayers_darwin/darwin`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - flutter_timezone (from `.symlinks/plugins/flutter_timezone/ios`)
+  - google_mlkit_barcode_scanning (from `.symlinks/plugins/google_mlkit_barcode_scanning/ios`)
+  - google_mlkit_commons (from `.symlinks/plugins/google_mlkit_commons/ios`)
+  - google_mlkit_object_detection (from `.symlinks/plugins/google_mlkit_object_detection/ios`)
+  - google_mlkit_translation (from `.symlinks/plugins/google_mlkit_translation/ios`)
+  - health (from `.symlinks/plugins/health/ios`)
+  - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - tflite_flutter (from `.symlinks/plugins/tflite_flutter/ios`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/ios`)
+
+SPEC REPOS:
+  trunk:
+    - GoogleDataTransport
+    - GoogleMLKit
+    - GoogleToolboxForMac
+    - GoogleUtilities
+    - GoogleUtilitiesComponents
+    - GTMSessionFetcher
+    - MLImage
+    - MLKitBarcodeScanning
+    - MLKitCommon
+    - MLKitImageLabelingCommon
+    - MLKitNaturalLanguage
+    - MLKitObjectDetection
+    - MLKitObjectDetectionCommon
+    - MLKitObjectDetectionCustom
+    - MLKitTranslate
+    - MLKitVision
+    - MLKitVisionKit
+    - nanopb
+    - PromisesObjC
+    - SSZipArchive
+    - TensorFlowLiteC
+    - TensorFlowLiteSwift
+
+EXTERNAL SOURCES:
+  add_2_calendar:
+    :path: ".symlinks/plugins/add_2_calendar/ios"
+  audioplayers_darwin:
+    :path: ".symlinks/plugins/audioplayers_darwin/darwin"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  Flutter:
+    :path: Flutter
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  flutter_timezone:
+    :path: ".symlinks/plugins/flutter_timezone/ios"
+  google_mlkit_barcode_scanning:
+    :path: ".symlinks/plugins/google_mlkit_barcode_scanning/ios"
+  google_mlkit_commons:
+    :path: ".symlinks/plugins/google_mlkit_commons/ios"
+  google_mlkit_object_detection:
+    :path: ".symlinks/plugins/google_mlkit_object_detection/ios"
+  google_mlkit_translation:
+    :path: ".symlinks/plugins/google_mlkit_translation/ios"
+  health:
+    :path: ".symlinks/plugins/health/ios"
+  image_picker_ios:
+    :path: ".symlinks/plugins/image_picker_ios/ios"
+  mobile_scanner:
+    :path: ".symlinks/plugins/mobile_scanner/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  shared_preferences_foundation:
+    :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  tflite_flutter:
+    :path: ".symlinks/plugins/tflite_flutter/ios"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  video_player_avfoundation:
+    :path: ".symlinks/plugins/video_player_avfoundation/ios"
+
+SPEC CHECKSUMS:
+  add_2_calendar: e626377f607d055070093cbd56abd1fafa1a02a5
+  audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
+  device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_local_notifications: 643a3eda1ce1c0599413ca31672536d423dee214
+  flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
+  google_mlkit_barcode_scanning: 48f187e61b95bdfbb89fd014454392844e0edda8
+  google_mlkit_commons: 8c42b5f6f6b7efa19adaf7e32613abf59bba88ad
+  google_mlkit_object_detection: 9c24345955bfd1f2beb5e7a94b5df519cd3eeb47
+  google_mlkit_translation: 9fb409ad97ba654d80bd58b7733b406377454ef2
+  GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
+  GoogleMLKit: 2bd0dc6253c4d4f227aad460f69215a504b2980e
+  GoogleToolboxForMac: 8bef7c7c5cf7291c687cf5354f39f9db6399ad34
+  GoogleUtilities: ea963c370a38a8069cc5f7ba4ca849a60b6d7d15
+  GoogleUtilitiesComponents: 679b2c881db3b615a2777504623df6122dd20afe
+  GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
+  health: a38a2b7480871e575ef403a8746cb2c08d20f1a4
+  image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
+  MLImage: 7bb7c4264164ade9bf64f679b40fb29c8f33ee9b
+  MLKitBarcodeScanning: 04e264482c5f3810cb89ebc134ef6b61e67db505
+  MLKitCommon: c1b791c3e667091918d91bda4bba69a91011e390
+  MLKitImageLabelingCommon: 79ffbc10bd0c3a6407aa423aeb076f76a8883e15
+  MLKitNaturalLanguage: cf9de96911516fc83297429b7d7b6b33bfa56a93
+  MLKitObjectDetection: 065c494fb18d01b3580eaa29f0df3854bee8b5cf
+  MLKitObjectDetectionCommon: 424e43365d7ef7dd7005a4799e5303eeb4287fec
+  MLKitObjectDetectionCustom: ed2376de1d1893e761a843f3490169c7c4de9633
+  MLKitTranslate: e805e2873e0fbb211547c714b40c22c08cb8d7cb
+  MLKitVision: 8baa5f46ee3352614169b85250574fde38c36f49
+  MLKitVisionKit: 5b5472d40ffc143bda693ba20a3cff44fe627d41
+  mobile_scanner: 8baa97c31b83d096766bfaca0d40679afee62958
+  nanopb: 438bc412db1928dac798aa6fd75726007be04262
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  SSZipArchive: cefe1364104a0231268a5deb8495bdf2861f52f0
+  TensorFlowLiteC: 20785a69299185a379ba9852b6625f00afd7984a
+  TensorFlowLiteSwift: 3a4928286e9e35bdd3e17970f48e53c80d25e793
+  tflite_flutter: 64b192e11352fe36943ab6656e1d49207f1a5595
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  video_player_avfoundation: a8ea941d9519a60fa93a9908123c68e0917cbd1d
+
+PODFILE CHECKSUM: d89dfb6227d7566976b19eab78305a11691153b4
+
+COCOAPODS: 1.15.2
