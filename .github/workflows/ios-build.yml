@@ -12,7 +12,6 @@ jobs:
 
       - name: Install Apple Certificates & Profile
         env:
-          # Используем названия секретов точно по нашей ленте:
           P12_DIST_BASE64: ${{ secrets.P12_BASE64 }}
           P12_DEV_BASE64: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -24,21 +23,17 @@ jobs:
           PP_PATH=$RUNNER_TEMP/build.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/app.keychain-db
           
-          # Распаковываем файлы из секретов
           echo -n "$P12_DIST_BASE64" | base64 --decode -o $DIST_CERT_PATH
           echo -n "$P12_DEV_BASE64" | base64 --decode -o $DEV_CERT_PATH
           echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode -o $PP_PATH
           
-          # Создаем связку ключей
           security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
           
-          # Импортируем оба ваших сертификата
           security import $DIST_CERT_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           security import $DEV_CERT_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
           
-          # Регистрируем профиль в системе
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
 
@@ -50,19 +45,19 @@ jobs:
 
       - name: Build IPA
         run: |
-          # Выключаем авто-подпись в проекте
+          # Это та самая команда, которая сама находит файл проекта и выключает подпись
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           
           flutter pub get
           
-          # Создаем настройки экспорта
+          # Создаем настройки экспорта (МЕТОД ТЕПЕРЬ DEVELOPMENT)
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>development</string>
             <key>teamID</key>
             <string>PCSW3AKAPF</string>
             <key>signingStyle</key>
@@ -76,7 +71,6 @@ jobs:
           </plist>
           EOF
           
-          # Запуск сборки
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload IPA
