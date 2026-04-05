@@ -17,9 +17,8 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
 
-      - name: Clean and Precache
+      - name: Install Dependencies
         run: |
-          flutter clean
           flutter pub get
           flutter precache --ios
           cd ios
@@ -27,15 +26,14 @@ jobs:
 
       - name: Build iOS App
         run: |
-          # Мы принудительно задаем ID и версию, чтобы скрипты Flutter не падали
+          # Включаем обход скрипта, на котором происходит ошибка Null check
           flutter build ios --release --no-codesign --no-tree-shake-icons \
-            --build-number=1 \
-            --build-name=1.0.0 \
             --extra-front-end-options=--no-implicit-dynamic-reexport
             
       - name: Create Payload for IPA
         run: |
           mkdir -p Payload
+          # Мы берем скомпилированное приложение напрямую
           cp -r build/ios/iphoneos/Runner.app Payload/
           zip -r SmartBodyLife.ipa Payload
 
