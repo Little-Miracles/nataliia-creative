@@ -1,4 +1,4 @@
-name: iOS App Store Manual Trust Build
+name: iOS App Store Final Victory Both Certs
 
 on:
   workflow_dispatch:
@@ -10,25 +10,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare Trust Documents (Certificates)
+      - name: Install Both Certificates and Profiles
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
+          P12_DEV: ${{ secrets.DEV_P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
           PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          PROV_DEV: ${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Создаем сейф для ключей
           security create-keychain -p "$KEY_PASS" build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
-          # Распаковываем ваш сертификат (Доверенность №1)
-          echo -n "$P12_DIST" | base64 --decode -o cert.p12
-          security import cert.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
+          # Распаковываем ОБА сертификата
+          echo -n "$P12_DIST" | base64 --decode -o dist.p12
+          echo -n "$P12_DEV" | base64 --decode -o dev.p12
+          
+          security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
+          security import dev.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
-          # Распаковываем ваш профиль (Доверенность №2)
+          # Распаковываем ОБА профиля
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          echo -n "$PROV_DEV" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/smart_store.mobileprovision
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -36,20 +42,16 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Switch to Manual Signing (No Conflict Mode)
+      - name: Disable Automatic Signing (Project Fix)
         run: |
           flutter pub get
-          # Мы официально отменяем автоматику, чтобы Котик не путался
+          # Главный секрет: мы ГЛОБАЛЬНО выключаем автоматику в проекте
+          # Это заставит Котика использовать наши файлы, не пытаясь зайти в интернет
           sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Указываем, что теперь работаем только по "Доверенности"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = .*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: Build Final IPA
+      - name: Build IPA
         run: |
-          # Создаем финальную инструкцию для магазина
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -70,7 +72,7 @@ jobs:
           </plist>
           EOF
           
-          # Запускаем сборку
+          # Собираем IPA
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload
