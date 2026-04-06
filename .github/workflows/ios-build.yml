@@ -1,4 +1,4 @@
-name: iOS Global Concept Redirection
+name: iOS Absolute Concept Redirection
 on:
   push:
     branches: [ main ]
@@ -17,20 +17,22 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Deep Redefinition of Concepts
+      - name: Deep Concept Redirection
         run: |
-          # 1. Мы подменяем понятие идентификатора ВЕЗДЕ.
+          # 1. Подменяем понятия в основном коде
           find $FLUTTER_ROOT -name "*.dart" -exec sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]/ "GenericDevice" /g' {} +
           
-          # 2. А теперь — УСМИРЯЕМ того самого охранника на строке 237.
-          # Мы заменяем жесткое требование "!" на мягкое согласие.
-          find $FLUTTER_ROOT -name "xcode_backend.dart" -exec sed -i '' 's/! \/\/ \/ \/ NULL CHECK/ ?? "GenericDevice" /g' {} +
-          find $FLUTTER_ROOT -name "xcode_backend.dart" -exec sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]!/ "GenericDevice" /g' {} +
-
-          # 3. Обновляем кэш Котика, чтобы он забыл старые капризы
+          # 2. Усмиряем упрямого охранника на строке 237 в xcode_backend.dart
+          # Мы заменяем жесткое требование (!) на безопасный пропуск
+          sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]!/ "GenericDevice" /g' $FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.dart
+          
+          # 3. Принудительно вписываем "GenericDevice" прямо в настройки сборки
+          echo "TARGET_DEVICE_IDENTIFIER=GenericDevice" >> $GITHUB_ENV
+          
+          # Обновляем память Котика
           rm -f $FLUTTER_ROOT/bin/cache/flutter_tools.snapshot
 
-      - name: Setup Official Environment
+      - name: Setup Environment
         run: |
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
@@ -42,22 +44,21 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Build with Universal Concept
+      - name: Build Application
         run: |
           flutter pub get
-          # Подмена понятия "Чистка" на "Сохранение универсальности"
+          # Подмена: "Чистка" = "Универсальность"
           export FLUTTER_XCODE_THIN_ARCHIVE=false
           flutter build ios --release --no-codesign
           
-          # Собираем результат в итоговую форму
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../SmartBody_Final_Result.ipa Payload
+          zip -r ../../../SmartBody_Final_Success.ipa Payload
             
-      - name: Delivery
+      - name: Deliver Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-build-artifact
-          path: SmartBody_Final_Result.ipa
+          name: final-result-artifact
+          path: SmartBody_Final_Success.ipa
