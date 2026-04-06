@@ -15,7 +15,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Возвращаемся к стабильной 3.24.0 - она не требует лишних флагов
+          # Используем стабильную версию, теперь она примет звук 6.1.0
           flutter-version: '3.24.0'
 
       - name: Setup Certificates and Keychain
@@ -32,9 +32,8 @@ jobs:
 
       - name: Build IPA
         run: |
-          # Собираем классическим способом. Теперь, когда Podfile исправлен,
-          # версия 3.24.0 должна пройти без ошибок.
           flutter pub get
+          # Собираем на стабильном станке 3.24.0
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
 
       - name: Upload IPA Artifact
