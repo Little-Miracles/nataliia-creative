@@ -15,7 +15,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Мы НЕ пишем версию здесь, пусть Котик берет ту, что ему удобнее
+          # ЗДЕСЬ ПУСТО. Ноутбук ничего не качает.
 
       - name: Setup Certificates
         run: |
@@ -29,5 +29,5 @@ jobs:
 
       - name: Build IPA
         run: |
-          # Главное исправление здесь - убираем баг одной командой
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-native-assets
+          # Пытаемся собрать самым простым способом
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
