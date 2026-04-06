@@ -22,11 +22,15 @@ jobs:
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
+          # Импортируем сертификат Nataliia Kuzmenko
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          
+          # Проверка: видит ли сервер ваш сертификат?
+          security find-identity -v -p codesigning build.keychain
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -34,17 +38,21 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Build iOS Frameworks
+      - name: Patch Project for Nataliia
         run: |
           flutter pub get
-          # Собираем только код, без попытки подписать на этом этапе
-          flutter build ios --release --no-codesign
+          PBX="ios/Runner.xcodeproj/project.pbxproj"
+          
+          # Убираем автоматику и прописываем команду
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
+          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
+          
+          # Указываем профиль
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
 
-      - name: Archive and Export (Manual Control)
-        env:
-          KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: Build IPA
         run: |
-          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -64,24 +72,9 @@ jobs:
           </dict>
           </plist>
           EOF
-
-          # Прямая команда Xcode для создания архива (минуя капризы Flutter)
-          # Мы ВРУЧНУЮ говорим использовать Apple Distribution и наш профиль
-          xcodebuild archive \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/ios/Runner.xcarchive \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="SMART_DISTRIBUTION" \
-            OTHER_CODE_SIGN_FLAGS="--keychain $(pwd)/build.keychain"
-
-          # Экспорт архива в готовый IPA файл
-          xcodebuild -exportArchive \
-            -archivePath build/ios/Runner.xcarchive \
-            -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/ExportOptions.plist
+          
+          # Собираем, позволяя Xcode самому выбрать лучший сертификат из установленных
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
