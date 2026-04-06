@@ -34,26 +34,17 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Forced Project Clean and Manual Sign
+      - name: Build iOS Frameworks
         run: |
           flutter pub get
-          PBX="ios/Runner.xcodeproj/project.pbxproj"
-          
-          # 1. Полностью удаляем строки с "Automatic" стилем
-          sed -i '' '/CODE_SIGN_STYLE = Automatic;/d' "$PBX"
-          
-          # 2. Устанавливаем Manual стиль для всех конфигураций
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
-          
-          # 3. Вставляем правильные данные подписи
-          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
-          
-          # 4. Исправляем настройки сертификата, если они остались старыми
-          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
-          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
+          # Собираем только код, без попытки подписать на этом этапе
+          flutter build ios --release --no-codesign
 
-      - name: Build IPA
+      - name: Archive and Export (Manual Control)
+        env:
+          KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
+          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -73,12 +64,24 @@ jobs:
           </dict>
           </plist>
           EOF
-          
-          # Собираем IPA, заставляя Xcode использовать наши настройки через флаги
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --build-name=2.0.0 \
-            --build-number=1
+
+          # Прямая команда Xcode для создания архива (минуя капризы Flutter)
+          # Мы ВРУЧНУЮ говорим использовать Apple Distribution и наш профиль
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/Runner.xcarchive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="SMART_DISTRIBUTION" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $(pwd)/build.keychain"
+
+          # Экспорт архива в готовый IPA файл
+          xcodebuild -exportArchive \
+            -archivePath build/ios/Runner.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
