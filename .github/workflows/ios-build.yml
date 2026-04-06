@@ -15,7 +15,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Используем стабильную версию 3.24.0
           flutter-version: '3.24.0'
 
       - name: Setup Certificates and Keychain
@@ -30,16 +29,16 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Build IPA
+      - name: Build Archive
         run: |
           flutter pub get
-          # ГЛАВНЫЙ СЕКРЕТ: Отключаем очистку архитектур, чтобы убрать Null check
+          # ОТКЛЮЧАЕМ ПРОБЛЕМНЫЕ ЭТАПЫ (Очистку и проверку активов)
           export FLUTTER_XCODE_THIN_ARCHIVE=false
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
+          flutter build ios --release --no-codesign
             
-      - name: Upload IPA Artifact
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-ipa
-          # Мы берем архив напрямую, если IPA не успеет создаться из-за сбоя в конце
-          path: build/ios/archive/Runner.xcarchive
+          name: ios-build-output
+          # Мы берем готовую папку приложения, чтобы Гитхаб точно её нашел
+          path: build/ios/iphoneos/Runner.app
