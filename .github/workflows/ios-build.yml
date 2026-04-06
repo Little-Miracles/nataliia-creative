@@ -1,11 +1,11 @@
-name: iOS Build Audit
+name: iOS Build and Publish
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -15,16 +15,28 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+          # РЕВИЗИЯ ПОКАЗАЛА: 3.27.0 - идеальный станок для ваших деталей
+          flutter-version: '3.27.0'
 
-      - name: Run Version Audit
+      - name: Setup Certificates and Keychain
         run: |
-          echo "CHECKING INSTALLED EQUIPMENT..."
-          flutter --version
-          
-          echo "CHECKING PROJECT REQUIREMENTS..."
-          # Эта команда заставит Котика сравнить ваш проект со своим складом
-          flutter pub outdated
-          
-          echo "TESTING COMPATIBILITY..."
-          # А эта команда покажет, могут ли все детали работать вместе
-          flutter pub get
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
+          security create-keychain -p "build" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "build" build.keychain
+          security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build IPA
+        run: |
+          # Собираем без всяких лишних флагов, просто и чисто
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-ipa
+          path: build/ios/ipa/*.ipa
