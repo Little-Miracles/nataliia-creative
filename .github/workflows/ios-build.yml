@@ -22,7 +22,6 @@ jobs:
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          # Импортируем именно тот сертификат, который мы видели на фото
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
@@ -35,20 +34,26 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Force Apple Distribution Identity
+      - name: Kill the Ghost of iOS Distribution
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Убираем всё лишнее и ставим Manual
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
+          # 1. Удаляем стиль Automatic
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
           
-          # ВНИМАНИЕ: Прописываем точное имя из вашей Связки ключей
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBX"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBX"
+          # 2. ЗАМЕНЯЕМ "iOS Distribution" на "Apple Distribution" ВЕЗДЕ
+          sed -i '' 's/iOS Distribution/Apple Distribution/g' "$PBX"
+          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
+          
+          # 3. Жестко фиксируем команду и профиль
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
+          
+          # 4. Чистим кэш сборки, чтобы старые ошибки не прилипали
+          flutter clean
+          flutter pub get
 
       - name: Build IPA
         run: |
@@ -72,7 +77,7 @@ jobs:
           </plist>
           EOF
           
-          # Собираем, требуя использовать именно Apple Distribution
+          # Собираем, явно запрещая использовать старые названия
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
