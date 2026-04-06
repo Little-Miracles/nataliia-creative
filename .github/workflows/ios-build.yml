@@ -15,7 +15,6 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Держим стабильную версию
           flutter-version: '3.24.0'
 
       - name: Setup Certificates and Keychain
@@ -32,10 +31,9 @@ jobs:
 
       - name: Build IPA
         run: |
-          # Теперь все детали подходят к станку
           flutter pub get
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
-
+            
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
