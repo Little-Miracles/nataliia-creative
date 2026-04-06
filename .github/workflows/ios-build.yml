@@ -17,17 +17,14 @@ jobs:
           PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Создаем временную связку ключей (keychain)
           security create-keychain -p "$KEY_PASS" build.keychain
           security set-keychain-settings -lut 21600 build.keychain
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
-          # Декодируем сертификат и импортируем его в связку
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
-          # Устанавливаем профиль в системную папку Apple
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
 
@@ -37,21 +34,17 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Prepare Project Settings
+      - name: Build iOS Frameworks
         run: |
           flutter pub get
-          PBX="ios/Runner.xcodeproj/project.pbxproj"
-          
-          # Принудительно выключаем автоматическую подпись в файле проекта
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
-          
-          # Жестко прописываем наш сертификат и имя профиля в настройки Xcode
-          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
+          # Собираем только код, без попытки подписать на этом этапе
+          flutter build ios --release --no-codesign
 
-      - name: Build IPA
+      - name: Archive and Export (Manual Control)
+        env:
+          KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Создаем ExportOptions.plist — это паспорт нашей сборки
+          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -71,9 +64,26 @@ jobs:
           </dict>
           </plist>
           EOF
-          
-          # Запускаем сборку IPA (теперь без лишних команд, только база)
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+          # Прямая команда Xcode для создания архива (минуя капризы Flutter)
+          # Мы ВРУЧНУЮ говорим использовать Apple Distribution и наш профиль
+          xcodebuild archive \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/ios/Runner.xcarchive \
+            -allowProvisioningUpdates \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="SMART_DISTRIBUTION" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $(pwd)/build.keychain"
+
+          # Экспорт архива в готовый IPA файл
+          xcodebuild -exportArchive \
+            -archivePath build/ios/Runner.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -allowProvisioningUpdates
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
