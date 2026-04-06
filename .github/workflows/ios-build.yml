@@ -1,14 +1,20 @@
-name: iOS-Diagnostic
+name: iOS-Final-Build
 
 on:
   workflow_dispatch:
 
 jobs:
-  inspect-and-build:
+  build:
     runs-on: macos-15
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: f-setup
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.29.0'
 
       - name: certs
         env:
@@ -25,25 +31,16 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
 
-      - name: diagnostic
-        continue-on-error: true
-        run: |
-          security find-identity -v -p codesigning build.keychain
-          cd ~/Library/MobileDevice/Provisioning\ Profiles
-          security cms -D -i SMART_DISTRIBUTION.mobileprovision | grep -A 1 "Name" || echo "none"
-          security cms -D -i SMART_DISTRIBUTION.mobileprovision | grep -A 1 "TeamIdentifier" || echo "none"
-
       - name: config
         run: |
+          flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
 
       - name: build
-        continue-on-error: true
         run: |
-          flutter pub get
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -64,3 +61,9 @@ jobs:
           </plist>
           EOF
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+
+      - name: artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: build/ios/ipa/*.ipa
