@@ -1,25 +1,29 @@
-name: GitHub Secrets Audit
-on: [push, workflow_dispatch]
+name: iOS Build and Publish
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
-  check-secrets:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Internal Audit of Secrets
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Setup Certificates
         run: |
-          echo "=== STEP 1: CHECKING BUNDLE ID IN CODE ==="
-          grep -r "PRODUCT_BUNDLE_IDENTIFIER" . || echo "Not found in root"
-          
-          echo "=== STEP 2: CHECKING SECRET PRESENCE ==="
-          if [ -z "${{ secrets.P12_BASE64 }}" ]; then echo "❌ P12_BASE64 is EMPTY"; else echo "✅ P12_BASE64 is PRESENT"; fi
-          if [ -z "${{ secrets.P12_PASSWORD }}" ]; then echo "❌ P12_PASSWORD is EMPTY"; else echo "✅ P12_PASSWORD is PRESENT"; fi
-          if [ -z "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" ]; then echo "❌ PROFILE is EMPTY"; else echo "✅ PROFILE is PRESENT"; fi
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
+          security create-keychain -p "" build.keychain
+          security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-          echo "=== STEP 3: TRYING TO DECODE P12 (PASSPORT) ==="
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > test_cert.p12 && echo "✅ P12 Decoded Successfully" || echo "❌ ERROR: Cannot decode P12_BASE64"
-
-          echo "=== STEP 4: TRYING TO DECODE PROFILE (VISA) ==="
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > test.mobileprovision && echo "✅ Profile Decoded Successfully" || echo "❌ ERROR: Cannot decode PROFILE"
+      - name: Build IPA
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
