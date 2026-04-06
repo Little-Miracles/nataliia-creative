@@ -1,16 +1,16 @@
-name: iOS App Store Absolute Victory FINAL
+name: iOS-Diagnostic
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  inspect-and-build:
     runs-on: macos-15
     steps:
-      - name: Checkout repository
+      - name: checkout
         uses: actions/checkout@v4
 
-      - name: Install Certificates and Profiles
+      - name: certs
         env:
           P12_DIST: ${{ secrets.P12_BASE64 }}
           P12_PASS: ${{ secrets.P12_PASSWORD }}
@@ -18,37 +18,32 @@ jobs:
           KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           security create-keychain -p "$KEY_PASS" build.keychain
-          security set-keychain-settings -lut 21600 build.keychain
           security unlock-keychain -p "$KEY_PASS" build.keychain
-          
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
-          
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          
-          echo "--- РЕНТГЕН ЯЩИЧКА (ПРОВЕРКА КЛЮЧА) ---"
-          security find-identity -v -p codesigning build.keychain
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: '3.29.0'
-
-      - name: Prepare Drawer
+      - name: diagnostic
+        continue-on-error: true
         run: |
-          flutter pub get
+          security find-identity -v -p codesigning build.keychain
+          cd ~/Library/MobileDevice/Provisioning\ Profiles
+          security cms -D -i SMART_DISTRIBUTION.mobileprovision | grep -A 1 "Name" || echo "none"
+          security cms -D -i SMART_DISTRIBUTION.mobileprovision | grep -A 1 "TeamIdentifier" || echo "none"
+
+      - name: config
+        run: |
           PBX="ios/Runner.xcodeproj/project.pbxproj"
-          # Убираем автоматику, оставляем ящичек "iOS Distribution" ручным
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
 
-      - name: Build IPA
+      - name: build
+        continue-on-error: true
         run: |
+          flutter pub get
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -68,5 +63,4 @@ jobs:
           </dict>
           </plist>
           EOF
-          
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
