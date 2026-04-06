@@ -15,7 +15,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Используем стабильную версию, теперь она примет звук 6.1.0
+          # Держим стабильную версию
           flutter-version: '3.24.0'
 
       - name: Setup Certificates and Keychain
@@ -32,8 +32,8 @@ jobs:
 
       - name: Build IPA
         run: |
+          # Теперь все детали подходят к станку
           flutter pub get
-          # Собираем на стабильном станке 3.24.0
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
 
       - name: Upload IPA Artifact
