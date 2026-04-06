@@ -27,7 +27,7 @@ dependencies:
   tflite_flutter: ^0.12.1 # <--- МОЗГИ: Чтобы запускать TensorFlow Lite прямо на ноутбуке 🧠
   # ВИДЕО ПЛЕЕР 🎬 (Добавили для живого аватара)
   video_player: 2.4.5
-  audioplayers: ^6.6.0  # <--- Добавь вот это
+  audioplayers: ^6.1.0  # <--- Добавь вот это
   # ЗДОРОВЬЕ: Самые свежие версии для "Магнита" 💎
   health: 10.1.0
   permission_handler: ^12.0.1
