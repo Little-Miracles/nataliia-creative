@@ -15,8 +15,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Мы используем 3.41.6, но добавим "щит" от её багов
-          flutter-version: '3.41.6'
+          # Возвращаемся к стабильной 3.24.0 - она не требует лишних флагов
+          flutter-version: '3.24.0'
 
       - name: Setup Certificates and Keychain
         run: |
@@ -32,11 +32,11 @@ jobs:
 
       - name: Build IPA
         run: |
+          # Собираем классическим способом. Теперь, когда Podfile исправлен,
+          # версия 3.24.0 должна пройти без ошибок.
           flutter pub get
-          # ГЛАВНЫЙ СЕКРЕТ: Мы добавляем --no-native-assets ПРАВИЛЬНО.
-          # В этой версии Flutter команда должна звучать именно так:
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign --no-native-assets
-          
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
+
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
