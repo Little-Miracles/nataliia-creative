@@ -15,8 +15,8 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Мы заставляем Котика взять версию 3.24.0, чтобы не было ошибок
-          flutter-version: '3.24.0'
+          # Даем версию, которую просит audioplayers
+          flutter-version: '3.41.6'
 
       - name: Setup Certificates and Keychain
         run: |
@@ -32,8 +32,8 @@ jobs:
 
       - name: Build IPA
         run: |
-          # Теперь он соберет это без багов "Null check"
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # ВАЖНО: Добавляем флаг --no-native-assets, чтобы обойти баг новой версии
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-native-assets
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
