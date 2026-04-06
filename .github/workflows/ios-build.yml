@@ -1,4 +1,4 @@
-name: iOS Final Success Build
+name: iOS Surgery Build
 on:
   push:
     branches: [ main ]
@@ -17,6 +17,12 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
+      - name: Surgery on Flutter Tools
+        run: |
+          sed -i '' 's/final String? deviceId = buildSettings\["TARGET_DEVICE_IDENTIFIER"\];/final String? deviceId = "GenericDevice";/g' $FLUTTER_ROOT/packages/flutter_tools/lib/src/build_info.dart || true
+          sed -i '' 's/final String deviceId = buildSettings\["TARGET_DEVICE_IDENTIFIER"\]!;/final String deviceId = "GenericDevice";/g' $FLUTTER_ROOT/packages/flutter_tools/lib/src/build_info.dart || true
+          rm -f $FLUTTER_ROOT/bin/cache/flutter_tools.snapshot
+
       - name: Setup Certificates
         run: |
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
@@ -29,23 +35,18 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Build and Package
+      - name: Build Application
         run: |
           flutter pub get
-          # MAGIC LINE: This stops the "Null check operator" error
-          export FLUTTER_XCODE_THIN_ARCHIVE=false
-          # Build the archive and ignore the minor packaging error at the very end
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign || true
-          
-          # Force create IPA manually from the successful build
+          flutter build ios --release --no-codesign
+          cd build/ios/iphoneos
           mkdir -p Payload
-          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
-          cp -r "$APP_PATH" Payload/
-          zip -r SmartBodyLife_Signed.ipa Payload
-
-      - name: Upload Final Product
+          cp -r Runner.app Payload/
+          zip -r ../../../SmartBody_Surgical_Result.ipa Payload
+            
+      - name: Deliver Product
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-FINAL
-          path: SmartBodyLife_Signed.ipa
+          name: surgical-build-artifact
+          path: SmartBody_Surgical_Result.ipa
