@@ -22,14 +22,12 @@ jobs:
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
+          # Кладем сертификат в систему
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          
-          echo "--- ПРОВЕРКА УСТАНОВЛЕННЫХ СЕРТИФИКАТОВ ---"
-          security find-identity -v -p codesigning build.keychain
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -37,16 +35,21 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Prepare Project
+      - name: Configure Xcode Drawers
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Жесткая привязка к Apple Distribution (как на фото)
+          # 1. Оставляем ящичек называться "iOS Distribution" (или "iPhone Distribution")
+          # Но говорим, что мы заполняем его вручную (Manual)
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "[^"]*"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBX"
+          
+          # 2. Указываем ваш Team ID и Профиль (документы в ящике)
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
+          
+          # 3. Важный момент: Мы не переименовываем IDENTITY, 
+          # мы позволяем Xcode самому сопоставить "ящичек" с нашим сертификатом.
 
       - name: Build IPA
         run: |
@@ -70,12 +73,5 @@ jobs:
           </plist>
           EOF
           
-          # Собираем архив и сразу экспортируем его
+          # Запускаем сборку. Теперь "стакан" должен наполниться.
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-
-      - name: Upload Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: build/ios/ipa/*.ipa
