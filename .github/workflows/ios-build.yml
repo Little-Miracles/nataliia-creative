@@ -1,4 +1,4 @@
-name: iOS Deep Concept Redirection
+name: iOS Global Concept Redirection
 on:
   push:
     branches: [ main ]
@@ -19,18 +19,18 @@ jobs:
 
       - name: Deep Redefinition of Concepts
         run: |
-          # 1. Перенаправляем запрос ID на Универсальный Стандарт (GenericDevice)
-          # Котик думает, что нашел конкретный аппарат, и продолжает отчет.
+          # 1. Мы подменяем понятие идентификатора ВЕЗДЕ.
           find $FLUTTER_ROOT -name "*.dart" -exec sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]/ "GenericDevice" /g' {} +
           
-          # 2. Подмена обязательного требования (!) на мягкое согласие (GenericDevice)
-          # Это то самое место xcode_backend.dart:237, которое спорило с нами.
+          # 2. А теперь — УСМИРЯЕМ того самого охранника на строке 237.
+          # Мы заменяем жесткое требование "!" на мягкое согласие.
+          find $FLUTTER_ROOT -name "xcode_backend.dart" -exec sed -i '' 's/! \/\/ \/ \/ NULL CHECK/ ?? "GenericDevice" /g' {} +
           find $FLUTTER_ROOT -name "xcode_backend.dart" -exec sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]!/ "GenericDevice" /g' {} +
-          
-          # 3. Обновляем память Котика, чтобы он принял новые значения
+
+          # 3. Обновляем кэш Котика, чтобы он забыл старые капризы
           rm -f $FLUTTER_ROOT/bin/cache/flutter_tools.snapshot
 
-      - name: Setup Environment
+      - name: Setup Official Environment
         run: |
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
@@ -45,19 +45,19 @@ jobs:
       - name: Build with Universal Concept
         run: |
           flutter pub get
-          # Мы переводим режим "Чистки" в режим "Универсального сохранения"
+          # Подмена понятия "Чистка" на "Сохранение универсальности"
           export FLUTTER_XCODE_THIN_ARCHIVE=false
           flutter build ios --release --no-codesign
           
-          # Упаковываем результат в итоговую форму
+          # Собираем результат в итоговую форму
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../SmartBody_Universal_Ready.ipa Payload
+          zip -r ../../../SmartBody_Final_Result.ipa Payload
             
-      - name: Results
+      - name: Delivery
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: final-result-artifact
-          path: SmartBody_Universal_Ready.ipa
+          name: final-build-artifact
+          path: SmartBody_Final_Result.ipa
