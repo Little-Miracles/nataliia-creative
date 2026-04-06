@@ -34,21 +34,26 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Prepare Project Settings
+      - name: Surgery on Project File
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Выключаем автоматику
+          # 1. Вырезаем ВСЕ упоминания Automatic подписи, даже в тестах
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           
-          # Прописываем сертификат и профиль прямо в файл проекта
-          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
+          # 2. Убираем пустые команды Team ID, которые мешают серверу
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' "$PBX"
+          
+          # 3. Уточняем имя сертификата (Apple Distribution — это стандарт для Manual)
+          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
+          
+          # 4. Проверяем, что профиль SMART_DISTRIBUTION прописан в коде
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = SMART_DISTRIBUTION;/g' "$PBX"
 
       - name: Build IPA
         run: |
-          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,7 +74,7 @@ jobs:
           </plist>
           EOF
           
-          # Собираем IPA целиком одним махом
+          # Запускаем сборку. Мы добавили флаг --no-codesign в архив, чтобы xcodebuild потом сам всё сделал
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
