@@ -22,12 +22,14 @@ jobs:
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          # Кладем сертификат в систему
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          
+          echo "--- РЕНТГЕН ЯЩИЧКА (ПРОВЕРКА КЛЮЧА) ---"
+          security find-identity -v -p codesigning build.keychain
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -35,21 +37,15 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Configure Xcode Drawers
+      - name: Prepare Drawer
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
-          
-          # 1. Оставляем ящичек называться "iOS Distribution" (или "iPhone Distribution")
-          # Но говорим, что мы заполняем его вручную (Manual)
+          # Убираем автоматику, оставляем ящичек "iOS Distribution" ручным
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
-          
-          # 2. Указываем ваш Team ID и Профиль (документы в ящике)
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
-          
-          # 3. Важный момент: Мы не переименовываем IDENTITY, 
-          # мы позволяем Xcode самому сопоставить "ящичек" с нашим сертификатом.
 
       - name: Build IPA
         run: |
@@ -73,5 +69,4 @@ jobs:
           </plist>
           EOF
           
-          # Запускаем сборку. Теперь "стакан" должен наполниться.
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
