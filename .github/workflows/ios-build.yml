@@ -32,7 +32,7 @@ jobs:
       - name: Build IPA
         run: |
           flutter pub get
-          # СЕКРЕТНАЯ КОМАНДА: Мы отключаем "Thinning", чтобы убрать последнюю ошибку Null check
+          # ДОБАВЛЯЕМ "ЩИТ" ПРОТИВ ОШИБКИ NULL CHECK:
           export FLUTTER_XCODE_THIN_ARCHIVE=false
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-codesign
             
