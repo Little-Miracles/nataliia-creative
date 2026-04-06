@@ -34,21 +34,21 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Prepare Project Settings
+      - name: Hard Manual Config
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Выключаем автоматическую подпись везде
+          # Заменяем Automatic на Manual везде, где только можно
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
           sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           
-          # Прописываем сертификат и профиль прямо в файл проекта
+          # Явно прописываем команду и профиль
           sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
 
       - name: Build IPA
         run: |
-          # Создаем ExportOptions.plist
+          # Создаем файл настроек экспорта
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,9 +69,8 @@ jobs:
           </plist>
           EOF
           
-          # Собираем IPA стандартным способом, но передаем настройки через аргументы Xcode
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist \
-            --code-sign-distribution="Apple Distribution"
+          # Самая простая команда сборки без спорных флагов
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
