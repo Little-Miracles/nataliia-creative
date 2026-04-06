@@ -209,7 +209,7 @@ Widget _buildArtifactCard(double unit, Artifact art, bool isUnlocked, int score,
                                 // Используем твой любимый цвет состаренного золота. 
 // Opacity 0.95 оставит легкую загадочность, но не даст фону исказить цвет.
 
-  color: const Color(0xFFB8860B).withValues(alpha: 0.7),
+  color: const Color(0xFFB8860B).withOpacity(0.7),
 
 
                                 borderRadius: const BorderRadius.only(
