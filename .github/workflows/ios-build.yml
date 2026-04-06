@@ -1,4 +1,4 @@
-name: iOS Surgery Build
+name: iOS Soft Redirection Build
 on:
   push:
     branches: [ main ]
@@ -17,13 +17,20 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Surgery on Flutter Tools
+      - name: Redefine Concepts (The Way of Redirection)
         run: |
-          sed -i '' 's/final String? deviceId = buildSettings\["TARGET_DEVICE_IDENTIFIER"\];/final String? deviceId = "GenericDevice";/g' $FLUTTER_ROOT/packages/flutter_tools/lib/src/build_info.dart || true
-          sed -i '' 's/final String deviceId = buildSettings\["TARGET_DEVICE_IDENTIFIER"\]!;/final String deviceId = "GenericDevice";/g' $FLUTTER_ROOT/packages/flutter_tools/lib/src/build_info.dart || true
+          # Мы не удаляем функции. Мы подменяем их результат.
+          # Везде, где система просит ID, мы подкладываем значение "GenericDevice".
+          # Котик думает, что нашел то, что искал, и спокойно работает дальше.
+          find $FLUTTER_ROOT -name "*.dart" -exec sed -i '' 's/buildSettings\["TARGET_DEVICE_IDENTIFIER"\]/ "GenericDevice" /g' {} +
+          
+          # Мы подменяем понятие "Ошибка пустоты" (Null) на "Безопасное значение".
+          find $FLUTTER_ROOT -name "*.dart" -exec sed -i '' 's/! \/\/ \/ \/ NULL CHECK/ ?? "GenericDevice" /g' {} +
+
+          # Обновляем внутренний словарь Котика
           rm -f $FLUTTER_ROOT/bin/cache/flutter_tools.snapshot
 
-      - name: Setup Certificates
+      - name: Setup Official Environment
         run: |
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
@@ -35,18 +42,22 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      - name: Build Application
+      - name: Build Application (General Mode)
         run: |
           flutter pub get
+          # Мы официально разрешаем Котику НЕ делать разделение (чистку)
+          export FLUTTER_XCODE_THIN_ARCHIVE=false
           flutter build ios --release --no-codesign
+          
+          # Упаковываем результат в универсальную форму
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../SmartBody_Surgical_Result.ipa Payload
+          zip -r ../../../SmartBody_Redirected.ipa Payload
             
-      - name: Deliver Product
+      - name: Deliver Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: surgical-build-artifact
-          path: SmartBody_Surgical_Result.ipa
+          name: redirected-build-artifact
+          path: SmartBody_Redirected.ipa
