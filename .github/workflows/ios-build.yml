@@ -1,11 +1,11 @@
-name: iOS Build and Publish
+name: iOS Build Audit
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -15,28 +15,16 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # Даем версию, которую просит audioplayers
-          flutter-version: '3.41.6'
 
-      - name: Setup Certificates and Keychain
+      - name: Run Version Audit
         run: |
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
-          security create-keychain -p "build" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "build" build.keychain
-          security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Build IPA
-        run: |
-          # ВАЖНО: Добавляем флаг --no-native-assets, чтобы обойти баг новой версии
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --no-native-assets
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-ipa
-          path: build/ios/ipa/*.ipa
+          echo "CHECKING INSTALLED EQUIPMENT..."
+          flutter --version
+          
+          echo "CHECKING PROJECT REQUIREMENTS..."
+          # Эта команда заставит Котика сравнить ваш проект со своим складом
+          flutter pub outdated
+          
+          echo "TESTING COMPATIBILITY..."
+          # А эта команда покажет, могут ли все детали работать вместе
+          flutter pub get
