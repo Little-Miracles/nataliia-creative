@@ -31,17 +31,17 @@ jobs:
 
       - name: Diagnostic Audit
         run: |
-          echo "--- ПРОВЕРКА СЕРТИФИКАТОВ ---"
+          echo "--- CHECKING IDENTITIES ---"
           security find-identity -v -p codesigning build.keychain
-          echo "--- ПРОВЕРКА ПРОФИЛЯ ---"
+          echo "--- CHECKING PROFILES ---"
           ls ~/Library/MobileDevice/Provisioning\ Profiles/
-          echo "--- ПРОВЕРКА КОНФИГУРАЦИИ ---"
+          echo "--- FLUTTER DOCTOR ---"
           flutter doctor -v
 
       - name: Build IPA
         run: |
           flutter pub get
-          # Пробуем собрать IPA официально. Если упадет - лог покажет точную причину.
+          # Собираем проект. Если есть сертификаты, он их подцепит сам.
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
             
       - name: Upload Logs and IPA
