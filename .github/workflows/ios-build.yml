@@ -34,21 +34,21 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Forced Project Repair
+      - name: Match Project with Keychain Photo
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Убираем автоматику
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
-          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
+          # Заменяем ВСЕ виды имен на "Apple Distribution" (как на вашем фото)
+          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
+          sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
+          sed -i '' 's/iOS Distribution/Apple Distribution/g' "$PBX"
           
-          # Прописываем ТЕ ИМЕНА, которые просит сервер в логе (iOS Distribution)
-          # Это заставит его увидеть наш сертификат под тем именем, которое он хочет
-          sed -i '' 's/CODE_SIGN_IDENTITY = "Apple Distribution"/CODE_SIGN_IDENTITY = "iOS Distribution"/g' "$PBX"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "iOS Distribution"/g' "$PBX"
-          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "iOS Distribution"/g' "$PBX"
+          # Принудительно отключаем автоматику
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' "$PBX"
           
+          # Указываем Team и Профиль
           sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
 
