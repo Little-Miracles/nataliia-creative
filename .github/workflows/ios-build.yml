@@ -1,69 +1,25 @@
-name: iOS-Final-Build
-
-on:
-  workflow_dispatch:
+name: GitHub Secrets Audit
+on: [push, workflow_dispatch]
 
 jobs:
-  build:
-    runs-on: macos-15
+  check-secrets:
+    runs-on: macos-latest
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: f-setup
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          flutter-version: '3.29.0'
-
-      - name: certs
-        env:
-          P12_DIST: ${{ secrets.P12_BASE64 }}
-          P12_PASS: ${{ secrets.P12_PASSWORD }}
-          PROV_DIST: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
-          KEY_PASS: ${{ secrets.KEYCHAIN_PASSWORD }}
+      - name: Internal Audit of Secrets
         run: |
-          security create-keychain -p "$KEY_PASS" build.keychain
-          security unlock-keychain -p "$KEY_PASS" build.keychain
-          echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          echo "=== STEP 1: CHECKING BUNDLE ID IN CODE ==="
+          grep -r "PRODUCT_BUNDLE_IDENTIFIER" . || echo "Not found in root"
+          
+          echo "=== STEP 2: CHECKING SECRET PRESENCE ==="
+          if [ -z "${{ secrets.P12_BASE64 }}" ]; then echo "❌ P12_BASE64 is EMPTY"; else echo "✅ P12_BASE64 is PRESENT"; fi
+          if [ -z "${{ secrets.P12_PASSWORD }}" ]; then echo "❌ P12_PASSWORD is EMPTY"; else echo "✅ P12_PASSWORD is PRESENT"; fi
+          if [ -z "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" ]; then echo "❌ PROFILE is EMPTY"; else echo "✅ PROFILE is PRESENT"; fi
 
-      - name: config
-        run: |
-          flutter pub get
-          PBX="ios/Runner.xcodeproj/project.pbxproj"
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' "$PBX"
-          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
+          echo "=== STEP 3: TRYING TO DECODE P12 (PASSPORT) ==="
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > test_cert.p12 && echo "✅ P12 Decoded Successfully" || echo "❌ ERROR: Cannot decode P12_BASE64"
 
-      - name: build
-        run: |
-          cat <<EOF > ios/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>PCSW3AKAPF</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>SMART_DISTRIBUTION</string>
-            </dict>
-          </dict>
-          </plist>
-          EOF
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
-
-      - name: artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: build/ios/ipa/*.ipa
+          echo "=== STEP 4: TRYING TO DECODE PROFILE (VISA) ==="
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > test.mobileprovision && echo "✅ Profile Decoded Successfully" || echo "❌ ERROR: Cannot decode PROFILE"
