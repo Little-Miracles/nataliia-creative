@@ -34,23 +34,23 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Surgery on Project File
+      - name: Forced Project Clean and Manual Sign
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # 1. Вырезаем ВСЕ упоминания Automatic подписи, даже в тестах
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
+          # 1. Полностью удаляем строки с "Automatic" стилем
+          sed -i '' '/CODE_SIGN_STYLE = Automatic;/d' "$PBX"
           
-          # 2. Убираем пустые команды Team ID, которые мешают серверу
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' "$PBX"
+          # 2. Устанавливаем Manual стиль для всех конфигураций
+          sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
           
-          # 3. Уточняем имя сертификата (Apple Distribution — это стандарт для Manual)
-          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
+          # 3. Вставляем правильные данные подписи
+          sed -i '' 's/DEVELOPMENT_TEAM = PCSW3AKAPF;/DEVELOPMENT_TEAM = PCSW3AKAPF; CODE_SIGN_IDENTITY = "Apple Distribution"; PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' "$PBX"
+          
+          # 4. Исправляем настройки сертификата, если они остались старыми
           sed -i '' 's/iPhone Developer/Apple Distribution/g' "$PBX"
-          
-          # 4. Проверяем, что профиль SMART_DISTRIBUTION прописан в коде
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = SMART_DISTRIBUTION;/g' "$PBX"
+          sed -i '' 's/iPhone Distribution/Apple Distribution/g' "$PBX"
 
       - name: Build IPA
         run: |
@@ -74,8 +74,11 @@ jobs:
           </plist>
           EOF
           
-          # Запускаем сборку. Мы добавили флаг --no-codesign в архив, чтобы xcodebuild потом сам всё сделал
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем IPA, заставляя Xcode использовать наши настройки через флаги
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --build-name=2.0.0 \
+            --build-number=1
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
