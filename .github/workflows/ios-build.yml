@@ -15,19 +15,28 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-          # ЗДЕСЬ ПУСТО. Ноутбук ничего не качает.
+          flutter-version: '3.19.0'
 
-      - name: Setup Certificates
+      - name: Setup Certificates and Keychain
         run: |
+          # 1. Декодируем сертификат и профиль
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
-          security create-keychain -p "" build.keychain
+          
+          # 2. Создаем временную связку ключей (Keychain)
+          security create-keychain -p "build" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "build" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+          
+          # 3. Импортируем сертификат и разрешаем доступ (КРИТИЧЕСКИЙ ШАГ)
           security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" build.keychain
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
+          
+          # 4. Устанавливаем профиль в систему
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Build IPA
         run: |
-          # Пытаемся собрать самым простым способом
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
