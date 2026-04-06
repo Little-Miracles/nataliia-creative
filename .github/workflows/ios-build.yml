@@ -22,15 +22,12 @@ jobs:
           security unlock-keychain -p "$KEY_PASS" build.keychain
           
           echo -n "$P12_DIST" | base64 --decode -o dist.p12
-          # Импортируем сертификат Nataliia Kuzmenko
+          # Импортируем именно тот сертификат, который мы видели на фото
           security import dist.p12 -P "$P12_PASS" -A -t cert -f pkcs12 -k build.keychain
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PASS" build.keychain
           
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "$PROV_DIST" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          
-          # Проверка: видит ли сервер ваш сертификат?
-          security find-identity -v -p codesigning build.keychain
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -38,17 +35,19 @@ jobs:
           channel: 'stable'
           flutter-version: '3.29.0'
 
-      - name: Patch Project for Nataliia
+      - name: Force Apple Distribution Identity
         run: |
           flutter pub get
           PBX="ios/Runner.xcodeproj/project.pbxproj"
           
-          # Убираем автоматику и прописываем команду
+          # Убираем всё лишнее и ставим Manual
           sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBX"
           sed -i '' 's/ProvisioningStyle = Automatic/ProvisioningStyle = Manual/g' "$PBX"
-          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           
-          # Указываем профиль
+          # ВНИМАНИЕ: Прописываем точное имя из вашей Связки ключей
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Developer"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBX"
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' "$PBX"
+          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*/DEVELOPMENT_TEAM = PCSW3AKAPF/g' "$PBX"
           sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION"/g' "$PBX"
 
       - name: Build IPA
@@ -73,7 +72,7 @@ jobs:
           </plist>
           EOF
           
-          # Собираем, позволяя Xcode самому выбрать лучший сертификат из установленных
+          # Собираем, требуя использовать именно Apple Distribution
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
       - name: Upload Artifact
