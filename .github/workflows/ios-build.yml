@@ -1,4 +1,4 @@
-name: M-MAGIC-V2
+name: O-JUST-BUILD-SUCCESS
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,34 +16,23 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. The Great Cleanup (Universal Mode)
+      - name: 3. Create instruction (One step)
         run: |
           flutter pub get
-          
-          # Заставляем систему игнорировать ошибки кодировки (illegal byte sequence)
-          export LC_ALL=C
-          
-          # Меняем все тексты (natalia, example -> nataliia)
-          find . -type f -not -path '*/.*' -exec sed -i '' 's/com.example/com.nataliia/g' {} +
-          find . -type f -not -path '*/.*' -exec sed -i '' 's/com.natalia/com.nataliia/g' {} +
-          find . -type f -not -path '*/.*' -exec sed -i '' 's/smart_body_life/smartbodylife/g' {} +
-
-          # Официально обновляем проект под одним именем
-          flutter create . --platforms ios --org com.nataliia
-          
-          # Создаем инструкцию для iOS
+          # Просто создаем файл Generated.xcconfig, который нужен Xcode
           flutter build ios --config-only --release
 
-       Maryland - name: 4. Build Mobile App
+      - name: 4. Build IPA
         run: |
+          # Прямая сборка твоего уже исправленного вручную кода
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Artifact
+      - name: 5. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_M
+          name: SmartBody_Final_O
           path: build/ios/archive/Runner.xcarchive
