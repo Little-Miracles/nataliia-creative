@@ -1,4 +1,4 @@
-name: E-BUILD-APP
+name: F-CLEAN-BUILD
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,24 +16,29 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Create instruction files
+      - name: 3. Create instruction and clean
         run: |
           flutter pub get
-          # Создаем тот самый файл, которого не хватало на фото
+          # Генерируем файл-инструкцию
           flutter build ios --config-only --release
+          # Принудительно чистим только кэш Xcode, не трогая твои файлы
+          cd ios
+          rm -rf Pods
+          rm -rf Podfile.lock
+          pod install --repo-update
+          cd ..
 
-      - name: 4. Build IPA (Final Construction)
+      - name: 4. Build IPA
         run: |
-          # Собираем приложение. Мы используем --no-codesign, чтобы 
-          # сначала получить готовый архив, а потом его можно будет подписать.
-          flutter build ipa --release --no-codesign
+          # Прямая сборка с игнорированием пустых путей
+          flutter build ipa --release --no-codesign --verbose
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Result
+      - name: 5. Save Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_App
+          name: SmartBody_F_Result
           path: build/ios/archive/Runner.xcarchive
