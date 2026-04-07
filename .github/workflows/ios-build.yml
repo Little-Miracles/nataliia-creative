@@ -1,4 +1,4 @@
-name: Z-IPA-SUCCESS
+name: Z-FINAL-ARCHIVE
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,32 +16,33 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. The Miracle Fix
+      - name: 3. The Miracle Fix (Proven)
         run: |
           flutter pub get
-          # Сносим старое, создаем новое — этот метод сработал!
+          # Очищаем старые капризные файлы проекта
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
+          
+          # Получаем имя из твоего pubspec.yaml
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
+          
+          # Создаем идеально чистый проект под Apple
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # Убираем занозу 237 из нового файла
+          # Вырезаем занозу 237, чтобы она не мешала архивации
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Настраиваем конфигурацию
-          flutter build ios --config-only --release
 
-      - name: 4. Build IPA Archive
+      - name: 4. Build Archive (The Target)
         run: |
-          # Теперь собираем именно архив без подписи (IPA)
+          # Собираем IPA именно как архив, не отвлекаясь на поиск сертификатов
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Artifact
+      - name: 5. Save Your App
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_IPA_Final
+          name: SmartBody_Final_Result
           path: build/ios/archive/Runner.xcarchive
