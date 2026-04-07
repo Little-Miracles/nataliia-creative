@@ -1,4 +1,4 @@
-name: V-STRICT-NAME-SUCCESS
+name: W-SAFE-UPDATE-SUCCESS
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,16 +16,24 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Smart Setup
+      - name: 3. Smart Project Refresh
         run: |
           flutter pub get
+          # 1. Обновляем проект официально (это уберет ошибку Incompatible)
+          # Используем имя из твоего pubspec.yaml
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
+          
+          # 2. СРАЗУ ПРОВЕРЯЕМ: если команда выше вернула "занозу" 237, удаляем её снова
+          # Это гарантирует, что мы не наступим на старые грабли
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # 3. Подготавливаем конфиги
           flutter build ios --config-only --release
 
       - name: 4. Build IPA
         run: |
+          # Теперь проект новый, совместимый и без занозы
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
@@ -35,5 +43,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_V
+          name: SmartBody_Final_W
           path: build/ios/archive/Runner.xcarchive
