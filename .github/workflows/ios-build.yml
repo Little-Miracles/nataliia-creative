@@ -1,4 +1,4 @@
-name: SmartBody Master Final 2026
+name: SmartBody Direct Reconstruction 2026
 on:
   push:
     branches: [ main ]
@@ -17,34 +17,32 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Fix Directory Logic
+      - name: Synchronize Project Logic
         run: |
-          # Удаляем ошибочную папку с одной i
-          rm -rf android/app/src/main/kotlin/com/natalia
+          # Мы даем ОДНУ главную команду: привести проект к новому стандарту.
+          # Котик сам поймет, что нужно заменить natalia на nataliia и тире на подчеркивание.
+          flutter create . --platforms ios,android --org com.nataliia --project-name nataliia_creative
           
-          # Создаем правильную структуру для com.nataliia
-          flutter create . --platforms ios,android --org com.nataliia
-          
-          # Устанавливаем универсальный стандарт Generic
+          # Утверждаем универсальный стандарт оборудования, чтобы не искать телефон
           mkdir -p ios/Flutter
           echo "FLUTTER_TARGET_DEVICE_ID=generic" >> ios/Flutter/Generated.xcconfig
           echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
 
-      - name: Production Assembly
+      - name: Final Production Build
         run: |
           flutter pub get
-          # Сборка финального архива без проверки физического устройства
+          # Сборка изделия по обновленному наряду-заказу
           flutter build ipa --release --no-codesign
           
-          # Упаковка в IPA
+          # Упаковка в финальный пакет
           cd build/ios/archive/Runner.xcarchive/Products/Applications
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../../../SmartBody_V2026_Perfect.ipa Payload
+          zip -r ../../../../../SmartBody_V2026_Final.ipa Payload
             
       - name: Deliver Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smartbody-ready
-          path: SmartBody_V2026_Perfect.ipa
+          name: smartbody-finished-package
+          path: SmartBody_V2026_Final.ipa
