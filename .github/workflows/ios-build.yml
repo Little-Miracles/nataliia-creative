@@ -1,4 +1,4 @@
-name: SmartBody Direct Reconstruction 2026
+name: SmartBody Final Locked Build
 on:
   push:
     branches: [ main ]
@@ -11,38 +11,38 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Modern Flutter
+      - name: Install Tools
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Synchronize Project Logic
+      - name: Official Project Setup
         run: |
-          # Мы даем ОДНУ главную команду: привести проект к новому стандарту.
-          # Котик сам поймет, что нужно заменить natalia на nataliia и тире на подчеркивание.
-          flutter create . --platforms ios,android --org com.nataliia --project-name nataliia_creative
-          
-          # Утверждаем универсальный стандарт оборудования, чтобы не искать телефон
-          mkdir -p ios/Flutter
-          echo "FLUTTER_TARGET_DEVICE_ID=generic" >> ios/Flutter/Generated.xcconfig
-          echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
-
-      - name: Final Production Build
-        run: |
+          flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
           flutter pub get
-          # Сборка изделия по обновленному наряду-заказу
+
+      - name: Hard-Lock Device Identity
+        run: |
+          mkdir -p ios/Flutter
+          echo "FLUTTER_TARGET_DEVICE_ID=generic" > ios/Flutter/Generated.xcconfig
+          echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
+          chmod 444 ios/Flutter/Generated.xcconfig
+
+      - name: Official Apple Assembly
+        run: |
           flutter build ipa --release --no-codesign
           
-          # Упаковка в финальный пакет
           cd build/ios/archive/Runner.xcarchive/Products/Applications
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../../../SmartBody_V2026_Final.ipa Payload
+          zip -r ../../../../../SmartBody_Life_V2026.ipa Payload
             
       - name: Deliver Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smartbody-finished-package
-          path: SmartBody_V2026_Final.ipa
+          name: smartbody-official-package
+          path: SmartBody_Life_V2026.ipa
+          
