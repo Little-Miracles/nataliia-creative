@@ -1,13 +1,16 @@
-name: SmartBody Life Final Release
+name: SmartBody iOS Build Stable
 
 on:
-  workflow_dispatch: # Запуск только по вашей кнопке
+  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Flutter
@@ -15,24 +18,22 @@ jobs:
         with:
           flutter-version: '3.24.0'
           channel: stable
+          cache: true
 
-      - name: Install Dependencies
+      - name: Install dependencies (SAFE MODE)
         run: |
-          # Просто получаем пакеты и ставим поды, ничего не ломая
           flutter pub get
           cd ios
           pod install
           cd ..
 
-      - name: Build IPA
+      - name: Build IPA (NO WEB, NO CLEAN DESTRUCTION)
         run: |
-          # Собираем один раз, чисто и без лишних команд
           flutter build ipa --release --no-codesign
 
-      - name: Upload Artifact
-        if: always()
+      - name: Upload Result
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Life_Result
-          # Собираем всё, что получилось в папке сборки
+          name: SmartBody_Life_Build
+          # Исправил тут: берем всю папку сборки, чтобы точно найти приложение
           path: build/ios/archive/Runner.xcarchive
