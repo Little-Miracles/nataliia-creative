@@ -1,34 +1,35 @@
-name: SmartBody-Project-Audit
+name: SmartBody-Final-Success
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Project File Audit
-        run: |
-          echo "=== CHECKING PROJECT FILES ==="
-          ls -R ios/*.xcodeproj
-          echo ""
-          echo "=== CHECKING BUNDLE ID AND TEAM ==="
-          grep -R "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 5
-          grep -R "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 5
+      - name: 2. Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
 
-      - name: 3. Secrets Format Audit
-        env:
-          CERT: ${{ secrets.IOS_CERTIFICATE }}
-          PROF: ${{ secrets.IOS_PROVISION_PROFILE }}
+      - name: 3. Force Generate Configs
         run: |
-          echo "=== CHECKING SECRETS STORAGE ==="
-          if [ -z "$CERT" ]; then echo "CERT: NOT FOUND IN GITHUB SECRETS"; else echo "CERT: EXISTS (${#CERT} chars)"; fi
-          if [ -z "$PROF" ]; then echo "PROF: NOT FOUND IN GITHUB SECRETS"; else echo "PROF: EXISTS (${#PROF} chars)"; fi
-          
-      - name: 4. Xcode Internal Paths
+          # Это создаст тот самый файл Generated.xcconfig, которого не хватает на фото
+          flutter pub get
+          flutter build ios --config-only --release
+
+      - name: 4. Build IPA (No-Sign Mode)
         run: |
-          echo "=== CHECKING FLUTTER CONFIGS ==="
-          if [ -f ios/Flutter/Generated.xcconfig ]; then echo "Generated.xcconfig: FOUND"; else echo "Generated.xcconfig: MISSING"; fi
+          # Теперь, когда конфиги на месте, собираем основной архив
+          flutter build ipa --release --no-codesign
+
+      - name: 5. Save Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBody_Final_IPA
+          path: build/ios/archive/Runner.xcarchive
