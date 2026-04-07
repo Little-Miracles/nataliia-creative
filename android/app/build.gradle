@@ -11,7 +11,7 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.natalia.smart_body_life"
+    namespace = "com.nataliia.smart_body_life"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
