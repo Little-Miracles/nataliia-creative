@@ -1,4 +1,4 @@
-name: Z-THE-GOLDEN-FILE
+name: OMEGA-SUCCESS-BUILD
 
 on:
   workflow_dispatch:
@@ -23,25 +23,28 @@ jobs:
           rm -rf ios/Runner.xcworkspace
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           
-          # Создаем проект
+          # Создаем чистый проект
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
           # Удаляем занозу 237
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # ВПИСЫВАЕМ ТВОЙ TEAM ID (PCSW3AKAPF)
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          flutter build ios --config-only --release
 
-      - name: 4. Build IPA with Your Secrets
+      - name: 4. Build Final IPA Archive
         run: |
-          # Мы используем твои секреты ПРЯМО ТУТ
-          # Флаг --no-codesign в команде Flutter не значит, что файла не будет, 
-          # это значит, что мы просим Гитхаб подготовить всё для ручной подписи твоими данными
+          # Теперь он видит, что это проект Натальи, и соберет архив
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Export Archive
+      - name: 5. Save Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_READY_TO_SIGN
+          name: SmartBody_Final_IPA
           path: build/ios/archive/Runner.xcarchive
