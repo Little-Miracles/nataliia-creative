@@ -1,9 +1,7 @@
-name: iOS Build SmartBody Life
+name: SmartBody Life Final Release
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: # Запуск только по вашей кнопке
 
 jobs:
   build:
@@ -17,32 +15,24 @@ jobs:
         with:
           flutter-version: '3.24.0'
           channel: stable
-          cache: true
 
-      - name: Fix Xcode Backend and Pods
+      - name: Install Dependencies
         run: |
-          # 1. Принудительная настройка проекта
-          flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
-          
-          # 2. Очистка старых "хвостов"
-          flutter clean
+          # Просто получаем пакеты и ставим поды, ничего не ломая
           flutter pub get
-          
-          # 3. Лекарство для строки 237: Прописываем пути для Xcode вручную
           cd ios
-          rm -rf Pods
-          rm -rf Podfile.lock
-          pod install --repo-update
+          pod install
           cd ..
 
-      - name: Build IPA (Final Force)
+      - name: Build IPA
         run: |
-          # Собираем архив, явно указывая Xcode, что мы главные
+          # Собираем один раз, чисто и без лишних команд
           flutter build ipa --release --no-codesign
-          
-      - name: Upload Result
+
+      - name: Upload Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Life_App
-          path: build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
+          name: SmartBody_Life_Result
+          # Собираем всё, что получилось в папке сборки
+          path: build/ios/archive/Runner.xcarchive
