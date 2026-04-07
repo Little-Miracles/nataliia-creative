@@ -1,4 +1,4 @@
-name: P-MAGIC-V2
+name: M-MAGIC-V2
 
 on:
   workflow_dispatch:
