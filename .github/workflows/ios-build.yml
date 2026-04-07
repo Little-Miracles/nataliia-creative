@@ -1,4 +1,4 @@
-name: X-FORCE-GENERATE-SUCCESS
+name: Y-THE-FINISH-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,34 +16,27 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Radical Repair
+      - name: 3. Radical Repair (Already proven!)
         run: |
           flutter pub get
-          # 1. Удаляем старый проект Xcode, который вызывает ошибку несовместимости
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
-          
-          # 2. Создаем его заново с твоим правильным именем и организацией
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
-          
-          # 3. Убираем "занозу" 237 из свежесозданного файла
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # 4. Финальная подготовка
           flutter build ios --config-only --release
 
-      - name: 4. Build IPA
+      - name: 4. Build Final Archive
         run: |
-          # Теперь проект гарантированно совместим
+          # Собираем IPA без подписи, как мы делали в успешных попытках
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Result
+      - name: 5. Save Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_X
+          name: SmartBody_Final_Y
           path: build/ios/archive/Runner.xcarchive
