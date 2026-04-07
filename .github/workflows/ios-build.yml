@@ -19,23 +19,27 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Prepare Identity
+      - name: Prepare Identity and Pods
         run: |
-          # Наталья, здесь мы подтверждаем ваше имя официально
+          # 1. Принудительно ставим имя проекта
           flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
+          # 2. Чиним зависимости
           flutter pub get
+          # 3. Заходим в папку ios и обновляем "трубы" (Podfile)
+          cd ios
+          pod install
+          cd ..
 
-      - name: Build IPA
-        env:
-          # Проверяем секреты прямо во время сборки
-          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+      - name: Build IPA (Final Fix)
         run: |
-          # Собираем архив без подписи, чтобы Котик не капризничал
-          flutter build ipa --release --no-codesign
+          # Мы добавляем --verbose, чтобы если упадет, Котик рассказал ВСЁ
+          # И явно указываем, что нам не нужна подпись
+          flutter build ipa --release --no-codesign --verbose
 
       - name: Upload Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: SmartBody_Life_App
+          # Путь к приложению (оно будет лежать в архиве)
           path: build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
