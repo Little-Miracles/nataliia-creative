@@ -301,7 +301,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin\n";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\"\n";
 		};
 		44F57703E97741129BE63E90 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
