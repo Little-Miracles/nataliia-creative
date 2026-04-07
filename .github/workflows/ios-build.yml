@@ -1,4 +1,4 @@
-name: I-REGENERATE-SUCCESS
+name: M-MAGIC-FINAL
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,24 +16,29 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Update Project Structure
+      - name: 3. The Great Cleanup (M-Step)
         run: |
           flutter pub get
-          # Эта команда обновит файлы проекта, чтобы они не конфликтовали
-          flutter create . --platforms ios
-          # Повторно создаем инструкцию после обновления
-          flutter build ios --config-only --release
+          
+          # 1. Меняем все тексты внутри файлов (natalia, example -> nataliia)
+          find . -type f -not -path '*/.*' -exec sed -i '' 's/com.example/com.nataliia/g' {} +
+          find . -type f -not -path '*/.*' -exec sed -i '' 's/com.natalia/com.nataliia/g' {} +
+          find . -type f -not -path '*/.*' -exec sed -i '' 's/smart_body_life/smartbodylife/g' {} +
 
-      - name: 4. Build Mobile App
+          # 2. Обновляем структуру проекта официально
+          flutter create . --platforms ios --org com.nataliia
+
+      - name: 4. Build IPA
         run: |
+          # Теперь, когда Котик видит только ОДНУ Наталию, он соберет всё
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Result
+      - name: 5. Save Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_I
+          name: SmartBody_Final_M
           path: build/ios/archive/Runner.xcarchive
