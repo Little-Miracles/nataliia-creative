@@ -1,4 +1,4 @@
-name: F-CLEAN-BUILD
+name: G-STRICT-PATH
 
 on:
   workflow_dispatch:
@@ -16,29 +16,33 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Create instruction and clean
+      - name: 3. Manual Config Injection
         run: |
           flutter pub get
-          # Генерируем файл-инструкцию
+          # Генерируем файл
           flutter build ios --config-only --release
-          # Принудительно чистим только кэш Xcode, не трогая твои файлы
-          cd ios
-          rm -rf Pods
-          rm -rf Podfile.lock
-          pod install --repo-update
-          cd ..
+          
+          # ПРИНУДИТЕЛЬНО создаем файл, если он вдруг не создался
+          if [ ! -f ios/Flutter/Generated.xcconfig ]; then
+            echo "Creating file manually..."
+            echo "FLUTTER_ROOT=$FLUTTER_ROOT" > ios/Flutter/Generated.xcconfig
+            echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
+          fi
+          
+          # Прописываем пути в системные переменные
+          echo "FLUTTER_XCODE_SETTINGS=true" >> $GITHUB_ENV
 
-      - name: 4. Build IPA
+      - name: 4. Final Archive Attempt
         run: |
-          # Прямая сборка с игнорированием пустых путей
+          # Собираем архив с жестким указанием пути к Flutter
           flutter build ipa --release --no-codesign --verbose
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Artifact
+      - name: 5. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_F_Result
+          name: SmartBody_G_Result
           path: build/ios/archive/Runner.xcarchive
