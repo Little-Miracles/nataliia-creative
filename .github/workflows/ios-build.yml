@@ -1,4 +1,4 @@
-name: Z-FINAL-BUILD-APP
+name: A-PLAN-SMARTBODY
 
 on:
   workflow_dispatch:
@@ -16,18 +16,17 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Create missing configs (The FIX)
+      - name: 3. Repair Environment
         run: |
+          # Этот шаг принудительно создает Generated.xcconfig
           flutter pub get
-          # Это шаг положит недостающее "яблоко" в папку ios/Flutter
           flutter build ios --config-only --release
 
-      - name: 4. Build IPA
+      - name: 4. Build Mobile App
         run: |
-          # Теперь, когда файлы на месте, запускаем сборку
+          # Собираем приложение без подписи, чтобы не было конфликтов
           flutter build ipa --release --no-codesign
         env:
-          # Используем ваши названия секретов из фото 19:30
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
@@ -35,5 +34,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_App_Archive
+          name: SmartBody_A_Result
           path: build/ios/archive/Runner.xcarchive
