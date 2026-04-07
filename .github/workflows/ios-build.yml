@@ -1,4 +1,4 @@
-name: iOS System Simulation Build
+name: iOS Final Clear Build
 on:
   push:
     branches: [ main ]
@@ -19,16 +19,11 @@ jobs:
 
       - name: Setup Simulation Env
         run: |
-          # Мы не меняем код. Мы создаем системную иллюзию, что телефон подключен.
-          # Эти переменные Apple считает "священными", и если они заполнены,
-          # скрипт на строке 237 получит ответ Раньше, чем успеет выдать ошибку.
+          # Подкладываем бумажку с номером устройства во все карманы системы
           echo "TARGET_DEVICE_IDENTIFIER=GenericDevice" >> $GITHUB_ENV
-          echo "XCODE_PRODUCT_BUNDLE_IDENTIFIER=com.nataliia.smartbodylife" >> $GITHUB_ENV
-          
-          # Заставляем систему думать, что замер уже произведен
           export TARGET_DEVICE_IDENTIFIER=GenericDevice
 
-      - name: Setup Certificates
+      - name: Setup Environment
         run: |
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
@@ -43,19 +38,20 @@ jobs:
       - name: Build Application
         run: |
           flutter pub get
-          # Мы используем специальный флаг, который говорит Xcode:
-          # "Считай, что ты собираешь для любого iPhone, не ищи конкретный"
-          flutter build ios --release --no-codesign --project-name=Runner --flavor=
+          # Подмена понятия: Чистка = Универсальность
+          export FLUTTER_XCODE_THIN_ARCHIVE=false
+          # Строгая команда без лишних слов, которую Котик точно поймет
+          flutter build ios --release --no-codesign
           
-          # Упаковка результата
+          # Упаковка того, что Котик построит
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../SmartBody_Simulated_Success.ipa Payload
+          zip -r ../../../SmartBody_Final.ipa Payload
             
       - name: Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: simulated-build-artifact
-          path: SmartBody_Simulated_Success.ipa
+          name: final-build-artifact
+          path: SmartBody_Final.ipa
