@@ -1,11 +1,11 @@
-name: iOS Master Technical Audit
+name: iOS Final Logical Fix
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -17,17 +17,43 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: System Audit Execution
+      - name: Repair Instruction (Исправляем то, что нашли)
         run: |
-          # 1. Просим Котика перечислить все файлы, где могут быть инструкции
-          echo "FILE_LISTING_START"
-          find ios -maxdepth 3 -name "*.xcconfig" -o -name "project.pbxproj"
-          echo "FILE_LISTING_END"
+          # Котик сам показал нам эту строку (618). 
+          # Мы официально меняем требование "живого тела" (YES) на "универсальную сборку" (NO).
+          sed -i '' 's/ONLY_ACTIVE_ARCH = YES;/ONLY_ACTIVE_ARCH = NO;/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # 2. Просим его выписать из этих файлов все строки про архитектуру и устройство
-          echo "SEARCHING_OLD_INSTRUCTIONS"
-          grep -rnE "ARCHS|ONLY_ACTIVE_ARCH|SDKROOT|TARGET_DEVICE_IDENTIFIER|IPHONEOS_DEPLOYMENT_TARGET" ios/ || true
+          # Также подправим настройки SDK, чтобы он не искал конкретную версию 15.5, а брал текущую
+          sed -i '' 's/SDKROOT = iphoneos.*;/SDKROOT = iphoneos;/g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Setup Signing (Стандартный этап)
+        run: |
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
+          security create-keychain -p "build" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "build" build.keychain
+          security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Build Application
+        run: |
+          flutter pub get
+          # Теперь, когда инструкция говорит NO (не ищи устройство), 
+          # Котик должен спокойно собрать IPA.
+          flutter build ios --release --no-codesign
           
-          # 3. Просим его показать нам ту самую "больную" строку 237 в его собственных мозгах
-          echo "INSPECTING_FLUTTER_TOOL_LOGIC"
-          grep -nC 5 "TARGET_DEVICE_IDENTIFIER" $FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.dart || true
+          # Упаковываем результат
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../SmartBody_Success.ipa Payload
+            
+      - name: Deliver Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: final-success-ipa
+          path: SmartBody_Success.ipa
