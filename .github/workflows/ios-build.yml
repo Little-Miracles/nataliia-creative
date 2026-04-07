@@ -1,4 +1,4 @@
-name: SmartBody iOS Build Stable
+name: SmartBody iOS Stable Build
 
 on:
   workflow_dispatch:
@@ -20,20 +20,25 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install dependencies (SAFE MODE)
+      - name: Install dependencies
         run: |
           flutter pub get
           cd ios
           pod install
           cd ..
 
-      - name: Build IPA (NO WEB, NO CLEAN DESTRUCTION)
+      - name: Fix iOS build config
+        run: |
+          flutter precache --ios
+          flutter clean
+          flutter pub get
+
+      - name: Build IPA (SAFE MODE)
         run: |
           flutter build ipa --release --no-codesign
 
-      - name: Upload Result
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Life_Build
-          # Исправил тут: берем всю папку сборки, чтобы точно найти приложение
-          path: build/ios/archive/Runner.xcarchive
+          name: SmartBody_Life_IPA
+          path: build/ios/ipa/*.ipa
