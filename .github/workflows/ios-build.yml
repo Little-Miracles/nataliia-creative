@@ -1,48 +1,36 @@
-name: SmartBody Final Locked Build
+name: SmartBody Life Final 2026
+
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-latest
+    timeout-minutes: 40
+
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install Tools
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
           flutter-version: '3.24.0'
+          channel: stable
+          cache: true
 
-      - name: Official Project Setup
+      - name: Install Dependencies
         run: |
-          flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
+          flutter clean
           flutter pub get
 
-      - name: Hard-Lock Device Identity
-        run: |
-          mkdir -p ios/Flutter
-          echo "FLUTTER_TARGET_DEVICE_ID=generic" > ios/Flutter/Generated.xcconfig
-          echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
-          chmod 444 ios/Flutter/Generated.xcconfig
+      - name: Build IPA (signed)
+        run: flutter build ipa --release
 
-      - name: Official Apple Assembly
-        run: |
-          flutter build ipa --release --no-codesign
-          
-          cd build/ios/archive/Runner.xcarchive/Products/Applications
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../../../SmartBody_Life_V2026.ipa Payload
-            
-      - name: Deliver Result
-        if: always()
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: smartbody-official-package
-          path: SmartBody_Life_V2026.ipa
-          
+          name: smartbody-life-ipa
+          path: build/ios/ipa/*.ipa
