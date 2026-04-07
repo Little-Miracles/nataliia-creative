@@ -1,4 +1,4 @@
-name: O-JUST-BUILD-SUCCESS
+name: Q-SURVIVOR-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,15 +16,16 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Create instruction (One step)
+      - name: 3. Prepare Environment
         run: |
           flutter pub get
-          # Просто создаем файл Generated.xcconfig, который нужен Xcode
+          # Генерируем только технический файл Generated.xcconfig
+          # Это не меняет твой project.pbxproj, только создает "мостик" для сборки
           flutter build ios --config-only --release
 
-      - name: 4. Build IPA
+      - name: 4. Build Mobile App (Final Run)
         run: |
-          # Прямая сборка твоего уже исправленного вручную кода
+          # Прямая сборка твоего вручную исправленного кода
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
@@ -34,5 +35,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_O
+          name: SmartBody_Final_Q
           path: build/ios/archive/Runner.xcarchive
