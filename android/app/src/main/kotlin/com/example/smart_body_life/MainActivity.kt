@@ -1,4 +1,4 @@
-package com.example.smart_body_life
+package com.nataliia.smart_body_life
 
 import io.flutter.embedding.android.FlutterActivity
 
