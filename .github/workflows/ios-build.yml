@@ -1,4 +1,4 @@
-name: Y-THE-FINISH-SUCCESS
+name: Z-IPA-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,19 +16,24 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Radical Repair (Already proven!)
+      - name: 3. The Miracle Fix
         run: |
           flutter pub get
+          # Сносим старое, создаем новое — этот метод сработал!
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
+          
+          # Убираем занозу 237 из нового файла
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # Настраиваем конфигурацию
           flutter build ios --config-only --release
 
-      - name: 4. Build Final Archive
+      - name: 4. Build IPA Archive
         run: |
-          # Собираем IPA без подписи, как мы делали в успешных попытках
+          # Теперь собираем именно архив без подписи (IPA)
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
@@ -38,5 +43,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_Y
+          name: SmartBody_IPA_Final
           path: build/ios/archive/Runner.xcarchive
