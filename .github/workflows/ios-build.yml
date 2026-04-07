@@ -1,41 +1,100 @@
-name: iOS Secrets Audit 2026
+name: iOS Build SmartBody Life
 
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  audit-secrets:
+  build-ios:
     runs-on: macos-latest
+    timeout-minutes: 60
+
     steps:
+      # =========================
+      # 1. Checkout
+      # =========================
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Validate Secrets Integrity
-        env:
-          CERT_DATA: ${{ secrets.IOS_CERTIFICATE }}
-          PROF_DATA: ${{ secrets.IOS_PROVISION_PROFILE }}
+      # =========================
+      # 2. Flutter Setup
+      # =========================
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+          cache: true
+
+      # =========================
+      # 3. Dependencies
+      # =========================
+      - name: Install dependencies
         run: |
-          echo "=== IOS_CERTIFICATE CHECK ==="
-          if [ -z "$CERT_DATA" ]; then 
-            echo "RESULT: EMPTY (Secret not found)"
-          else 
-            echo "STRING LENGTH: ${#CERT_DATA} characters"
-            if echo "$CERT_DATA" | base64 --decode > /dev/null 2>&1; then
-              echo "VALIDATION: Base64 format is CORRECT"
-            else
-              echo "VALIDATION: ERROR - Invalid Base64 or corrupted data"
-            fi
-          fi
-          
-          echo ""
-          echo "=== IOS_PROVISION_PROFILE CHECK ==="
-          if [ -z "$PROF_DATA" ]; then 
-            echo "RESULT: EMPTY"
-          else 
-            echo "STRING LENGTH: ${#PROF_DATA} characters"
-            if echo "$PROF_DATA" | base64 --decode > /dev/null 2>&1; then
-              echo "VALIDATION: Base64 format is CORRECT"
-            else
-              echo "VALIDATION: ERROR - Invalid Base64"
-            fi
-          fi
+          flutter clean
+          flutter pub get
+
+      # =========================
+      # 4. Apple Signing Setup
+      # =========================
+      - name: Install certificates
+        env:
+          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+
+          echo "=== START SIGNING SETUP ==="
+
+          CERT_PATH=$RUNNER_TEMP/cert.p12
+          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
+
+          # Decode files
+          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
+          echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+
+          # Create keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
+
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Install provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+
+          echo "=== SIGNING DONE ==="
+
+      # =========================
+      # 5. iOS Pods
+      # =========================
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      # =========================
+      # 6. Build IPA
+      # =========================
+      - name: Build IPA
+        run: |
+          flutter build ipa --release --no-codesign
+
+      # =========================
+      # 7. Upload artifact
+      # =========================
+      - name: Upload IPA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBody-Life-iOS
+          path: build/ios/ipa/*.ipa
