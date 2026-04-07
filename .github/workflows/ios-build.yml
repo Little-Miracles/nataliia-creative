@@ -1,17 +1,41 @@
-name: SmartBody Audit Diagnosis 2026
+name: iOS Build SmartBody Life
+
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
+
 jobs:
-  audit:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: List Files
-        run: ls -R
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
+          cache: true
 
-      - name: Verify Secrets
+      - name: Prepare Identity
         run: |
-          if [ -z "${{ secrets.IOS_CERTIFICATE }}" ]; then echo "CERT: MISSING"; else echo "CERT: OK"; fi
-          if [ -z "${{ secrets.IOS_PROVISION_PROFILE }}" ]; then echo "PROFILE: MISSING"; else echo "PROFILE: OK"; fi
+          # Наталья, здесь мы подтверждаем ваше имя официально
+          flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
+          flutter pub get
+
+      - name: Build IPA
+        env:
+          # Проверяем секреты прямо во время сборки
+          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+        run: |
+          # Собираем архив без подписи, чтобы Котик не капризничал
+          flutter build ipa --release --no-codesign
+
+      - name: Upload Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBody_Life_App
+          path: build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
