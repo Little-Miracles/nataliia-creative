@@ -1,4 +1,4 @@
-name: M-MAGIC-FINAL
+name: P-MAGIC-V2
 
 on:
   workflow_dispatch:
@@ -16,21 +16,26 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. The Great Cleanup (M-Step)
+      - name: 3. The Great Cleanup (Universal Mode)
         run: |
           flutter pub get
           
-          # 1. Меняем все тексты внутри файлов (natalia, example -> nataliia)
+          # Заставляем систему игнорировать ошибки кодировки (illegal byte sequence)
+          export LC_ALL=C
+          
+          # Меняем все тексты (natalia, example -> nataliia)
           find . -type f -not -path '*/.*' -exec sed -i '' 's/com.example/com.nataliia/g' {} +
           find . -type f -not -path '*/.*' -exec sed -i '' 's/com.natalia/com.nataliia/g' {} +
           find . -type f -not -path '*/.*' -exec sed -i '' 's/smart_body_life/smartbodylife/g' {} +
 
-          # 2. Обновляем структуру проекта официально
+          # Официально обновляем проект под одним именем
           flutter create . --platforms ios --org com.nataliia
+          
+          # Создаем инструкцию для iOS
+          flutter build ios --config-only --release
 
-      - name: 4. Build IPA
+       Maryland - name: 4. Build Mobile App
         run: |
-          # Теперь, когда Котик видит только ОДНУ Наталию, он соберет всё
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
