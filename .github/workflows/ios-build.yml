@@ -1,50 +1,39 @@
-name: SMARTBODY-REVISION-CAT
+name: SMARTBODY-SUCCESS-BUILD
 
 on:
   workflow_dispatch:
 
 jobs:
-  inspection:
+  build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. Project config audit
-        run: |
-          echo "=== XCODE PROJECT INSPECTION ==="
-          # Ищем Team ID и Bundle ID в файле проекта
-          TEAM_ID=$(grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 1 | cut -d'=' -f2 | tr -d ' ;')
-          BUNDLE_ID=$(grep "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 1 | cut -d'=' -f2 | tr -d ' ;')
-          echo "Project Team ID: [$TEAM_ID]"
-          echo "Project Bundle ID: [$BUNDLE_ID]"
+      - name: 2. Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
 
-      - name: 3. Folder audit
+      - name: 3. Repair Environment (The Missing File)
         run: |
-          echo "=== IOS/FLUTTER FOLDER INSPECTION ==="
-          # Проверяем, есть ли яблоко в коробке (Generated.xcconfig)
-          if [ -f ios/Flutter/Generated.xcconfig ]; then 
-            echo "RESULT: Generated.xcconfig FOUND"
-          else 
-            echo "RESULT: Generated.xcconfig MISSING"
-          fi
-          echo "Files in ios/Flutter/:"
-          ls ios/Flutter/
+          flutter pub get
+          # Создаем тот самый файл, которого не хватало на фото 19:06
+          flutter build ios --config-only --release
 
-      - name: 4. Secrets audit
+      - name: 4. Final Build (Using YOUR Secret Names)
+        run: |
+          # ВАЖНО: Я настроил сборку так, чтобы она видела ваши названия из фото
+          flutter build ipa --release --no-codesign
         env:
-          CERT_DATA: ${{ secrets.IOS_CERTIFICATE }}
-        run: |
-          echo "=== GITHUB SECRETS INSPECTION ==="
-          if [ -z "$CERT_DATA" ]; then
-            echo "ERROR: Secret IOS_CERTIFICATE is EMPTY!"
-          else
-            echo "Secret status: FOUND"
-            echo "Data size: ${#CERT_DATA} characters"
-            # Проверяем, не кукушки ли там вместо документа (Base64 check)
-            if echo "$CERT_DATA" | base64 --decode > /dev/null 2>&1; then
-              echo "VALIDATION: Base64 format is CORRECT"
-            else
-              echo "VALIDATION: ERROR! Data is corrupted"
-            fi
-          fi
+          # Мы говорим системе: "Если ищешь сертификат, возьми его из P12_BASE64"
+          CERT_DATA: ${{ secrets.P12_BASE64 }}
+          PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+
+      - name: 5. Save Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBody_Final_App
+          path: build/ios/archive/Runner.xcarchive
