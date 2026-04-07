@@ -1,4 +1,4 @@
-name: iOS Logic Assembly 2026
+name: SmartBody Master Final 2026
 on:
   push:
     branches: [ main ]
@@ -17,12 +17,15 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Sync Instructions with New Version
+      - name: Fix Directory Logic
         run: |
-          # Step 1: Tell Flutter to update iOS templates to version 3.24
-          flutter create . --platforms ios
+          # Удаляем ошибочную папку с одной i
+          rm -rf android/app/src/main/kotlin/com/natalia
           
-          # Step 2: Ensure the work order uses the generic device standard
+          # Создаем правильную структуру для com.nataliia
+          flutter create . --platforms ios,android --org com.nataliia
+          
+          # Устанавливаем универсальный стандарт Generic
           mkdir -p ios/Flutter
           echo "FLUTTER_TARGET_DEVICE_ID=generic" >> ios/Flutter/Generated.xcconfig
           echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
@@ -30,18 +33,18 @@ jobs:
       - name: Production Assembly
         run: |
           flutter pub get
-          # Building the final product using the updated industrial standard
+          # Сборка финального архива без проверки физического устройства
           flutter build ipa --release --no-codesign
           
-          # Packaging the result
+          # Упаковка в IPA
           cd build/ios/archive/Runner.xcarchive/Products/Applications
           mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r ../../../../../SmartBody_V2026_Final.ipa Payload
+          zip -r ../../../../../SmartBody_V2026_Perfect.ipa Payload
             
       - name: Deliver Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smartbody-v2026
-          path: SmartBody_V2026_Final.ipa
+          name: smartbody-ready
+          path: SmartBody_V2026_Perfect.ipa
