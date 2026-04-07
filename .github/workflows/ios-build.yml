@@ -1,11 +1,11 @@
-name: iOS Final Clear Build
+name: iOS Master Technical Audit
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
@@ -17,41 +17,17 @@ jobs:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Setup Simulation Env
+      - name: System Audit Execution
         run: |
-          # Подкладываем бумажку с номером устройства во все карманы системы
-          echo "TARGET_DEVICE_IDENTIFIER=GenericDevice" >> $GITHUB_ENV
-          export TARGET_DEVICE_IDENTIFIER=GenericDevice
-
-      - name: Setup Environment
-        run: |
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > cert.p12
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > profile.mobileprovision
-          security create-keychain -p "build" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "build" build.keychain
-          security import cert.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp profile.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Build Application
-        run: |
-          flutter pub get
-          # Подмена понятия: Чистка = Универсальность
-          export FLUTTER_XCODE_THIN_ARCHIVE=false
-          # Строгая команда без лишних слов, которую Котик точно поймет
-          flutter build ios --release --no-codesign
+          # 1. Просим Котика перечислить все файлы, где могут быть инструкции
+          echo "FILE_LISTING_START"
+          find ios -maxdepth 3 -name "*.xcconfig" -o -name "project.pbxproj"
+          echo "FILE_LISTING_END"
           
-          # Упаковка того, что Котик построит
-          cd build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../SmartBody_Final.ipa Payload
-            
-      - name: Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: final-build-artifact
-          path: SmartBody_Final.ipa
+          # 2. Просим его выписать из этих файлов все строки про архитектуру и устройство
+          echo "SEARCHING_OLD_INSTRUCTIONS"
+          grep -rnE "ARCHS|ONLY_ACTIVE_ARCH|SDKROOT|TARGET_DEVICE_IDENTIFIER|IPHONEOS_DEPLOYMENT_TARGET" ios/ || true
+          
+          # 3. Просим его показать нам ту самую "больную" строку 237 в его собственных мозгах
+          echo "INSPECTING_FLUTTER_TOOL_LOGIC"
+          grep -nC 5 "TARGET_DEVICE_IDENTIFIER" $FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.dart || true
