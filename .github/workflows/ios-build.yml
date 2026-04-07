@@ -1,4 +1,4 @@
-name: W-SAFE-UPDATE-SUCCESS
+name: X-FORCE-GENERATE-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,24 +16,26 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Smart Project Refresh
+      - name: 3. Radical Repair
         run: |
           flutter pub get
-          # 1. Обновляем проект официально (это уберет ошибку Incompatible)
-          # Используем имя из твоего pubspec.yaml
+          # 1. Удаляем старый проект Xcode, который вызывает ошибку несовместимости
+          rm -rf ios/Runner.xcodeproj
+          rm -rf ios/Runner.xcworkspace
+          
+          # 2. Создаем его заново с твоим правильным именем и организацией
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # 2. СРАЗУ ПРОВЕРЯЕМ: если команда выше вернула "занозу" 237, удаляем её снова
-          # Это гарантирует, что мы не наступим на старые грабли
+          # 3. Убираем "занозу" 237 из свежесозданного файла
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
           
-          # 3. Подготавливаем конфиги
+          # 4. Финальная подготовка
           flutter build ios --config-only --release
 
       - name: 4. Build IPA
         run: |
-          # Теперь проект новый, совместимый и без занозы
+          # Теперь проект гарантированно совместим
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
@@ -43,5 +45,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_W
+          name: SmartBody_Final_X
           path: build/ios/archive/Runner.xcarchive
