@@ -1,4 +1,4 @@
-name: SmartBody Life Final 2026
+name: SmartBody Life iOS Build 2026
 
 on:
   push:
@@ -22,7 +22,16 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install Apple Certificate and Provisioning Profile
+      # 🔍 ПРОВЕРКА СЕКРЕТОВ (ОЧЕНЬ ВАЖНО)
+      - name: Check Secrets (debug only)
+        env:
+          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
+        run: |
+          echo "CERT length = ${#CERT_BASE64}"
+          echo "PROFILE length = ${#PROFILE_BASE64}"
+
+      - name: Install Certificate and Profile
         env:
           CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -58,7 +67,7 @@ jobs:
         run: |
           flutter build ipa --release
 
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: SmartBody_Life_2026_IPA
