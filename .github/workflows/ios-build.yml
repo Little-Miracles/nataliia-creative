@@ -1,4 +1,4 @@
-name: H-FINAL-SUCCESS
+name: I-REGENERATE-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,23 +16,24 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Create instruction
+      - name: 3. Update Project Structure
         run: |
           flutter pub get
-          # Генерируем файл, которого не хватало
+          # Эта команда обновит файлы проекта, чтобы они не конфликтовали
+          flutter create . --platforms ios
+          # Повторно создаем инструкцию после обновления
           flutter build ios --config-only --release
 
-      - name: 4. Build IPA (Final Run)
+      - name: 4. Build Mobile App
         run: |
-          # Собираем приложение без подписи
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Artifact
+      - name: 5. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_H
+          name: SmartBody_Final_I
           path: build/ios/archive/Runner.xcarchive
