@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout Code
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,23 +16,24 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Repair Environment
+      - name: 3. Create missing configs (The FIX)
         run: |
           flutter pub get
-          # Создаем Generated.xcconfig (яблоко в коробку)
+          # Это шаг положит недостающее "яблоко" в папку ios/Flutter
           flutter build ios --config-only --release
 
-      - name: 4. Build Mobile Archive
+      - name: 4. Build IPA
         run: |
-          # Используем ваши названия секретов из фото 19:30
+          # Теперь, когда файлы на месте, запускаем сборку
           flutter build ipa --release --no-codesign
         env:
+          # Используем ваши названия секретов из фото 19:30
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Artifact
+      - name: 5. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Result
+          name: SmartBody_App_Archive
           path: build/ios/archive/Runner.xcarchive
