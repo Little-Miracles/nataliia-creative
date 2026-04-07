@@ -1,74 +1,54 @@
-name: SmartBody Life iOS Build 2026
+name: iOS Debug Certificate Diagnosis
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-ios:
+  debug-ios:
     runs-on: macos-latest
-    timeout-minutes: 60
 
     steps:
 
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: stable
-          cache: true
-
-      # 🔍 ПРОВЕРКА СЕКРЕТОВ (ОЧЕНЬ ВАЖНО)
-      - name: Check Secrets (debug only)
+      - name: Check Secrets Arrival
         env:
           CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
           PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
         run: |
-          echo "CERT length = ${#CERT_BASE64}"
-          echo "PROFILE length = ${#PROFILE_BASE64}"
+          echo "=== SECRET CHECK ==="
+          echo "CERT length: ${#CERT_BASE64}"
+          echo "PROFILE length: ${#PROFILE_BASE64}"
 
-      - name: Install Certificate and Profile
+      - name: Create Files From Secrets
         env:
           CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
-          CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
           PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
-          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
         run: |
-          set -e
+          echo "=== FILE CREATION ==="
 
           CERT_PATH=$RUNNER_TEMP/cert.p12
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
 
           echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
           echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
 
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          echo "CERT file size:"
+          ls -lh $CERT_PATH
 
-          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
+          echo "PROFILE file size:"
+          ls -lh $PROFILE_PATH
 
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          echo "CERT file type:"
+          file $CERT_PATH
 
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Install Dependencies
+      - name: Inspect Provisioning Profile
         run: |
-          flutter clean
-          flutter pub get
+          echo "=== PROFILE INFO ==="
+          security cms -D -i $RUNNER_TEMP/profile.mobileprovision | head -n 50
 
-      - name: Build iOS IPA
+      - name: Inspect Certificate (if valid)
         run: |
-          flutter build ipa --release
-
-      - name: Upload IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartBody_Life_2026_IPA
-          path: build/ios/ipa/*.ipa
+          echo "=== CERT INFO ==="
+          security find-identity -v -p codesigning
