@@ -1,90 +1,34 @@
-name: iOS Build SmartBody Life
+name: SmartBody-Project-Audit
 
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-ios:
+  audit:
     runs-on: macos-latest
-    timeout-minutes: 60
-
     steps:
-      # 1. Код
-      - name: Checkout Code
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      # 2. Flutter
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: stable
-          cache: true
-
-      # 3. Установка зависимостей Flutter
-      - name: Install Dependencies
+      - name: 2. Project File Audit
         run: |
-          flutter clean
-          flutter pub get
+          echo "=== CHECKING PROJECT FILES ==="
+          ls -R ios/*.xcodeproj
+          echo ""
+          echo "=== CHECKING BUNDLE ID AND TEAM ==="
+          grep -R "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 5
+          grep -R "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 5
 
-      # 4. CocoaPods install (стабильно и без "ломания" Pods)
-      - name: Install Pods
-        run: |
-          cd ios
-          pod install --repo-update
-          cd ..
-
-      # 5. Signing (сертификаты + provisioning)
-      - name: Install Certificates
+      - name: 3. Secrets Format Audit
         env:
-          CERT_BASE64: ${{ secrets.P12_BASE64 }}
-          CERT_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          CERT: ${{ secrets.IOS_CERTIFICATE }}
+          PROF: ${{ secrets.IOS_PROVISION_PROFILE }}
         run: |
-          set -e
-
-          echo "=== SIGNING START ==="
-
-          CERT_PATH=$RUNNER_TEMP/cert.p12
-          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
-
-          # Decode files
-          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
-          echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
-
-          # Create keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # Import certificate
-          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # Install provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
-
-          echo "=== SIGNING DONE ==="
-
-      # 6. iOS Build (ВАЖНО: без no-codesign)
-      - name: Build iOS Archive
+          echo "=== CHECKING SECRETS STORAGE ==="
+          if [ -z "$CERT" ]; then echo "CERT: NOT FOUND IN GITHUB SECRETS"; else echo "CERT: EXISTS (${#CERT} chars)"; fi
+          if [ -z "$PROF" ]; then echo "PROF: NOT FOUND IN GITHUB SECRETS"; else echo "PROF: EXISTS (${#PROF} chars)"; fi
+          
+      - name: 4. Xcode Internal Paths
         run: |
-          flutter build ios --release
-
-      # 7. IPA build
-      - name: Build IPA
-        run: |
-          flutter build ipa --release
-
-      # 8. Upload artifact
-      - name: Upload IPA
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartBodyLife-iOS
-          path: build/ios/ipa/*.ipa
+          echo "=== CHECKING FLUTTER CONFIGS ==="
+          if [ -f ios/Flutter/Generated.xcconfig ]; then echo "Generated.xcconfig: FOUND"; else echo "Generated.xcconfig: MISSING"; fi
