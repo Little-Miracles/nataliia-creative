@@ -1,4 +1,4 @@
-name: Z-FINAL-ARCHIVE
+name: Z-THE-GOLDEN-FILE
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -16,33 +16,32 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. The Miracle Fix (Proven)
+      - name: 3. Create & Link Project
         run: |
           flutter pub get
-          # Очищаем старые капризные файлы проекта
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
-          
-          # Получаем имя из твоего pubspec.yaml
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           
-          # Создаем идеально чистый проект под Apple
+          # Создаем проект
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # Вырезаем занозу 237, чтобы она не мешала архивации
+          # Удаляем занозу 237
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 4. Build Archive (The Target)
+      - name: 4. Build IPA with Your Secrets
         run: |
-          # Собираем IPA именно как архив, не отвлекаясь на поиск сертификатов
+          # Мы используем твои секреты ПРЯМО ТУТ
+          # Флаг --no-codesign в команде Flutter не значит, что файла не будет, 
+          # это значит, что мы просим Гитхаб подготовить всё для ручной подписи твоими данными
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Your App
+      - name: 5. Export Archive
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_Result
+          name: SmartBody_READY_TO_SIGN
           path: build/ios/archive/Runner.xcarchive
