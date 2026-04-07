@@ -1,4 +1,4 @@
-name: Q-SURVIVOR-SUCCESS
+name: T-TOTAL-REWRITE-SUCCESS
 
 on:
   workflow_dispatch:
@@ -16,24 +16,31 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Prepare Environment
+      - name: 3. Официальное обновление (без сноса кода)
         run: |
           flutter pub get
-          # Генерируем только технический файл Generated.xcconfig
-          # Это не меняет твой project.pbxproj, только создает "мостик" для сборки
+          # Мы просим Flutter ОБНОВИТЬ файлы проекта, чтобы они стали совместимы
+          # Это не удалит твою логику, но поправит техническую структуру
+          flutter create . --platforms ios --org com.nataliia
+          
+          # СРАЗУ ПОСЛЕ ЭТОГО: вырезаем занозу 237, которую Котик мог вернуть
+          # Мы делаем это прямо в памяти сервера перед сборкой
+          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # Проверяем, что всё готово
           flutter build ios --config-only --release
 
-      - name: 4. Build Mobile App (Final Run)
+      - name: 4. Финальная Сборка
         run: |
-          # Прямая сборка твоего вручную исправленного кода
+          # Теперь проект "чистый" и совместимый, Котик должен его принять
           flutter build ipa --release --no-codesign
         env:
           CERT_DATA: ${{ secrets.P12_BASE64 }}
           PROF_DATA: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
 
-      - name: 5. Save Result
+      - name: 5. Сохранение результата
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_Q
+          name: SmartBody_Final_T
           path: build/ios/archive/Runner.xcarchive
