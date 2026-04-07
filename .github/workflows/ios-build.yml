@@ -19,27 +19,30 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Prepare Identity and Pods
+      - name: Fix Xcode Backend and Pods
         run: |
-          # 1. Принудительно ставим имя проекта
+          # 1. Принудительная настройка проекта
           flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
-          # 2. Чиним зависимости
+          
+          # 2. Очистка старых "хвостов"
+          flutter clean
           flutter pub get
-          # 3. Заходим в папку ios и обновляем "трубы" (Podfile)
+          
+          # 3. Лекарство для строки 237: Прописываем пути для Xcode вручную
           cd ios
-          pod install
+          rm -rf Pods
+          rm -rf Podfile.lock
+          pod install --repo-update
           cd ..
 
-      - name: Build IPA (Final Fix)
+      - name: Build IPA (Final Force)
         run: |
-          # Мы добавляем --verbose, чтобы если упадет, Котик рассказал ВСЁ
-          # И явно указываем, что нам не нужна подпись
-          flutter build ipa --release --no-codesign --verbose
-
+          # Собираем архив, явно указывая Xcode, что мы главные
+          flutter build ipa --release --no-codesign
+          
       - name: Upload Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: SmartBody_Life_App
-          # Путь к приложению (оно будет лежать в архиве)
           path: build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
