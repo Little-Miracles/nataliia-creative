@@ -1,35 +1,46 @@
-name: SmartBody-Final-Success
+name: SMARTBODY-REVISION-CAT
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  inspection:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: stable
-
-      - name: 3. Force Generate Configs
+      - name: 2. Project config audit
         run: |
-          # Это создаст тот самый файл Generated.xcconfig, которого не хватает на фото
-          flutter pub get
-          flutter build ios --config-only --release
+          echo "=== XCODE PROJECT INSPECTION ==="
+          TEAM_ID=$(grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 1 | cut -d'=' -f2 | tr -d ' ;')
+          BUNDLE_ID=$(grep "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 1 | cut -d'=' -f2 | tr -d ' ;')
+          echo "Expected Team ID: [$TEAM_ID]"
+          echo "Expected Bundle ID: [$BUNDLE_ID]"
 
-      - name: 4. Build IPA (No-Sign Mode)
+      - name: 3. Folder and files audit
         run: |
-          # Теперь, когда конфиги на месте, собираем основной архив
-          flutter build ipa --release --no-codesign
+          echo "=== IOS/FLUTTER FOLDER INSPECTION ==="
+          if [ -f ios/Flutter/Generated.xcconfig ]; then 
+            echo "FILE Generated.xcconfig: FOUND (Apple is here)"
+          else 
+            echo "FILE Generated.xcconfig: MISSING (The box is empty!)"
+          fi
+          echo "=== LISTING ALL FILES IN Flutter/ ==="
+          ls ios/Flutter/
 
-      - name: 5. Save Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartBody_Final_IPA
-          path: build/ios/archive/Runner.xcarchive
+      - name: 4. GitHub Secrets audit
+        env:
+          CERT_DATA: ${{ secrets.IOS_CERTIFICATE }}
+        run: |
+          echo "=== GITHUB SECRETS INSPECTION ==="
+          if [ -z "$CERT_DATA" ]; then
+            echo "ERROR: Secret IOS_CERTIFICATE is EMPTY!"
+          else
+            echo "Secret found. Data size: ${#CERT_DATA} characters."
+            if echo "$CERT_DATA" | base64 --decode > /dev/null 2>&1; then
+              echo "VALIDATION: Base64 format is CORRECT"
+            else
+              echo "VALIDATION: ERROR! Data is corrupted (Not Base64)"
+            fi
+          fi
