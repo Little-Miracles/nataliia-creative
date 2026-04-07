@@ -1,18 +1,25 @@
-name: SmartBody iOS TestFlight Build
+name: iOS Build SmartBody Life
 
 on:
-  workflow_dispatch:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-ios:
     runs-on: macos-latest
+    timeout-minutes: 60
 
     steps:
-      - name: Checkout code
+      # ========================
+      # 1. Checkout
+      # ========================
+      - name: Checkout Code
         uses: actions/checkout@v4
 
+      # ========================
+      # 2. Setup Flutter
+      # ========================
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -20,13 +27,18 @@ jobs:
           channel: stable
           cache: true
 
+      # ========================
+      # 3. Install dependencies
+      # ========================
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          flutter clean
+          flutter pub get
 
-      # =========================
-      # 1. INSTALL CERTIFICATES
-      # =========================
-      - name: Setup Signing
+      # ========================
+      # 4. Setup Apple Certificates
+      # ========================
+      - name: Install Apple Certificate & Provisioning Profile
         env:
           CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -35,44 +47,54 @@ jobs:
         run: |
           set -e
 
+          echo "Starting signing setup..."
+
           CERT_PATH=$RUNNER_TEMP/cert.p12
           PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
           KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
 
+          # Decode files
           echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
           echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
 
+          # Create keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
+          # Import certificate
           security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
+
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
+          # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      # =========================
-      # 2. CLEAN IOS
-      # =========================
+          echo "Signing setup complete"
+
+      # ========================
+      # 5. iOS build preparation
+      # ========================
       - name: Prepare iOS project
         run: |
           cd ios
-          pod install
+          pod install --repo-update
           cd ..
 
-      # =========================
-      # 3. BUILD ARCHIVE (SIGNED)
-      # =========================
-      - name: Build IPA (Signed)
+      # ========================
+      # 6. Build IPA
+      # ========================
+      - name: Build IPA
         run: |
-          flutter build ipa --release
+          flutter build ipa --release --no-codesign
 
-      # =========================
-      # 4. UPLOAD ARTIFACT
-      # =========================
+      # ========================
+      # 7. Upload artifact
+      # ========================
       - name: Upload IPA
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_TestFlight_IPA
+          name: smartbody-life-ipa
           path: build/ios/ipa/*.ipa
