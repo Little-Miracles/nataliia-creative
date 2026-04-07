@@ -1,8 +1,6 @@
 name: SmartBody Audit Diagnosis 2026
-
 on:
   workflow_dispatch:
-
 jobs:
   audit:
     runs-on: macos-latest
@@ -10,36 +8,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Directory Structure Audit
-        run: |
-          echo "=== PROJECT STRUCTURE ==="
-          ls -R
-          echo "========================="
+      - name: List Files
+        run: ls -R
 
-      - name: Secrets Validation
-        env:
-          CERT: ${{ secrets.IOS_CERTIFICATE }}
-          PASS: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROF: ${{ secrets.IOS_PROVISION_PROFILE }}
-          KEY_PASS: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+      - name: Verify Secrets
         run: |
-          echo "=== SECRETS STATUS CHECK ==="
-          if [ -z "$CERT" ]; then echo "STATUS: IOS_CERTIFICATE IS EMPTY"; else echo "STATUS: IOS_CERTIFICATE IS SET"; fi
-          if [ -z "$PASS" ]; then echo "STATUS: IOS_CERTIFICATE_PASSWORD IS EMPTY"; else echo "STATUS: IOS_CERTIFICATE_PASSWORD IS SET"; fi
-          if [ -z "$PROF" ]; then echo "STATUS: IOS_PROVISION_PROFILE IS EMPTY"; else echo "STATUS: IOS_PROVISION_PROFILE IS SET"; fi
-          if [ -z "$KEY_PASS" ]; then echo "STATUS: IOS_KEYCHAIN_PASSWORD IS EMPTY"; else echo "STATUS: IOS_KEYCHAIN_PASSWORD IS SET"; fi
-          echo "============================"
-
-      - name: Critical Files Check
-        run: |
-          echo "=== DOCUMENTATION CHECK ==="
-          [ -f "pubspec.yaml" ] && echo "FILE: pubspec.yaml FOUND" || echo "FILE: pubspec.yaml MISSING"
-          [ -f "ios/Podfile" ] && echo "FILE: ios/Podfile FOUND" || echo "FILE: ios/Podfile MISSING"
-          [ -f "ios/ExportOptions.plist" ] && echo "FILE: ios/ExportOptions.plist FOUND" || echo "FILE: ios/ExportOptions.plist MISSING"
-          echo "==========================="
-
-      - name: Internal Project Name Check
-        run: |
-          echo "=== PUBSPEC NAME CHECK ==="
-          grep "name:" pubspec.yaml || echo "ERROR: COULD NOT READ NAME FROM PUBSPEC.YAML"
-          echo "=========================="
+          if [ -z "${{ secrets.IOS_CERTIFICATE }}" ]; then echo "CERT: MISSING"; else echo "CERT: OK"; fi
+          if [ -z "${{ secrets.IOS_PROVISION_PROFILE }}" ]; then echo "PROFILE: MISSING"; else echo "PROFILE: OK"; fi
