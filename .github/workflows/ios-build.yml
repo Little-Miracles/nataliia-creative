@@ -1,32 +1,47 @@
-name: iOS Documents Audit (No Lyrics)
+name: iOS Logic Assembly 2026
 on:
   push:
     branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install Flutter
+      - name: Install Modern Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           flutter-version: '3.24.0'
 
-      - name: Technical Audit (English Commands Only)
+      - name: Sync Instructions with New Version
         run: |
-          # 1. Просим Котика показать настройки в главном файле
-          echo "CHECKING_PROJECT_FILE_SETTINGS"
-          grep -E "ONLY_ACTIVE_ARCH|SDKROOT|ARCHS|TARGET_DEVICE_FAMILY" ios/Runner.xcodeproj/project.pbxproj || true
+          # Step 1: Tell Flutter to update iOS templates to version 3.24
+          flutter create . --platforms ios
           
-          # 2. Просим показать содержимое скрытых конфигов
-          echo "CHECKING_FLUTTER_CONFIG_FILES"
-          ls ios/Flutter/*.xcconfig && cat ios/Flutter/*.xcconfig || echo "No config files found"
+          # Step 2: Ensure the work order uses the generic device standard
+          mkdir -p ios/Flutter
+          echo "FLUTTER_TARGET_DEVICE_ID=generic" >> ios/Flutter/Generated.xcconfig
+          echo "TARGET_DEVICE_IDENTIFIER=generic" >> ios/Flutter/Generated.xcconfig
+
+      - name: Production Assembly
+        run: |
+          flutter pub get
+          # Building the final product using the updated industrial standard
+          flutter build ipa --release --no-codesign
           
-          # 3. Просим показать версию iOS в списке оборудования
-          echo "CHECKING_PODFILE_VERSION"
-          [ -f ios/Podfile ] && grep -E "platform :ios|deployment_target" ios/Podfile || echo "No Podfile"
+          # Packaging the result
+          cd build/ios/archive/Runner.xcarchive/Products/Applications
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../../../SmartBody_V2026_Final.ipa Payload
+            
+      - name: Deliver Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smartbody-v2026
+          path: SmartBody_V2026_Final.ipa
