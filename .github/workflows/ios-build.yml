@@ -1,4 +1,4 @@
-name: SmartBody Life iOS Build
+name: SmartBody Life Final 2026
 
 on:
   push:
@@ -8,12 +8,36 @@ on:
 jobs:
   build-ios:
     runs-on: macos-latest
-    timeout-minutes: 50
+    timeout-minutes: 40
 
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Install Apple Certificate
+        env:
+          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
+          CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+          CERT_PATH=$RUNNER_TEMP/cert.p12
+          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
+          
+          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
+          echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -22,44 +46,18 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Install Certificate and Provisioning Profile
-        env:
-          CERT_BASE64: ${{ secrets.IOS_CERTIFICATE }}
-          CERT_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE }}
-          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+      - name: smart_body_life
         run: |
-          set -e
-
-          CERT_PATH=$RUNNER_TEMP/cert.p12
-          PROFILE_PATH=$RUNNER_TEMP/profile.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain-db
-
-          echo "$CERT_BASE64" | base64 --decode > "$CERT_PATH"
-          echo "$PROFILE_BASE64" | base64 --decode > "$PROFILE_PATH"
-
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-
-          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -A
-
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Clean Project
-        run: |
-          flutter clean
+          flutter create . --platforms ios --org com.nataliia --project-name smart_body_life
           flutter pub get
 
-      - name: Build iOS IPA
+      - name: Build Archive
         run: |
-          flutter build ipa --release
+          flutter build ipa --release --no-codesign
 
-      - name: Upload IPA
+      - name: Upload Result
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: smartbody-ios
-          path: build/ios/ipa/*.ipa
+          name: SmartBody_Life_Archive_2026
+          path: build/ios/archive/Runner.xcarchive/Products/Applications/Runner.app
