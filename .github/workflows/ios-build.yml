@@ -7,7 +7,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
       - name: 2. Setup Flutter
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
-      - name: 3. Install All Keys
+      - name: 3. Install Keys and Profiles
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
@@ -40,27 +40,38 @@ jobs:
           cp ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$DIST_UUID.mobileprovision
           echo "DIST_UUID=$DIST_UUID" >> $GITHUB_ENV
 
-      - name: 4. Repair & Align Project
+      - name: 4. Configure Project (ID: com.nataliia.smartbodylife)
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
           flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Archive and Manual Export
+      - name: 5. Generate Icons
+        run: |
+          # Раз ты проверила, что папка ui_images/icon.png на месте, просто запускаем генератор
+          flutter pub get
+          flutter pub run flutter_launcher_icons:main || echo "Icons generation skipped"
+
+      - name: 6. Build Archive (No Codesign)
         run: |
           flutter build ipa --release --no-codesign
-          
+
+      - name: 7. Export Final IPA
+        run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store-connect</string>
+            <string>app-store</string>
             <key>teamID</key>
             <string>PCSW3AKAPF</string>
+            <key>signingStyle</key>
+            <string>manual</string>
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
@@ -70,16 +81,15 @@ jobs:
           </plist>
           EOF
 
-          # Добавили флаг -destination, чтобы он не думал лишнего
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
             -exportOptionsPlist ios/ExportOptions.plist \
-            -destination "generic/platform=iOS"
+            -allowProvisioningUpdates
 
-      - name: 6. Save Result
+      - name: 8. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_IPA
+          name: SmartBodyLife_Final_IPA
           path: build/ios/ipa/*.ipa
