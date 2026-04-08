@@ -10,7 +10,7 @@ jobs:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Install Certificates (Тот самый единый пароль)
+      - name: 2. Install Certificates
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
@@ -21,8 +21,7 @@ jobs:
           # Декодируем сертификат
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           
-          # Пытаемся импортировать с очисткой пароля от лишних пробелов
-          # Мы используем твой единый P12_PASSWORD
+          # Очищаем пароль от лишних пробелов и заходим
           PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
           security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           
@@ -43,16 +42,15 @@ jobs:
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # Твой Team ID: PCSW3AKAPF
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
 
-       Maryland - name: 5. Build Final Signed IPA
+      - name: 5. Build Final Signed IPA
         run: |
-          # Собираем официальный IPA для App Store с бантиком!
+          # Собираем IPA для App Store
           flutter build ipa --release --export-method app-store
 
-      - name: 6. Upload IPA Result
+      - name: 6. Upload Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
