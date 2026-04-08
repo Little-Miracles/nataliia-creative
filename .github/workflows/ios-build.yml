@@ -1,45 +1,62 @@
-name: KEYCHAIN-REVISION-REPORT
+name: APPLE-SUCCESS-SIGNED
 
 on:
   workflow_dispatch:
 
 jobs:
-  inspect:
+  build:
     runs-on: macos-latest
     steps:
-      - name: Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: Open Safes and Report
+      - name: 2. Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: 3. Install Certificates (The Verified Way)
         run: |
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > test_cert.p12
-          if [ -s test_cert.p12 ]; then
-            echo "STATUS_P12: FOUND"
-            file test_cert.p12
-          else
-            echo "STATUS_P12: EMPTY_OR_ERROR"
-          fi
+          # Создаем и разблокируем связку ключей
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
+          # Импортируем сертификат (мы проверили - это работает!)
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
-          if [ -z "$PASS" ]; then
-            echo "STATUS_PASS: EMPTY"
-          else
-            echo "STATUS_PASS: OK"
-          fi
-
-          KEYCHAIN_PATH=$RUNNER_TEMP/test.keychain
-          security create-keychain -p "123" "$KEYCHAIN_PATH"
+          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           
-          if security import test_cert.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign; then
-            echo "STATUS_AUTH: SUCCESS_MATCH"
-          else
-            echo "STATUS_AUTH: PASSWORD_MISMATCH_OR_MAC_FAIL"
-          fi
+          # Даем права на использование ключа
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
 
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > test.mobileprovision
-          if [ -s test.mobileprovision ]; then
-            echo "STATUS_PROV: FOUND"
-            grep -a "TeamIdentifier" test.mobileprovision || true
-          else
-            echo "STATUS_PROV: EMPTY"
-          fi
+          # Ставим профиль
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: 4. Rebuild Project Structure
+        run: |
+          flutter pub get
+          rm -rf ios/Runner.xcodeproj
+          rm -rf ios/Runner.xcworkspace
+          PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
+          flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
+          
+          # Прописываем Team ID (PCSW3AKAPF) и фиксим занозу 237
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+
+      - name: 5. Build Final Signed IPA
+        run: |
+          # Теперь он обязан собрать IPA с бантиком, так как ключи приняты системой
+          flutter build ipa --release --export-method app-store
+
+      - name: 6. Save Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBody_Final_IPA
+          path: build/ios/ipa/*.ipa
