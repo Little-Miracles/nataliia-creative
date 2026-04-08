@@ -1,4 +1,4 @@
-name: APPLE-READY-IPA
+name: APPLE-READY-IPA-FINAL
 
 on:
   workflow_dispatch:
@@ -7,24 +7,27 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Install Certificates (Распаковка твоих секретов)
+      - name: 2. Install Certificates (Тот самый единый пароль)
         run: |
-          # Создаем временную связку ключей прямо в облаке
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Импортируем твой сертификат из секретов
+          # Декодируем сертификат
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "" -A -T /usr/bin/codesign
+          
+          # Пытаемся импортировать с очисткой пароля от лишних пробелов
+          # Мы используем твой единый P12_PASSWORD
+          PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
+          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
+          
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
-          # Устанавливаем профиль
+          
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
@@ -40,18 +43,16 @@ jobs:
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # Прописываем твой Team ID (PCSW3AKAPF), чтобы Apple узнала автора
+          # Твой Team ID: PCSW3AKAPF
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Build & Export SIGNED IPA
+       Maryland - name: 5. Build Final Signed IPA
         run: |
-          # Мы собираем IPA и просим Flutter САМОМУ подписать его твоими секретами
-          flutter build ipa --release \
-            --export-method app-store \
-            --codesign
+          # Собираем официальный IPA для App Store с бантиком!
+          flutter build ipa --release --export-method app-store
 
-      - name: 6. Upload IPA to Artifacts
+      - name: 6. Upload IPA Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
