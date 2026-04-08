@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.24.0'
 
-      - name: 3. Install Distribution Certificate
+      - name: 3. Install Distribution Certificate (Verified)
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
@@ -23,7 +23,6 @@ jobs:
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Берем твой основной P12_BASE64 (Distribution) 
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
           security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
@@ -31,22 +30,22 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          # Ставим профиль SMART_DISTRIBUTION [cite: 2]
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
           
-          # Находим UUID профиля (f2e7364b...) [cite: 2]
-          UUID=$(grep -aA1 "UUID" ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision | grep -o "[-A-Z0-9]\{36\}")
+          # УЛУЧШЕННЫЙ ПОИСК UUID (Специально для твоего файла)
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision))
           echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
+          echo "Found Profile UUID: $UUID"
 
-      - name: 4. Configure Clean Project
+      - name: 4. Configure Project
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # Прописываем Team ID (PCSW3AKAPF) [cite: 2] и заставляем использовать Distribution
+          # Жесткая привязка к найденному UUID
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' "s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" ios/Runner.xcodeproj/project.pbxproj
@@ -54,7 +53,7 @@ jobs:
 
       - name: 5. Build Final IPA
         run: |
-          # Теперь все пути ведут к Distribution сертификату
+          # Теперь всё связано: сертификат найден, UUID вытащен
           flutter build ipa --release --export-method app-store
 
       - name: 6. Save Result
