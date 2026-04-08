@@ -1,4 +1,4 @@
-name: FINAL-SMART-SUCCESS
+name: GRAND-FINALE-SUCCESS
 
 on:
   workflow_dispatch:
@@ -10,7 +10,7 @@ jobs:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Install ALL Certificates (Dev + Dist)
+      - name: 2. Install ALL Keys (Dev + Dist)
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
@@ -18,50 +18,71 @@ jobs:
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # 1. Устанавливаем DISTRIBUTION (для магазина)
+          # Импортируем оба твоих ключа (как мы делали в прошлый раз, когда он сказал "archive done")
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > dist.p12
-          security import dist.p12 -k "$KEYCHAIN_PATH" -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
-
-          # 2. Устанавливаем DEVELOPMENT (чтобы Xcode не ворчал)
           echo "${{ secrets.DEV_P12_BASE64 }}" | base64 --decode > dev.p12
+          security import dist.p12 -k "$KEYCHAIN_PATH" -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
           security import dev.p12 -k "$KEYCHAIN_PATH" -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
           
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          # Устанавливаем ОБА профиля
+          # Устанавливаем профили
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision
           echo "${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dev.mobileprovision
           
-          # Вытаскиваем UUID профиля Распространения (для бантика)
-          DIST_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
-          echo "DIST_UUID=$DIST_UUID" >> $GITHUB_ENV
+          # Получаем тот самый UUID (f2e7364b...)
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
+          echo "DIST_UUID=$UUID" >> $GITHUB_ENV
 
       - name: 3. Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
 
-      - name: 4. Prepare Smart Project
+      - name: 4. Prepare Project
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
-          
-          # Прописываем Team ID и разрешаем автоматический выбор между Dev и Dist
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Build Official IPA
+      - name: 5. Archive and Manual Export
         run: |
-          # Собираем IPA, указывая конкретный профиль для экспорта
-          flutter build ipa --release --export-method app-store
+          # 1. Сначала создаем архив (это у нас уже получалось!)
+          flutter build ipa --release --no-codesign
+          
+          # 2. А теперь САМИ создаем файл ExportOptions.plist, чтобы принудительно завязать бантик
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>$DIST_UUID</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
 
-      - name: 6. Save IPA
+          # 3. Финальный экспорт в IPA силами Xcode
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/Runner.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -allowProvisioningUpdates
+
+      - name: 6. Save IPA to Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_READY_FOR_APPLE
+          name: SmartBody_Final_IPA
           path: build/ios/ipa/*.ipa
