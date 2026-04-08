@@ -1,4 +1,4 @@
-name: THE-PATH-SUCCESS
+name: GOLDEN-DISTRIBUTION-SIGNED
 
 on:
   workflow_dispatch:
@@ -10,56 +10,54 @@ jobs:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Install Apple Secrets & Setup Path
+      - name: 2. Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+
+      - name: 3. Install Distribution Certificate
         run: |
-          # Создаем связку ключей
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Импортируем сертификат
+          # Берем твой основной P12_BASE64 (Distribution) 
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
           security import certificate.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           
-          # Разрешаем доступ и делаем сейф основным
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          # Устанавливаем профиль
+          # Ставим профиль SMART_DISTRIBUTION [cite: 2]
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
           
-          # Узнаем точное имя сертификата для прописки путей
-          CERT_NAME=$(security find-identity -v -p codesigning "$KEYCHAIN_PATH" | head -1 | grep -o '".*"' | tr -d '"')
-          echo "CERT_NAME=$CERT_NAME" >> $GITHUB_ENV
+          # Находим UUID профиля (f2e7364b...) [cite: 2]
+          UUID=$(grep -aA1 "UUID" ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision | grep -o "[-A-Z0-9]\{36\}")
+          echo "PROFILE_UUID=$UUID" >> $GITHUB_ENV
 
-      - name: 3. Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-
-      - name: 4. Repair Project & Hard-Code Paths
+      - name: 4. Configure Clean Project
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           
-          # ПРОПИСЫВАЕМ ПУТИ И КОМАНДУ ВНУТРЬ ПРОЕКТА
+          # Прописываем Team ID (PCSW3AKAPF) [cite: 2] и заставляем использовать Distribution
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/CODE_SIGN_IDENTITY = \"iPhone Developer\";/CODE_SIGN_IDENTITY = \"$CERT_NAME\";/g" ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g" ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \"\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_UUID\";/g" ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/CODE_SIGN_IDENTITY = \"iPhone Developer\";/CODE_SIGN_IDENTITY = \"Apple Distribution\";/g" ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Build Signed IPA
+      - name: 5. Build Final IPA
         run: |
-          # Теперь, когда пути прописаны в самое сердце проекта, собираем IPA
+          # Теперь все пути ведут к Distribution сертификату
           flutter build ipa --release --export-method app-store
 
-      - name: 6. Save IPA to Artifacts
+      - name: 6. Save Result
         if: always()
         uses: actions/upload-artifact@v4
         with:
