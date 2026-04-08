@@ -1,4 +1,4 @@
-name: FINAL-GET-RESULT
+name: SUCCESS-GET-FILE
 
 on:
   workflow_dispatch:
@@ -24,19 +24,25 @@ jobs:
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
           sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
-          # Прописываем твой ID еще раз, на всякий случай
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 4. Just Archive
-        # Мы используем команду ios вместо ipa, она менее капризная к сертификатам в конце
+      - name: 4. Build IPA (The Action)
+        continue-on-error: true
         run: |
           flutter build ios --release --no-codesign --no-version-check
-        continue-on-error: true
 
-      - name: 5. Force Export Result
+      - name: 5. Pack Everything (The Treasure Chest)
+        if: always()
+        run: |
+          mkdir -p out_assets
+          # Собираем всё, что Котик успел создать
+          cp -R build/ios/iphoneos/Runner.app out_assets/ || true
+          # Если создался архив - забираем и его
+          cp -R build/ios/archive/Runner.xcarchive out_assets/ || true
+
+      - name: 6. Show Me The Money
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_Final_Collection
-          # Мы забираем ВСЁ, что он успел собрать в папке сборки
-          path: build/ios/iphoneos/
+          name: SmartBody_COMPLETE_APP
+          path: out_assets/
