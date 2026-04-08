@@ -18,14 +18,11 @@ jobs:
 
       - name: 3. Install All Certificates and Profiles
         run: |
-          # Создаем временную связку ключей (сейф)
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Импортируем оба ключа: Distribution и Development
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > dist.p12
           echo "${{ secrets.DEV_P12_BASE64 }}" | base64 --decode > dev.p12
           
@@ -33,42 +30,39 @@ jobs:
           security import dist.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           security import dev.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           
-          # Даем системе доступ к ключам
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          # Устанавливаем профили
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision
           echo "${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dev.mobileprovision
           
-          # Определяем UUID профиля и его Bundle ID
           DIST_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
-          # Копируем профиль под именем UUID (Xcode это обожает)
           cp ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$DIST_UUID.mobileprovision
           
           echo "DIST_UUID=$DIST_UUID" >> $GITHUB_ENV
-          echo "BUNDLE_ID=com.nataliia.smartbodylife" >> $GITHUB_ENV
 
       - name: 4. Repair and Configure Project
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
-          # Создаем проект с правильным именем
           flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
           
-          # Жесткая настройка Bundle ID и Team ID под твой профиль
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
 
+      - name: 4.5 Generate App Icons (Чтобы Xcode не ворчал)
+        run: |
+          # Устанавливаем инструмент для иконок и запускаем его
+          flutter pub get
+          flutter pub run flutter_launcher_icons:main
+
       - name: 5. Archive and Export IPA
         run: |
-          # Собираем архив (печем пирог)
           flutter build ipa --release --no-codesign
           
-          # Создаем инструкции для упаковки в коробку
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -89,7 +83,6 @@ jobs:
           </plist>
           EOF
 
-          # Финальный экспорт силами Xcode
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
