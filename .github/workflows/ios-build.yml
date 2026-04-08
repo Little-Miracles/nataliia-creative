@@ -1,4 +1,4 @@
-name: SUCCESS-GET-FILE
+name: APPLE-READY-IPA
 
 on:
   workflow_dispatch:
@@ -10,39 +10,50 @@ jobs:
       - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Setup Flutter
+      - name: 2. Install Certificates (Распаковка твоих секретов)
+        run: |
+          # Создаем временную связку ключей прямо в облаке
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Импортируем твой сертификат из секретов
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k "$KEYCHAIN_PATH" -P "" -A -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Устанавливаем профиль
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: 3. Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
-          channel: stable
 
-      - name: 3. Radical Fix (Proven)
+      - name: 4. Repair & Configure Project
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
-          rm -rf ios/Runner.xcworkspace
           PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
           flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
-          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # Прописываем твой Team ID (PCSW3AKAPF), чтобы Apple узнала автора
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/embed_and_thin//g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 4. Build IPA (The Action)
-        continue-on-error: true
+      - name: 5. Build & Export SIGNED IPA
         run: |
-          flutter build ios --release --no-codesign --no-version-check
+          # Мы собираем IPA и просим Flutter САМОМУ подписать его твоими секретами
+          flutter build ipa --release \
+            --export-method app-store \
+            --codesign
 
-      - name: 5. Pack Everything (The Treasure Chest)
-        if: always()
-        run: |
-          mkdir -p out_assets
-          # Собираем всё, что Котик успел создать
-          cp -R build/ios/iphoneos/Runner.app out_assets/ || true
-          # Если создался архив - забираем и его
-          cp -R build/ios/archive/Runner.xcarchive out_assets/ || true
-
-      - name: 6. Show Me The Money
+      - name: 6. Upload IPA to Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBody_COMPLETE_APP
-          path: out_assets/
+          name: SmartBody_Apple_Ready_IPA
+          path: build/ios/ipa/*.ipa
