@@ -1,4 +1,4 @@
-name: GRAND-FINALE-SUCCESS
+name: FINAL-IPA-DELIVERY
 
 on:
   workflow_dispatch:
@@ -7,18 +7,16 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Install ALL Keys (Dev + Dist)
+      - name: 2. Install Keys & Get UUID
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
           KEYCHAIN_PASSWORD=$(openssl rand -base64 21)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-          # Импортируем оба твоих ключа (как мы делали в прошлый раз, когда он сказал "archive done")
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > dist.p12
           echo "${{ secrets.DEV_P12_BASE64 }}" | base64 --decode > dev.p12
           security import dist.p12 -k "$KEYCHAIN_PATH" -P "${{ secrets.P12_PASSWORD }}" -A -T /usr/bin/codesign
@@ -27,60 +25,62 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
 
-          # Устанавливаем профили
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision
-          echo "${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dev.mobileprovision
           
-          # Получаем тот самый UUID (f2e7364b...)
+          # Берем UUID и BundleID прямо из твоего профиля
           UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
+          B_ID=$(/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision) | sed "s/PCSW3AKAPF.//")
+          
           echo "DIST_UUID=$UUID" >> $GITHUB_ENV
+          echo "BUNDLE_ID=$B_ID" >> $GITHUB_ENV
 
       - name: 3. Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
 
-      - name: 4. Prepare Project
+      - name: 4. Repair Project & Align ID
         run: |
           flutter pub get
           rm -rf ios/Runner.xcodeproj
-          PROJECT_NAME=$(grep '^name:' pubspec.yaml | awk '{print $2}')
-          flutter create . --platforms ios --org com.nataliia --project-name $PROJECT_NAME
+          flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
+          
+          # Устанавливаем Bundle ID ровно такой, как в профиле
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = $BUNDLE_ID;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Archive and Manual Export
+      - name: 5. Archive and Force Export
         run: |
-          # 1. Сначала создаем архив (это у нас уже получалось!)
+          # 1. Снова печем архив
           flutter build ipa --release --no-codesign
           
-          # 2. А теперь САМИ создаем файл ExportOptions.plist, чтобы принудительно завязать бантик
+          # 2. Создаем ExportOptions.plist с ИДЕАЛЬНЫМИ данными
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key>
-            <string>app-store</string>
+            <string>app-store-connect</string>
             <key>teamID</key>
             <string>PCSW3AKAPF</string>
             <key>provisioningProfiles</key>
             <dict>
-              <key>com.nataliia.smartbodylife</key>
+              <key>$BUNDLE_ID</key>
               <string>$DIST_UUID</string>
             </dict>
           </dict>
           </plist>
           EOF
 
-          # 3. Финальный экспорт в IPA силами Xcode
+          # 3. Финальный рывок
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/ExportOptions.plist \
-            -allowProvisioningUpdates
+            -exportOptionsPlist ios/ExportOptions.plist
 
-      - name: 6. Save IPA to Artifacts
+      - name: 6. Save IPA
         if: always()
         uses: actions/upload-artifact@v4
         with:
