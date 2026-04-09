@@ -5,7 +5,8 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    # Используем более новую систему для свежего SDK
+    runs-on: macos-15
     steps:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
@@ -47,16 +48,21 @@ jobs:
       - name: 4. Repair and Configure Project
         run: |
           flutter pub get
+          # Генерируем проект
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
           flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
           
+          # Подставляем твои ID и Команду
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
 
-          # Добавляем поддержку всех ориентаций для iPad (Фикс ошибки 409)
           PLIST="ios/Runner/Info.plist"
+          # ДОБАВЛЯЕМ ОПИСАНИЕ ДЛЯ КАЛЕНДАРЯ (Фикс ошибки 90683)
+          /usr/libexec/PlistBuddy -c "Add :NSCalendarsUsageDescription string 'Приложению нужен доступ к календарю для планирования ваших тренировок.'" $PLIST || true
+
+          # Поддержка всех ориентаций для iPad
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad array" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientationPortrait" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:1 string UIInterfaceOrientationPortraitUpsideDown" $PLIST || true
@@ -68,7 +74,8 @@ jobs:
 
       - name: 5. Archive and Export IPA
         run: |
-          flutter build ipa --release --no-codesign
+          # Собираем архив с НОВЫМ номером сборки (build-number=2)
+          flutter build ipa --release --no-codesign --build-number=2
           
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -99,5 +106,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_Apple_Ready_IPA
+          name: SmartBodyLife_V2_Build2
           path: build/ios/ipa/*.ipa
