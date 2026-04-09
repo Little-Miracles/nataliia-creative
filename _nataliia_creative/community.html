@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community | Nataliia Creative</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Стиль специально для Галереи Партнеров */
+        .partner-grid {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .partner-card {
+            width: 200px;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .partner-card:hover {
+            transform: scale(1.05); /* Чуть увеличивается при наведении */
+        }
+
+        .partner-logo {
+            width: 150px;
+            height: 150px;
+            object-fit: cover; /* Чтобы картинка заполняла круг */
+            border-radius: 50%; /* Делаем круглые аватарки */
+            border: 2px solid #333;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        .partner-card:hover .partner-logo {
+            border-color: #D4AF37; /* Золотая рамка при наведении */
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .partner-name {
+            color: #fff;
+            font-size: 18px;
+            margin: 5px 0;
+        }
+
+        .partner-desc {
+            color: #888;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <nav>
+            <a href="index.html">HOME</a>
+            <a href="about.html">THE STUDIO</a>
+            <a href="books.html">BOOKS</a>
+            <a href="apps.html">APPLICATIONS</a>
+            <a href="miracles.html">LITTLE MIRACLES</a>
+            <a href="art.html">ART & 3D</a>
+            <a href="contact.html">CONTACT</a>
+        </nav>
+    </header>
+
+    <section class="hero" style="padding: 40px 20px;">
+        <h1>COMMUNITY & PARTNERS</h1>
+        <p class="slogan">Talented Creators We Love</p>
+    </section>
+
+    <hr>
+
+    <main style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+        
+        <p style="color: #aaa; margin-bottom: 40px;">
+            A curated collection of artists, developers, and creators who share our vision.
+            <br>Click on a profile to visit their page.
+        </p>
+
+        <div class="partner-grid">
+
+            <a href="#" class="partner-card">
+                <img src="images/logo_main.png" alt="Partner 1" class="partner-logo">
+                <h3 class="partner-name">Cyber Studio</h3>
+                <p class="partner-desc">Code & Security</p>
+            </a>
+
+            <a href="#" class="partner-card">
+                <img src="images/logo_books.png" alt="Partner 2" class="partner-logo">
+                <h3 class="partner-name">Art Vision</h3>
+                <p class="partner-desc">Digital Design</p>
+            </a>
+
+            <a href="#" class="partner-card">
+                <img src="images/logo_art.png" alt="Partner 3" class="partner-logo">
+                <h3 class="partner-name">Magic Print</h3>
+                <p class="partner-desc">3D Modeling</p>
+            </a>
+
+            <div class="partner-card" style="opacity: 0.5; cursor: default;">
+                <div style="width: 150px; height: 150px; border-radius: 50%; border: 2px dashed #555; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+                    <span style="font-size: 30px; color: #555;">+</span>
+                </div>
+                <h3 class="partner-name">Join Us</h3>
+                <p class="partner-desc">Apply via Contact</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <p>© 2025 Nataliia Creative. All rights reserved.</p>
+    </footer>
+
+</body>
+</html>
