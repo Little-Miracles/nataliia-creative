@@ -17,11 +17,11 @@ dependencies:
   intl: 0.19.0
   image_picker: ^1.0.0
 
-  google_mlkit_commons: 0.5.0
+  google_mlkit_commons: ^0.6.1
   mobile_scanner: 3.5.2    # ГЛАЗА: Сканирует сам штрих-кod через камеру
   openfoodfacts: ^3.25.0    # МОЗГИ: Ищет этот код в мировой базе продуктов
-  google_mlkit_object_detection: 0.10.0 # <--- Добавили для распознавания объектов в кадре
-  google_mlkit_barcode_scanning: 0.9.0 # <--- Добавили для сканирования штрих-кodов
+  google_mlkit_object_detection: ^0.11.0 # <--- Добавили для распознавания объектов в кадре
+  google_mlkit_barcode_scanning: ^0.10.0 # <--- Добавили для сканирования штрих-кodов
   
   #camera: 0.10.5+9  # <--- ГЛАЗА: Живое видео для сканера 📸
   tflite_flutter: ^0.12.1 # <--- МОЗГИ: Чтобы запускать TensorFlow Lite прямо на ноутбуке 🧠
@@ -43,7 +43,7 @@ dependencies:
   sqflite: ^2.3.0
 
   # ИНСТРУМЕНТЫ И ПЕРЕВОД
-  google_mlkit_translation: 0.8.0
+  google_mlkit_translation: ^0.9.0
   collection: ^1.18.0
   path: ^1.9.0
   google_fonts: ^6.2.1
