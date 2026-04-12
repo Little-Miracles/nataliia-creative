@@ -67,7 +67,6 @@ flutter:
   assets:
     - ui_images/   
     - res_gym/
-    - user_artifacts/  # <--- Добавь эту строчку здесь
     - avatars/
     - instructions/
     - images/
@@ -77,20 +76,11 @@ flutter:
     - item_male/layers/
     - item_female/layers/
     - assets/sounds/  # <--- Теперь программа знает, где искать дзынь
-    - assets/fonts/ # <--- Добавили папку для шрифтов
     - assets/images/soups/
     - assets/images/salads/
     - assets/images/mains/
-    - assets/images/drinks/
-    - assets/images/snacks/
   
 
-# ДОБАВЛЯЕМ ШРИФТ ДЛЯ ЭЛЕКТРОННЫХ ЧАСОВ 🕰
-  #fonts:
-   # - family: DSEG
-     # fonts:
-     #   - asset: assets/fonts/DSEG7Classic-Bold.ttf # Убедись, что название файла совпадает!
-    
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
