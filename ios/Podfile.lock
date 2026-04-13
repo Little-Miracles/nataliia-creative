@@ -11,19 +11,19 @@ PODS:
     - Flutter
   - flutter_timezone (0.0.1):
     - Flutter
-  - google_mlkit_barcode_scanning (0.9.0):
+  - google_mlkit_barcode_scanning (0.10.0):
     - Flutter
     - google_mlkit_commons
     - GoogleMLKit/BarcodeScanning (~> 4.0.0)
-  - google_mlkit_commons (0.5.0):
+  - google_mlkit_commons (0.6.1):
     - Flutter
     - MLKitVision
-  - google_mlkit_object_detection (0.10.0):
+  - google_mlkit_object_detection (0.11.0):
     - Flutter
     - google_mlkit_commons
     - GoogleMLKit/ObjectDetection (~> 4.0.0)
     - GoogleMLKit/ObjectDetectionCustom (~> 4.0.0)
-  - google_mlkit_translation (0.8.0):
+  - google_mlkit_translation (0.9.0):
     - Flutter
     - google_mlkit_commons
     - GoogleMLKit/Translate (~> 4.0.0)
@@ -267,12 +267,12 @@ SPEC CHECKSUMS:
   audioplayers_darwin: 835ced6edd4c9fc8ebb0a7cc9e294a91d99917d5
   device_info_plus: 71ffc6ab7634ade6267c7a93088ed7e4f74e5896
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_local_notifications: 643a3eda1ce1c0599413ca31672536d423dee214
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
   flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
-  google_mlkit_barcode_scanning: 48f187e61b95bdfbb89fd014454392844e0edda8
-  google_mlkit_commons: 8c42b5f6f6b7efa19adaf7e32613abf59bba88ad
-  google_mlkit_object_detection: 9c24345955bfd1f2beb5e7a94b5df519cd3eeb47
-  google_mlkit_translation: 9fb409ad97ba654d80bd58b7733b406377454ef2
+  google_mlkit_barcode_scanning: 677dbd0a43df527f5a4055cdfc53cf86ff02c01e
+  google_mlkit_commons: f27386da2a4d88eb7c56b4dd38dfcf61d9257d57
+  google_mlkit_object_detection: c2c939f830e85e05ee409544838d989e81e6625e
+  google_mlkit_translation: 69ffd583b469193ef2e0cbc413f3d04bca7570d9
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
   GoogleMLKit: 2bd0dc6253c4d4f227aad460f69215a504b2980e
   GoogleToolboxForMac: 8bef7c7c5cf7291c687cf5354f39f9db6399ad34
@@ -306,6 +306,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   video_player_avfoundation: a8ea941d9519a60fa93a9908123c68e0917cbd1d
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: bf7409eab53266b47080897df82424f8d5051a04
 
 COCOAPODS: 1.15.2

@@ -247,6 +247,20 @@ class ActiveSessionProvider with ChangeNotifier {
     final customLibrary = Provider.of<CustomWorkoutProvider>(context, listen: false);
     final metrics = Provider.of<MetricsProvider>(context, listen: false);
     
+// --- ПРОВЕРКА ДАННЫХ ДЛЯ НАТАЛЬИ ---
+    print("--- ОТЧЕТ ПЕРЕД СОХРАНЕНИЕМ ---");
+    print("1. Имя тренировки в сессии: ${_currentRunningWorkout?.name}");
+    print("2. ID тренировки в сессии: ${_currentRunningWorkout?.id}");
+    print("3. Сколько упражнений записано в блокноте: ${_sessionLog.length}");
+    
+    int checkIndex = customLibrary.myCustomList.indexWhere((w) => w.id == _currentRunningWorkout?.id);
+    print("4. Нашли эту папку в архиве? (индекс): $checkIndex");
+    
+    if (_sessionLog.isEmpty) {
+      print("ВНИМАНИЕ: Блокнот пустой! Данные из карточек не дошли до провайдера.");
+    }
+    print("-------------------------------");
+
     List<String> exercisesDetails = [];
     double totalKcal = 0.0;
 
