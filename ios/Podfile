@@ -29,6 +29,9 @@ post_install do |installer|
       # Оставляем только самое важное для работы
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
       config.build_settings['ENABLE_BITCODE'] = 'NO'
+      
+      # ДОБАВЛЯЕМ ТОЛЬКО ЭТУ СТРОЧКУ НИЖЕ:
+      config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
     end
   end
 end
