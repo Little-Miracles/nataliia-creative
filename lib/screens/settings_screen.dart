@@ -71,20 +71,26 @@ _buildToggleItem(
 
             // --- 3. LEGAL & LICENSES ---
             _sectionHeader("LEGAL ARCHIVE"),
-            // 1. Для DISCLAIMER
-_buildLinkItem(Icons.info_outline, "Medical Disclaimer", () {
-  _launchURL("https://docs.google.com/document/d/13SpfXwEeclOg03Am-zhLI30-Jd8h9Y4_Rh_dqURuySM/edit?usp=sharing");
-}),
+            
+            // 1. НОВАЯ КНОПКА ДЛЯ APPLE (Guideline 1.4.1)
+            _buildLinkItem(Icons.menu_book_outlined, "Sources & Medical Compliance", () {
+              _launchURL("https://docs.google.com/document/d/1LmneGc114rQR377FYS_9ZMcW7QKNVPC5ie5z9CTzhck/edit?usp=sharing");
+            }),
 
-// 2. Для PRIVACY POLICY
-_buildLinkItem(Icons.verified_user, "Privacy Policy", () {
-  _launchURL("https://docs.google.com/document/d/1UpywYt9ir7gwUdrHVNyZvusF8WIawe4_sT2XyeL8Jjs/edit?usp=sharing");
-}),
+            // 2. Для DISCLAIMER (твоя старая кнопка)
+            _buildLinkItem(Icons.info_outline, "Medical Disclaimer", () {
+              _launchURL("https://docs.google.com/document/d/13SpfXwEeclOg03Am-zhLI30-Jd8h9Y4_Rh_dqURuySM/edit?usp=sharing");
+            }),
 
-// 3. Для EULA (Terms of Service)
-_buildLinkItem(Icons.gavel, "Terms of Service (EULA)", () {
-  _launchURL("https://docs.google.com/document/d/19bF_TbqJheMKHpsu0jRHWB18zAJOdnHFN-kSVFrXsHc/edit?usp=sharing");
-}),
+            // 3. Для PRIVACY POLICY
+            _buildLinkItem(Icons.verified_user, "Privacy Policy", () {
+              _launchURL("https://docs.google.com/document/d/1UpywYt9ir7gwUdrHVNyZvusF8WIawe4_sT2XyeL8Jjs/edit?usp=sharing");
+            }),
+
+            // 4. Для EULA (Terms of Service)
+            _buildLinkItem(Icons.gavel, "Terms of Service (EULA)", () {
+              _launchURL("https://docs.google.com/document/d/19bF_TbqJheMKHpsu0jRHWB18zAJOdnHFN-kSVFrXsHc/edit?usp=sharing");
+            }),
 
             const SizedBox(height: 40),
 
