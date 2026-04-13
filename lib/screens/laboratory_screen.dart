@@ -27,57 +27,6 @@ class _LaboratoryScreenState extends State<LaboratoryScreen> {
     });
   }
 
-  // --- МЕТОД ДЛЯ УДАЛЕНИЯ ---
-  /*void _confirmDeletion(BuildContext context, Map<String, dynamic> data) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: Text("DELETE DESIGN?", style: GoogleFonts.saira(color: const Color(0xFF6A1B9A), fontWeight: FontWeight.bold)),
-        content: Text("Remove '${data['title']}' from laboratory records?", style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("CANCEL", style: TextStyle(color: Colors.white38))),
-          TextButton(
-            onPressed: () {
-              StorageService.deleteCustomArtifact(data['machineCode']);
-              _loadMyArtifacts(); 
-              Navigator.pop(context);
-            }, 
-            child: const Text("DELETE", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }*/
-
-  // --- МЕТОД ДЛЯ ИНФО (ШТОРКА) ---
- /* void _showArtifactInfo(BuildContext context, Map<String, dynamic> data) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF05100A),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(25),
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(10)))),
-            const SizedBox(height: 20),
-            Text(data['title']?.toUpperCase() ?? "INFO", 
-              style: GoogleFonts.saira(color: const Color(0xFF6A1B9A), fontWeight: FontWeight.bold, fontSize: 22)),
-            const SizedBox(height: 20),
-            _buildInfoRow(Icons.build_circle_outlined, "BUILD", data['description'] ?? "No data provided"),
-            const SizedBox(height: 20),
-            _buildInfoRow(Icons.fitness_center, "TECHNIQUE", data['instructions'] ?? "No data provided"),
-            const SizedBox(height: 20),
-            _buildInfoRow(Icons.security, "SAFETY", data['safety'] ?? "No data provided"),
-          ],
-        ),
-      ),
-    );
-  }*/
 
   Widget _buildInfoRow(IconData icon, String title, String content) {
     return Row(

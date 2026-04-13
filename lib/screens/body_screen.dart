@@ -544,7 +544,7 @@ Widget _buildDailyTargetsPanel(MetricsProvider metrics) {
                   itemCount: 22,
                   itemBuilder: (context, index) {
                     String name = (index < 11) ? 'man${index + 1}' : 'woman${index - 10}';
-                    String path = 'avatars/$name.jpg';
+                    String path = 'avatars/$name.jpeg';
                     return GestureDetector(
                       onTap: () {
                         metrics.updateAvatar(path);
