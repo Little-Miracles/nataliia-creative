@@ -26,12 +26,15 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # Твои важные настройки
+      # Твои важные настройки (сохраняем!)
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
       config.build_settings['ENABLE_BITCODE'] = 'NO'
-      
-      # Единое правило для всех
       config.build_settings['EXCLUDED_ARCHS[sdk=iphonesimulator*]'] = 'arm64'
+
+      # Добавляем "отсечку" паспорта (чтобы не просил ID телефона)
+      config.build_settings['EXPANDED_CODE_SIGN_STYLE'] = 'Manual'
+      config.build_settings['CODE_SIGNING_REQUIRED'] = 'NO'
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
     end
   end
 end
