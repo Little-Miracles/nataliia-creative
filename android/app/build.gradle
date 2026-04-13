@@ -37,7 +37,7 @@ android {
     }
 
     defaultConfig {
-    applicationId = "com.natalia.smart_body_life"
+    applicationId = "com.nataliia.smart_body_life"
     
     // Прямо указываем версию 26 (Android 8.0 Oreo)
     minSdkVersion = 26 
