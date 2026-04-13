@@ -35,8 +35,9 @@ dependencies:
   # ГРАФИКИ: Версия 0.70.0 — самая мощная для новых iPhone
   fl_chart: ^0.69.2
   
-  # КАЛЕНДАРЬ
-  add_2_calendar: 2.2.3
+  # КАЛЕНДАРЬ И СИНХРОНИЗАЦИЯ 📅
+  add_2_calendar: ^2.0.0
+  device_calendar: ^3.9.0
   
   # ПАМЯТЬ И БАЗА ДАННЫХ
   path_provider: ^2.1.5
@@ -89,5 +90,5 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "ui_images/icon.png"
 
 # ДОБАВЬТЕ ЭТО В САМЫЙ КОНЕЦ:
-dependency_overrides:
-  meta: 1.15.0
+#dependency_overrides:
+ # meta: 1.15.0
