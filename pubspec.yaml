@@ -36,7 +36,7 @@ dependencies:
   fl_chart: ^0.69.2
   
   # КАЛЕНДАРЬ
-  add_2_calendar: ^3.0.1
+  add_2_calendar: ^2.2.3
   
   # ПАМЯТЬ И БАЗА ДАННЫХ
   path_provider: ^2.1.5
