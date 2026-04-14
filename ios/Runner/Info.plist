@@ -40,19 +40,21 @@
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone for voice features.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>The app needs permission to save photos to the SmartBodyScan archive.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>The app needs access to the gallery to select food photos.</string>
+	<string>The app needs access to the gallery to select</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
+	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
-		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~iphone</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 </dict>
 </plist>
