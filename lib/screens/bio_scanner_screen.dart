@@ -73,7 +73,7 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
 
     try {
       // 2. ОБЛАЧНАЯ ИДЕНТИФИКАЦИЯ (GEMINI)
-      const String apiKey = "YOUR_API_KEY_HERE"; // Вставь свой ключ!
+      const String apiKey = "AIzaSyBXfTJRNkX-zH-mY2o9Yp6ltBHus6J7U6U"; // Вставь свой ключ!
       final String cloudUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
       
       final bytes = await imageFile.readAsBytes();
