@@ -1,60 +1,72 @@
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TranslationService {
   static Future<String> translateText(String text, String targetCode) async {
     final String cleanCode = targetCode.trim().toLowerCase();
     
-    TranslateLanguage targetLanguage;
+    // 1. ОПРЕДЕЛЯЕМ ЯЗЫК (сохраняем твою логику)
+    String lang;
     if (cleanCode == 'de' || cleanCode == 'german') {
-      targetLanguage = TranslateLanguage.german;
+      lang = 'de';
     } else if (cleanCode == 'fr' || cleanCode == 'french') {
-      targetLanguage = TranslateLanguage.french;
+      lang = 'fr';
     } else if (cleanCode == 'es' || cleanCode == 'spanish') {
-      targetLanguage = TranslateLanguage.spanish;
+      lang = 'es';
     } else {
-      targetLanguage = TranslateLanguage.ukrainian;
+      lang = 'uk'; // По умолчанию украинский
     }
 
-    final options = OnDeviceTranslatorOptions(
-      sourceLanguage: TranslateLanguage.english,
-      targetLanguage: targetLanguage,
-    );
+    // 2. ПРОВЕРКА ЛИМИТА (3 раза в день)
+    final prefs = await SharedPreferences.getInstance();
+    final String today = DateTime.now().toString().substring(0, 10);
+    int count = prefs.getInt('trans_count') ?? 0;
+    String? lastDate = prefs.getString('trans_date');
 
-    final translator = OnDeviceTranslator(
-      sourceLanguage: options.sourceLanguage, 
-      targetLanguage: options.targetLanguage
+    if (lastDate != today) {
+      await prefs.setString('trans_date', today);
+      await prefs.setInt('trans_count', 0);
+      count = 0;
+    }
+
+    if (count >= 3) {
+      // Сообщение на английском, как ты просила
+      return "LIMIT 3/3 REACHED. TRY TOMORROW";
+    }
+
+    // 3. БЕСПЛАТНЫЙ ОБЛАЧНЫЙ ЗАПРОС
+    final url = Uri.parse(
+      "https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=$lang&dt=t&q=${Uri.encodeComponent(text)}"
     );
 
     try {
-      // Пытаемся получить перевод
-      final String result = await translator.translateText(text);
+      final response = await http.get(url);
       
-      // СРАЗУ ЗАКРЫВАЕМ, чтобы он не висел в памяти
-      await translator.close(); 
-      
-      // Проверка на кириллицу в иностранном языке
-      if (targetLanguage != TranslateLanguage.ukrainian && 
-          (result.contains('а') || result.contains('о'))) {
-        return "LOADING ${cleanCode.toUpperCase()}... Tap again.";
-      }
+      if (response.statusCode == 200) {
+        await prefs.setInt('trans_count', count + 1);
+        final data = jsonDecode(response.body);
+        
+        String result = data[0][0][0];
 
-      return result;
+        // Твоя проверка на кириллицу (для испанского/немецкого/французского)
+        if (lang != 'uk' && (result.contains('а') || result.contains('о'))) {
+          return "SYNCHRONIZING ${cleanCode.toUpperCase()}... Tap again.";
+        }
+
+        return result;
+      } else {
+        return text; // Если ошибка связи — возвращаем английский оригинал
+      }
     } catch (e) {
-      await translator.close();
-      return "DOWNLOADING ${cleanCode.toUpperCase()}... Wait 30s.";
+      return text; // Если нет интернета — возвращаем английский оригинал
     }
   }
 }
 
+// Утилитарные классы оставляем пустыми или удаляем, если они больше не вызываются в других местах
 class OnDeviceTranslatorOptions {
-  final TranslateLanguage sourceLanguage;
-  final TranslateLanguage targetLanguage;
-
-  OnDeviceTranslatorOptions({
-    required this.sourceLanguage,
-    required this.targetLanguage,
-  });
-}
-class translateText {
-  translateText(String s, String lang);
+  final String sourceLanguage;
+  final String targetLanguage;
+  OnDeviceTranslatorOptions({required this.sourceLanguage, required this.targetLanguage});
 }
