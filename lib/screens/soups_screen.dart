@@ -50,7 +50,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
 
   // База данных
   final List<FoodItem> soupDatabase = [
-   /* FoodItem(
+   FoodItem(
     name: 'Classic Borscht',
     desc: 'beef, beets, cabbage, potatoes, carrots, onion, tomato paste',
     category: 'MEAT',
@@ -58,7 +58,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 3.5,
     fats: 4.2,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/1.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/1.jpeg'), // Прописали путь!
 
   FoodItem(
     name: 'Beef Solyanka',
@@ -68,7 +68,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.5,
     fats: 7.5,
     carbs: 3.0,
-    imageUrl: 'assets/images/soups/2.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/2.jpeg'), // Прописали путь!
 
 
   FoodItem(
@@ -79,7 +79,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.5,
     fats: 4.5,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/3.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/3.jpeg'), // Прописали путь!
 
 
   FoodItem(
@@ -90,7 +90,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.0,
     fats: 5.5,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/4.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/4.jpeg'), // Прописали путь!
 
 
   FoodItem(
@@ -101,7 +101,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.0,
     fats: 4.0,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/5.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/5.jpeg'), // Прописали путь!
 
 
   FoodItem(
@@ -112,7 +112,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.0,
     fats: 2.5,
     carbs: 5.0,
-    imageUrl: 'assets/images/soups/6.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/6.jpeg'), // Прописали путь!
 
 
   FoodItem(
@@ -123,7 +123,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 1.8,
     carbs: 4.0,
-    imageUrl: 'assets/images/soups/7.png'), // Прописали путь! 
+    imageUrl: 'assets/images/soups/7.jpeg'), // Прописали путь! 
 
 
   FoodItem(
@@ -134,7 +134,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.2,
     fats: 2.2,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/8.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/8.jpeg'), // Прописали путь!
 
   FoodItem(
     name: 'Duck Soup',
@@ -144,7 +144,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.5,
     fats: 5.0,
     carbs: 4.5,
-    imageUrl: 'assets/images/soups/9.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/9.jpeg'), // Прописали путь!
   
 
   FoodItem(
@@ -155,7 +155,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.5,
     fats: 3.0,
     carbs: 4.2,
-    imageUrl: 'assets/images/soups/10.png'), // Прописали путь!
+    imageUrl: 'assets/images/soups/10.jpeg'), // Прописали путь!
   
 
   FoodItem(
@@ -166,7 +166,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.0,
     fats: 5.0,
     carbs: 4.0,
-    imageUrl: 'assets/images/soups/11.png'
+    imageUrl: 'assets/images/soups/11.jpeg'
   ),
 
   FoodItem(
@@ -177,7 +177,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.5,
     fats: 3.5,
     carbs: 4.5,
-    imageUrl: 'assets/images/soups/12.png'
+    imageUrl: 'assets/images/soups/12.jpeg'
   ),
 
   FoodItem(
@@ -188,7 +188,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.0,
     fats: 2.0,
     carbs: 4.0,
-    imageUrl: 'assets/images/soups/13.png'
+    imageUrl: 'assets/images/soups/13.jpeg'
   ),
   FoodItem(
     name: 'Mushroom Cream',
@@ -198,7 +198,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 7.0,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/14.png'
+    imageUrl: 'assets/images/soups/14.jpeg'
   ),
 
   FoodItem(
@@ -209,7 +209,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.2,
     fats: 2.5,
     carbs: 6.5,
-    imageUrl: 'assets/images/soups/15.png'
+    imageUrl: 'assets/images/soups/15.jpeg'
   ),
 
   FoodItem(
@@ -220,7 +220,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 4.5,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/16.png'
+    imageUrl: 'assets/images/soups/16.jpeg'
   ),
 
   FoodItem(
@@ -231,7 +231,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 3.5,
     fats: 6.5,
     carbs: 6.5,
-    imageUrl: 'assets/images/soups/17.png'
+    imageUrl: 'assets/images/soups/17.jpeg'
   ),
 
   FoodItem(
@@ -242,7 +242,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.0,
     fats: 0.2,
     carbs: 5.0,
-    imageUrl: 'assets/images/soups/18.png'
+    imageUrl: 'assets/images/soups/18.jpeg'
   ),
 
   FoodItem(
@@ -253,7 +253,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 3.0,
     fats: 3.5,
     carbs: 4.5,
-    imageUrl: 'assets/images/soups/19.png'
+    imageUrl: 'assets/images/soups/19.jpeg'
   ),
 
   FoodItem(
@@ -264,7 +264,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 2.5,
     carbs: 4.0,
-    imageUrl: 'assets/images/soups/20.png'
+    imageUrl: 'assets/images/soups/20.jpeg'
   ),
 
   FoodItem(
@@ -275,7 +275,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.0,
     fats: 0.5,
     carbs: 8.5,
-    imageUrl: 'assets/images/soups/21.png'
+    imageUrl: 'assets/images/soups/21.jpeg'
   ),
 
   FoodItem(
@@ -286,7 +286,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 1.5,
     carbs: 9.0,
-    imageUrl: 'assets/images/soups/22.png'
+    imageUrl: 'assets/images/soups/22.jpeg'
   ),
 
   FoodItem(
@@ -297,7 +297,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 1.0,
     carbs: 10.0,
-    imageUrl: 'assets/images/soups/23.png'
+    imageUrl: 'assets/images/soups/23.jpeg'
   ),
 
   FoodItem(
@@ -308,7 +308,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 1.5,
     carbs: 3.5,
-    imageUrl: 'assets/images/soups/24.png'
+    imageUrl: 'assets/images/soups/24.jpeg'
   ),
   FoodItem(
     name: 'Beef Goulash Soup',
@@ -318,7 +318,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.5,
     fats: 5.0,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/25.png'
+    imageUrl: 'assets/images/soups/25.jpeg'
   ),
 
   FoodItem(
@@ -329,7 +329,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.5,
     fats: 6.0,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/26.png'
+    imageUrl: 'assets/images/soups/26.jpeg'
   ),
 
   FoodItem(
@@ -340,7 +340,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 2.5,
     carbs: 2.5,
-    imageUrl: 'assets/images/soups/27.png'
+    imageUrl: 'assets/images/soups/27.jpeg'
   ),
 
   FoodItem(
@@ -351,7 +351,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 2.5,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/28.png'
+    imageUrl: 'assets/images/soups/28.jpeg'
   ),
 
   FoodItem(
@@ -362,7 +362,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 5.5,
     carbs: 5.0,
-    imageUrl: 'assets/images/soups/29.png'
+    imageUrl: 'assets/images/soups/29.jpeg'
   ),
 
   FoodItem(
@@ -373,7 +373,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.0,
     fats: 4.0,
     carbs: 5.0,
-    imageUrl: 'assets/images/soups/30.png'
+    imageUrl: 'assets/images/soups/30.jpeg'
   ),
 
   FoodItem(
@@ -384,7 +384,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 6.0,
     fats: 3.0,
     carbs: 4.5,
-    imageUrl: 'assets/images/soups/31.png'
+    imageUrl: 'assets/images/soups/31.jpeg'
   ),
 
   FoodItem(
@@ -395,7 +395,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.5,
     fats: 2.0,
     carbs: 4.0,
-    imageUrl: 'assets/images/soups/32.png'
+    imageUrl: 'assets/images/soups/32.jpeg'
   ),
 
   FoodItem(
@@ -406,7 +406,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.5,
     fats: 6.0,
     carbs: 6.5,
-    imageUrl: 'assets/images/soups/33.png'
+    imageUrl: 'assets/images/soups/33.jpeg'
   ),
 
   FoodItem(
@@ -417,7 +417,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 5.0,
     fats: 7.5,
     carbs: 4.5,
-    imageUrl: 'assets/images/soups/34.png'
+    imageUrl: 'assets/images/soups/34.jpeg'
   ),
 
   FoodItem(
@@ -428,7 +428,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.5,
     fats: 0.5,
     carbs: 6.0,
-    imageUrl: 'assets/images/soups/35.png'
+    imageUrl: 'assets/images/soups/35.jpeg'
   ),
 
   FoodItem(
@@ -439,7 +439,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 3.0,
     carbs: 5.5,
-    imageUrl: 'assets/images/soups/36.png'
+    imageUrl: 'assets/images/soups/36.jpeg'
   ),
 
   FoodItem(
@@ -450,7 +450,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.5,
     fats: 1.5,
     carbs: 6.5,
-    imageUrl: 'assets/images/soups/37.png'
+    imageUrl: 'assets/images/soups/37.jpeg'
   ),
 
   FoodItem(
@@ -461,7 +461,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.5,
     fats: 0.3,
     carbs: 5.0,
-    imageUrl: 'assets/images/soups/38.png'
+    imageUrl: 'assets/images/soups/38.jpeg'
   ),
 
   FoodItem(
@@ -472,7 +472,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 4.5,
     fats: 1.5,
     carbs: 9.5,
-    imageUrl: 'assets/images/soups/39.png'
+    imageUrl: 'assets/images/soups/39.jpeg'
   ),
 
   FoodItem(
@@ -483,7 +483,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.0,
     fats: 2.0,
     carbs: 3.5,
-    imageUrl: 'assets/images/soups/40.png'
+    imageUrl: 'assets/images/soups/40.jpeg'
   ),
 
   FoodItem(
@@ -494,7 +494,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.5,
     fats: 2.5,
     carbs: 3.5,
-    imageUrl: 'assets/images/soups/41.png'
+    imageUrl: 'assets/images/soups/41.jpeg'
   ),
 
   FoodItem(
@@ -505,7 +505,7 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 2.0,
     fats: 5.5,
     carbs: 7.5,
-    imageUrl: 'assets/images/soups/42.png'
+    imageUrl: 'assets/images/soups/42.jpeg'
   ),
 
   FoodItem(
@@ -516,132 +516,200 @@ class _SoupsScreenState extends State<SoupsScreen> {
     proteins: 1.5,
     fats: 4.0,
     carbs: 6.5,
-    imageUrl: 'assets/images/soups/43.png'
-  ),*/
+    imageUrl: 'assets/images/soups/43.jpeg'
+  ),
 
   // --- MEAT (15) ---
   FoodItem(name: ' Classic Ukrainian Borscht', desc: 'beef, beets, cabbage, potatoes, carrots, tomato paste, sour cream', category: 'MEAT', kcal100g: 65, proteins: 3.5, fats: 4.2, carbs: 6.0, 
-  imageUrl: 'assets/images/soups/1.png'),
+  imageUrl: 'assets/images/soups/1.jpeg'),
   FoodItem(name: 'Georgian Beef Kharcho', desc: 'beef, rice, tomato, garlic, walnuts, tkemali, herbs', category: 'MEAT', kcal100g: 75, proteins: 5.5, fats: 4.5, carbs: 5.5,
-   imageUrl: 'assets/images/soups/2.png'),
-  FoodItem(name: 'Russian Beef Solyanka', desc: 'beef, sausages, pickles, olives, onion, tomato paste, lemon', category: 'MEAT', kcal100g: 95, proteins: 6.5, fats: 7.5, carbs: 3.0,
-   imageUrl: 'assets/images/soups/3.png'),
+   imageUrl: 'assets/images/soups/2.jpeg'),
+  FoodItem(name: 'Ukrainian Beef Solyanka', desc: 'beef, sausages, pickles, olives, onion, tomato paste, lemon', category: 'MEAT', kcal100g: 95, proteins: 6.5, fats: 7.5, carbs: 3.0,
+   imageUrl: 'assets/images/soups/3.jpeg'),
   FoodItem(name: 'Uzbek Shurpa', desc: 'lamb, potatoes, carrots, onion, tomato, herbs, spices', category: 'MEAT', kcal100g: 85, proteins: 6.0, fats: 5.5, carbs: 6.0,
-   imageUrl: 'assets/images/soups/4.png'),
+   imageUrl: 'assets/images/soups/4.jpeg'),
   FoodItem(name: 'Italian Meatball Soup', desc: 'beef meatballs, potatoes, carrots, onion, herbs, broth', category: 'MEAT', kcal100g: 70, proteins: 5.0, fats: 4.0, carbs: 5.5,
-   imageUrl: 'assets/images/soups/5.png'),
+   imageUrl: 'assets/images/soups/5.jpeg'),
   FoodItem(name: 'Moroccan Harira', desc: 'lamb, chickpeas, lentils, tomato, coriander, lemon, spices', category: 'MEAT', kcal100g: 90, proteins: 7.0, fats: 4.5, carbs: 8.0, 
-  imageUrl: 'assets/images/soups/6.png'),
+  imageUrl: 'assets/images/soups/6.jpeg'),
   FoodItem(name: 'Hungarian Goulash Soup', desc: 'beef, potatoes, peppers, onion, paprika, caraway, broth', category: 'MEAT', kcal100g: 80, proteins: 6.5, fats: 4.0, carbs: 6.5, 
-  imageUrl: 'assets/images/soups/7.png'),
+  imageUrl: 'assets/images/soups/7.jpeg'),
   FoodItem(name: 'Vietnamese Pho Bo', desc: 'beef, rice noodles, star anise, ginger, onion, herbs, broth', category: 'MEAT', kcal100g: 60, proteins: 5.5, fats: 2.5, carbs: 6.0, 
-  imageUrl: 'assets/images/soups/8.png'),
+  imageUrl: 'assets/images/soups/8.jpeg'),
   FoodItem(name: 'Mexican Caldo de Res', desc: 'beef, corn, zucchini, carrots, cabbage, chili, lime', category: 'MEAT', kcal100g: 70, proteins: 5.5, fats: 3.5, carbs: 6.0,
-   imageUrl: 'assets/images/soups/9.png'),
+   imageUrl: 'assets/images/soups/9.jpeg'),
   FoodItem(name: 'Scottish Lamb Broth', desc: 'lamb, barley, carrots, turnip, leek, parsley, broth', category: 'MEAT', kcal100g: 75, proteins: 6.0, fats: 4.0, carbs: 6.5,
-   imageUrl: 'assets/images/soups/10.png'),
+   imageUrl: 'assets/images/soups/10.jpeg'),
   FoodItem(name: 'Turkish Iskembe Soup', desc: 'lamb, garlic, vinegar, butter, paprika, yogurt', category: 'MEAT', kcal100g: 85, proteins: 7.0, fats: 5.5, carbs: 3.5,
-   imageUrl: 'assets/images/soups/11.png'),
+   imageUrl: 'assets/images/soups/11.jpeg'),
   FoodItem(name: 'Chinese Beef Noodle Soup', desc: 'beef, noodles, soy sauce, star anise, ginger, bok choy', category: 'MEAT', kcal100g: 78, proteins: 7.5, fats: 3.5, carbs: 7.0,
-   imageUrl: 'assets/images/soups/12.png'),
+   imageUrl: 'assets/images/soups/12.jpeg'),
   FoodItem(name: 'Irish Beef Stew Soup', desc: 'beef, potatoes, carrots, onion, Guinness, thyme, broth', category: 'MEAT', kcal100g: 88, proteins: 6.5, fats: 4.5, carbs: 7.0,
-   imageUrl: 'assets/images/soups/13.png'),
+   imageUrl: 'assets/images/soups/13.jpeg'),
   FoodItem(name: 'Egyptian Lentil Meat Soup', desc: 'beef, red lentils, cumin, turmeric, onion, lemon, olive oil', category: 'MEAT', kcal100g: 82, proteins: 7.5, fats: 4.0, carbs: 7.5,
-   imageUrl: 'assets/images/soups/14.png'),
+   imageUrl: 'assets/images/soups/14.jpeg'),
   FoodItem(name: 'Korean Galbitang', desc: 'beef ribs, radish, garlic, green onion, soy sauce, sesame', category: 'MEAT', kcal100g: 92, proteins: 8.5, fats: 5.5, carbs: 3.0, 
-  imageUrl: 'assets/images/soups/15.png'),
+  imageUrl: 'assets/images/soups/15.jpeg'),
 
   // --- POULTRY (15) ---
   FoodItem(name: 'American Chicken Noodle', desc: 'chicken, noodles, carrots, onion, celery, herbs, broth', category: 'POULTRY', kcal100g: 50, proteins: 4.0, fats: 2.5, carbs: 5.0,
-   imageUrl: 'assets/images/soups/16.png'),
+   imageUrl: 'assets/images/soups/16.jpeg'),
   FoodItem(name: 'European Turkey Soup', desc: 'turkey, rice, carrots, celery, onion, thyme, broth', category: 'POULTRY', kcal100g: 48, proteins: 4.5, fats: 1.8, carbs: 4.0, 
-  imageUrl: 'assets/images/soups/17.png'),
+  imageUrl: 'assets/images/soups/17.jpeg'),
   FoodItem(name: 'Asian Chicken Rice Soup', desc: 'chicken, rice, ginger, garlic, sesame oil, green onion', category: 'POULTRY', kcal100g: 52, proteins: 4.2, fats: 2.2, carbs: 5.5,
-   imageUrl: 'assets/images/soups/18.png'),
+   imageUrl: 'assets/images/soups/18.jpeg'),
   FoodItem(name: 'Chinese Duck Soup', desc: 'duck, noodles, bok choy, soy sauce, ginger, star anise', category: 'POULTRY', kcal100g: 80, proteins: 6.5, fats: 5.0, carbs: 4.5, 
-  imageUrl: 'assets/images/soups/19.png'),
+  imageUrl: 'assets/images/soups/19.jpeg'),
   FoodItem(name: 'Mexican Chicken Tortilla', desc: 'chicken, tortilla strips, tomato, chili, avocado, lime', category: 'POULTRY', kcal100g: 65, proteins: 5.5, fats: 3.5, carbs: 6.0, 
-  imageUrl: 'assets/images/soups/20.png'),
+  imageUrl: 'assets/images/soups/20.jpeg'),
   FoodItem(name: 'Thai Chicken Coconut', desc: 'chicken, coconut milk, lemongrass, galangal, lime, chili', category: 'POULTRY', kcal100g: 95, proteins: 6.0, fats: 7.5, carbs: 4.0,
-   imageUrl: 'assets/images/soups/21.png'),
+   imageUrl: 'assets/images/soups/21.jpeg'),
   FoodItem(name: 'Georgian Chikhirtma', desc: 'chicken, eggs, lemon, onion, coriander, flour, saffron', category: 'POULTRY', kcal100g: 58, proteins: 5.5, fats: 3.5, carbs: 3.0, 
-  imageUrl: 'assets/images/soups/22.png'),
-  FoodItem(name: 'Moroccan Chicken Harira', desc: 'chicken, chickpeas, tomato, coriander, cinnamon, lemon', category: 'POULTRY', kcal100g: 72, proteins: 6.5, fats: 3.0, carbs: 7.0, imageUrl: 'assets/images/soups/23.png'),
-  FoodItem(name: 'French Poulet au Pot', desc: 'chicken, leek, carrots, turnip, celery, herbs, broth', category: 'POULTRY', kcal100g: 55, proteins: 5.0, fats: 2.5, carbs: 4.5, imageUrl: 'assets/images/soups/24.png'),
-  FoodItem(name: 'Korean Samgyetang', desc: 'whole chicken, ginseng, garlic, rice, jujube, broth', category: 'POULTRY', kcal100g: 85, proteins: 8.0, fats: 4.5, carbs: 5.0, imageUrl: 'assets/images/soups/25.png'),
-  FoodItem(name: 'Indian Chicken Shorba', desc: 'chicken, tomato, onion, garam masala, ginger, coriander', category: 'POULTRY', kcal100g: 68, proteins: 6.5, fats: 3.5, carbs: 4.5, imageUrl: 'assets/images/soups/26.png'),
-  FoodItem(name: 'Italian Chicken Minestrone', desc: 'chicken, pasta, zucchini, tomato, beans, basil, parmesan', category: 'POULTRY', kcal100g: 62, proteins: 5.5, fats: 2.5, carbs: 6.5, imageUrl: 'assets/images/soups/27.png'),
-  FoodItem(name: 'Greek Avgolemono', desc: 'chicken, rice, eggs, lemon juice, broth, fresh dill', category: 'POULTRY', kcal100g: 60, proteins: 5.0, fats: 3.0, carbs: 5.0, imageUrl: 'assets/images/soups/28.png'),
-  FoodItem(name: 'Vietnamese Pho Ga', desc: 'chicken, rice noodles, star anise, ginger, onion, herbs', category: 'POULTRY', kcal100g: 55, proteins: 5.5, fats: 2.0, carbs: 5.5, imageUrl: 'assets/images/soups/29.png'),
-  FoodItem(name: 'Peruvian Aguadito', desc: 'chicken, rice, cilantro, aji amarillo, peas, corn, broth', category: 'POULTRY', kcal100g: 65, proteins: 6.0, fats: 2.5, carbs: 6.5, imageUrl: 'assets/images/soups/30.png'),
+  imageUrl: 'assets/images/soups/22.jpeg'),
+  FoodItem(name: 'Moroccan Chicken Harira', desc: 'chicken, chickpeas, tomato, coriander, cinnamon, lemon', category: 'POULTRY', kcal100g: 72, proteins: 6.5, fats: 3.0, carbs: 7.0, 
+  imageUrl: 'assets/images/soups/23.jpeg'),
+  FoodItem(name: 'French Poulet au Pot', desc: 'chicken, leek, carrots, turnip, celery, herbs, broth', category: 'POULTRY', kcal100g: 55, proteins: 5.0, fats: 2.5, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/24.jpeg'),
+  FoodItem(name: 'Korean Samgyetang', desc: 'whole chicken, ginseng, garlic, rice, jujube, broth', category: 'POULTRY', kcal100g: 85, proteins: 8.0, fats: 4.5, carbs: 5.0, 
+  imageUrl: 'assets/images/soups/25.jpeg'),
+  FoodItem(name: 'Indian Chicken Shorba', desc: 'chicken, tomato, onion, garam masala, ginger, coriander', category: 'POULTRY', kcal100g: 68, proteins: 6.5, fats: 3.5, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/26.jpeg'),
+  FoodItem(name: 'Italian Chicken Minestrone', desc: 'chicken, pasta, zucchini, tomato, beans, basil, parmesan', category: 'POULTRY', kcal100g: 62, proteins: 5.5, fats: 2.5, carbs: 6.5,
+   imageUrl: 'assets/images/soups/27.jpeg'),
+  FoodItem(name: 'Greek Avgolemono', desc: 'chicken, rice, eggs, lemon juice, broth, fresh dill', category: 'POULTRY', kcal100g: 60, proteins: 5.0, fats: 3.0, carbs: 5.0,
+   imageUrl: 'assets/images/soups/28.jpeg'),
+  FoodItem(name: 'Vietnamese Pho Ga', desc: 'chicken, rice noodles, star anise, ginger, onion, herbs', category: 'POULTRY', kcal100g: 55, proteins: 5.5, fats: 2.0, carbs: 5.5,
+   imageUrl: 'assets/images/soups/29.jpeg'),
+  FoodItem(name: 'Peruvian Aguadito', desc: 'chicken, rice, cilantro, aji amarillo, peas, corn, broth', category: 'POULTRY', kcal100g: 65, proteins: 6.0, fats: 2.5, carbs: 6.5, 
+  imageUrl: 'assets/images/soups/30.jpeg'),
 
   // --- FISH (15) ---
-  FoodItem(name: 'Russian Fish Ukha', desc: 'salmon, potatoes, onion, carrots, bay leaf, dill, broth', category: 'FISH', kcal100g: 55, proteins: 5.5, fats: 3.0, carbs: 4.2, imageUrl: 'assets/images/soups/31.png'),
-  FoodItem(name: 'Norwegian Salmon Soup', desc: 'salmon, potatoes, carrots, leek, cream, dill, butter', category: 'FISH', kcal100g: 78, proteins: 6.0, fats: 5.0, carbs: 4.0, imageUrl: 'assets/images/soups/32.png'),
-  FoodItem(name: 'Finnish Lohikeitto', desc: 'salmon, potatoes, leek, cream, dill, butter, white pepper', category: 'FISH', kcal100g: 90, proteins: 7.0, fats: 6.5, carbs: 4.5, imageUrl: 'assets/images/soups/33.png'),
-  FoodItem(name: 'Portuguese Caldeirada', desc: 'white fish, potatoes, tomato, peppers, olive oil, herbs', category: 'FISH', kcal100g: 60, proteins: 6.5, fats: 3.0, carbs: 4.0, imageUrl: 'assets/images/soups/34.png'),
-  FoodItem(name: 'Japanese Miso Fish Soup', desc: 'cod, miso paste, tofu, seaweed, green onion, dashi', category: 'FISH', kcal100g: 45, proteins: 5.5, fats: 2.0, carbs: 3.5, imageUrl: 'assets/images/soups/35.png'),
-  FoodItem(name: 'Greek Kakavia', desc: 'sea bass, potatoes, onion, olive oil, lemon, herbs', category: 'FISH', kcal100g: 58, proteins: 6.0, fats: 3.5, carbs: 3.5, imageUrl: 'assets/images/soups/36.png'),
-  FoodItem(name: 'Italian Cioppino', desc: 'white fish, tomato, garlic, white wine, basil, olive oil', category: 'FISH', kcal100g: 62, proteins: 7.0, fats: 3.0, carbs: 4.0, imageUrl: 'assets/images/soups/37.png'),
-  FoodItem(name: 'Swedish Fish Soup', desc: 'cod, salmon, potatoes, carrots, cream, dill, mustard', category: 'FISH', kcal100g: 75, proteins: 6.5, fats: 4.5, carbs: 4.5, imageUrl: 'assets/images/soups/38.png'),
-  FoodItem(name: 'Moroccan Chermoula Fish', desc: 'white fish, tomato, cumin, coriander, preserved lemon, olive oil', category: 'FISH', kcal100g: 65, proteins: 7.0, fats: 3.5, carbs: 3.5, imageUrl: 'assets/images/soups/39.png'),
-  FoodItem(name: 'Chinese Steamed Fish Soup', desc: 'tilapia, ginger, soy sauce, sesame oil, green onion, broth', category: 'FISH', kcal100g: 50, proteins: 6.5, fats: 2.0, carbs: 2.5, imageUrl: 'assets/images/soups/40.png'),
-  FoodItem(name: 'Thai Fish Curry Soup', desc: 'white fish, coconut milk, red curry paste, lime, lemongrass', category: 'FISH', kcal100g: 85, proteins: 6.5, fats: 6.0, carbs: 4.5, imageUrl: 'assets/images/soups/41.png'),
-  FoodItem(name: 'Brazilian Moqueca', desc: 'white fish, coconut milk, tomato, peppers, palm oil, coriander', category: 'FISH', kcal100g: 80, proteins: 7.0, fats: 5.5, carbs: 4.0, imageUrl: 'assets/images/soups/42.png'),
-  FoodItem(name: 'Indian Fish Rasam', desc: 'fish, tamarind, tomato, turmeric, cumin, mustard seeds, curry leaves', category: 'FISH', kcal100g: 48, proteins: 5.5, fats: 2.0, carbs: 4.0, imageUrl: 'assets/images/soups/43.png'),
-  FoodItem(name: 'Turkish Balik Corbasi', desc: 'sea bass, potatoes, carrots, tomato, lemon, olive oil, herbs', category: 'FISH', kcal100g: 62, proteins: 6.5, fats: 3.5, carbs: 4.0, imageUrl: 'assets/images/soups/44.png'),
-  FoodItem(name: 'Caribbean Fish Broth', desc: 'snapper, yam, plantain, coconut milk, chili, thyme, lime', category: 'FISH', kcal100g: 70, proteins: 6.0, fats: 4.0, carbs: 6.0, imageUrl: 'assets/images/soups/45.png'),
+  FoodItem(name: 'Russian Fish Ukha', desc: 'salmon, potatoes, onion, carrots, bay leaf, dill, broth', category: 'FISH', kcal100g: 55, proteins: 5.5, fats: 3.0, carbs: 4.2,
+   imageUrl: 'assets/images/soups/31.jpeg'),
+  FoodItem(name: 'Norwegian Salmon Soup', desc: 'salmon, potatoes, carrots, leek, cream, dill, butter', category: 'FISH', kcal100g: 78, proteins: 6.0, fats: 5.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/32.jpeg'),
+  FoodItem(name: 'Finnish Lohikeitto', desc: 'salmon, potatoes, leek, cream, dill, butter, white pepper', category: 'FISH', kcal100g: 90, proteins: 7.0, fats: 6.5, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/33.jpeg'),
+  FoodItem(name: 'Portuguese Caldeirada', desc: 'white fish, potatoes, tomato, peppers, olive oil, herbs', category: 'FISH', kcal100g: 60, proteins: 6.5, fats: 3.0, carbs: 4.0, 
+  imageUrl: 'assets/images/soups/34.jpeg'),
+  FoodItem(name: 'Japanese Miso Fish Soup', desc: 'cod, miso paste, tofu, seaweed, green onion, dashi', category: 'FISH', kcal100g: 45, proteins: 5.5, fats: 2.0, carbs: 3.5, 
+  imageUrl: 'assets/images/soups/35.jpeg'),
+  FoodItem(name: 'Greek Kakavia', desc: 'sea bass, potatoes, onion, olive oil, lemon, herbs', category: 'FISH', kcal100g: 58, proteins: 6.0, fats: 3.5, carbs: 3.5,
+   imageUrl: 'assets/images/soups/36.jpeg'),
+  FoodItem(name: 'Italian Cioppino', desc: 'white fish, tomato, garlic, white wine, basil, olive oil', category: 'FISH', kcal100g: 62, proteins: 7.0, fats: 3.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/37.jpeg'),
+  FoodItem(name: 'Swedish Fish Soup', desc: 'cod, salmon, potatoes, carrots, cream, dill, mustard', category: 'FISH', kcal100g: 75, proteins: 6.5, fats: 4.5, carbs: 4.5,
+   imageUrl: 'assets/images/soups/38.jpeg'),
+  FoodItem(name: 'Moroccan Chermoula Fish', desc: 'white fish, tomato, cumin, coriander, preserved lemon, olive oil', category: 'FISH', kcal100g: 65, proteins: 7.0, fats: 3.5, carbs: 3.5,
+   imageUrl: 'assets/images/soups/39.jpeg'),
+  FoodItem(name: 'Chinese Steamed Fish Soup', desc: 'tilapia, ginger, soy sauce, sesame oil, green onion, broth', category: 'FISH', kcal100g: 50, proteins: 6.5, fats: 2.0, carbs: 2.5,
+   imageUrl: 'assets/images/soups/40.jpeg'),
+  FoodItem(name: 'Thai Fish Curry Soup', desc: 'white fish, coconut milk, red curry paste, lime, lemongrass', category: 'FISH', kcal100g: 85, proteins: 6.5, fats: 6.0, carbs: 4.5,
+   imageUrl: 'assets/images/soups/41.jpeg'),
+  FoodItem(name: 'Brazilian Moqueca', desc: 'white fish, coconut milk, tomato, peppers, palm oil, coriander', category: 'FISH', kcal100g: 80, proteins: 7.0, fats: 5.5, carbs: 4.0,
+  imageUrl: 'assets/images/soups/42.jpeg'),
+  FoodItem(name: 'Indian Fish Rasam', desc: 'fish, tamarind, tomato, turmeric, cumin, mustard seeds, curry leaves', category: 'FISH', kcal100g: 48, proteins: 5.5, fats: 2.0, carbs: 4.0, 
+  imageUrl: 'assets/images/soups/43.jpeg'),
+  FoodItem(name: 'Turkish Balik Corbasi', desc: 'sea bass, potatoes, carrots, tomato, lemon, olive oil, herbs', category: 'FISH', kcal100g: 62, proteins: 6.5, fats: 3.5, carbs: 4.0, 
+  imageUrl: 'assets/images/soups/44.jpeg'),
+  FoodItem(name: 'Caribbean Fish Broth', desc: 'snapper, yam, plantain, coconut milk, chili, thyme, lime', category: 'FISH', kcal100g: 70, proteins: 6.0, fats: 4.0, carbs: 6.0,
+   imageUrl: 'assets/images/soups/45.jpeg'),
 
   // --- SEAFOOD (15) ---
-  FoodItem(name: 'French Bouillabaisse', desc: 'fish, mussels, shrimp, tomato, saffron, garlic, herbs', category: 'SEAFOOD', kcal100g: 70, proteins: 6.5, fats: 3.5, carbs: 4.5, imageUrl: 'assets/images/soups/46.png'),
-  FoodItem(name: 'Thai Tom Yum', desc: 'shrimp, mushrooms, lemongrass, lime, chili, fish sauce', category: 'SEAFOOD', kcal100g: 50, proteins: 5.0, fats: 2.0, carbs: 4.0, imageUrl: 'assets/images/soups/47.png'),
-  FoodItem(name: 'American Clam Chowder', desc: 'clams, potatoes, cream, bacon, onion, celery, thyme', category: 'SEAFOOD', kcal100g: 95, proteins: 5.5, fats: 6.5, carbs: 7.0, imageUrl: 'assets/images/soups/48.png'),
-  FoodItem(name: 'Spanish Seafood Zarzuela', desc: 'shrimp, mussels, calamari, tomato, garlic, white wine', category: 'SEAFOOD', kcal100g: 65, proteins: 7.0, fats: 3.0, carbs: 4.0, imageUrl: 'assets/images/soups/49.png'),
-  FoodItem(name: 'Korean Haemul Jeongol', desc: 'seafood mix, tofu, mushrooms, chili paste, green onion', category: 'SEAFOOD', kcal100g: 55, proteins: 6.5, fats: 2.5, carbs: 3.5, imageUrl: 'assets/images/soups/50.png'),
-  FoodItem(name: 'Italian Cacciucco', desc: 'octopus, squid, shrimp, tomato, garlic, red wine, herbs', category: 'SEAFOOD', kcal100g: 72, proteins: 7.5, fats: 3.5, carbs: 4.0, imageUrl: 'assets/images/soups/51.png'),
-  FoodItem(name: 'Japanese Seafood Miso', desc: 'shrimp, clams, tofu, miso, seaweed, green onion, dashi', category: 'SEAFOOD', kcal100g: 48, proteins: 5.5, fats: 2.0, carbs: 4.0, imageUrl: 'assets/images/soups/52.png'),
-  FoodItem(name: 'Portuguese Caldeirada Mar', desc: 'shrimp, mussels, fish, potatoes, tomato, white wine, olive oil', category: 'SEAFOOD', kcal100g: 68, proteins: 6.5, fats: 3.0, carbs: 5.0, imageUrl: 'assets/images/soups/53.png'),
-  FoodItem(name: 'Malaysian Laksa', desc: 'shrimp, rice noodles, coconut milk, curry paste, tofu, bean sprouts', category: 'SEAFOOD', kcal100g: 105, proteins: 6.0, fats: 7.0, carbs: 8.0, imageUrl: 'assets/images/soups/54.png'),
-  FoodItem(name: 'Greek Seafood Soup', desc: 'octopus, shrimp, mussels, tomato, olive oil, lemon, ouzo', category: 'SEAFOOD', kcal100g: 62, proteins: 7.0, fats: 3.0, carbs: 3.5, imageUrl: 'assets/images/soups/55.png'),
-  FoodItem(name: 'Chinese Seafood Hot Pot', desc: 'shrimp, scallops, squid, bok choy, mushrooms, soy broth', category: 'SEAFOOD', kcal100g: 58, proteins: 7.5, fats: 2.0, carbs: 3.5, imageUrl: 'assets/images/soups/56.png'),
-  FoodItem(name: 'Brazilian Moqueca Seafood', desc: 'shrimp, mussels, coconut milk, palm oil, tomato, coriander', category: 'SEAFOOD', kcal100g: 85, proteins: 7.0, fats: 5.5, carbs: 4.5, imageUrl: 'assets/images/soups/57.png'),
-  FoodItem(name: 'Peruvian Chupe de Camarones', desc: 'shrimp, potatoes, corn, cream, egg, chili, herbs', category: 'SEAFOOD', kcal100g: 90, proteins: 7.5, fats: 5.0, carbs: 7.0, imageUrl: 'assets/images/soups/58.png'),
-  FoodItem(name: 'Turkish Seafood Soup', desc: 'shrimp, mussels, calamari, tomato, lemon, olive oil, herbs', category: 'SEAFOOD', kcal100g: 60, proteins: 6.5, fats: 3.0, carbs: 3.5, imageUrl: 'assets/images/soups/59.png'),
-  FoodItem(name: 'Indian Prawn Curry Soup', desc: 'prawns, coconut milk, tomato, curry leaves, mustard seeds, turmeric', category: 'SEAFOOD', kcal100g: 88, proteins: 7.5, fats: 6.0, carbs: 4.5, imageUrl: 'assets/images/soups/60.png'),
+  FoodItem(name: 'French Bouillabaisse', desc: 'fish, mussels, shrimp, tomato, saffron, garlic, herbs', category: 'SEAFOOD', kcal100g: 70, proteins: 6.5, fats: 3.5, carbs: 4.5,
+   imageUrl: 'assets/images/soups/46.jpeg'),
+  FoodItem(name: 'Thai Tom Yum', desc: 'shrimp, mushrooms, lemongrass, lime, chili, fish sauce', category: 'SEAFOOD', kcal100g: 50, proteins: 5.0, fats: 2.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/47.jpeg'),
+  FoodItem(name: 'American Clam Chowder', desc: 'clams, potatoes, cream, bacon, onion, celery, thyme', category: 'SEAFOOD', kcal100g: 95, proteins: 5.5, fats: 6.5, carbs: 7.0,
+   imageUrl: 'assets/images/soups/48.jpeg'),
+  FoodItem(name: 'Spanish Seafood Zarzuela', desc: 'shrimp, mussels, calamari, tomato, garlic, white wine', category: 'SEAFOOD', kcal100g: 65, proteins: 7.0, fats: 3.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/49.jpeg'),
+  FoodItem(name: 'Korean Haemul Jeongol', desc: 'seafood mix, tofu, mushrooms, chili paste, green onion', category: 'SEAFOOD', kcal100g: 55, proteins: 6.5, fats: 2.5, carbs: 3.5,
+   imageUrl: 'assets/images/soups/50.jpeg'),
+  FoodItem(name: 'Italian Cacciucco', desc: 'octopus, squid, shrimp, tomato, garlic, red wine, herbs', category: 'SEAFOOD', kcal100g: 72, proteins: 7.5, fats: 3.5, carbs: 4.0,
+   imageUrl: 'assets/images/soups/51.jpeg'),
+  FoodItem(name: 'Japanese Seafood Miso', desc: 'shrimp, clams, tofu, miso, seaweed, green onion, dashi', category: 'SEAFOOD', kcal100g: 48, proteins: 5.5, fats: 2.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/52.jpeg'),
+  FoodItem(name: 'Portuguese Caldeirada Mar', desc: 'shrimp, mussels, fish, potatoes, tomato, white wine, olive oil', category: 'SEAFOOD', kcal100g: 68, proteins: 6.5, fats: 3.0, carbs: 5.0,
+   imageUrl: 'assets/images/soups/53.jpeg'),
+  FoodItem(name: 'Malaysian Laksa', desc: 'shrimp, rice noodles, coconut milk, curry paste, tofu, bean sprouts', category: 'SEAFOOD', kcal100g: 105, proteins: 6.0, fats: 7.0, carbs: 8.0, 
+  imageUrl: 'assets/images/soups/54.jpeg'),
+  FoodItem(name: 'Greek Seafood Soup', desc: 'octopus, shrimp, mussels, tomato, olive oil, lemon, ouzo', category: 'SEAFOOD', kcal100g: 62, proteins: 7.0, fats: 3.0, carbs: 3.5, 
+  imageUrl: 'assets/images/soups/55.jpeg'),
+  FoodItem(name: 'Chinese Seafood Hot Pot', desc: 'shrimp, scallops, squid, bok choy, mushrooms, soy broth', category: 'SEAFOOD', kcal100g: 58, proteins: 7.5, fats: 2.0, carbs: 3.5,
+   imageUrl: 'assets/images/soups/56.jpeg'),
+  FoodItem(name: 'Brazilian Moqueca Seafood', desc: 'shrimp, mussels, coconut milk, palm oil, tomato, coriander', category: 'SEAFOOD', kcal100g: 85, proteins: 7.0, fats: 5.5, carbs: 4.5,
+   imageUrl: 'assets/images/soups/57.jpeg'),
+  FoodItem(name: 'Peruvian Chupe de Camarones', desc: 'shrimp, potatoes, corn, cream, egg, chili, herbs', category: 'SEAFOOD', kcal100g: 90, proteins: 7.5, fats: 5.0, carbs: 7.0,
+   imageUrl: 'assets/images/soups/58.jpeg'),
+  FoodItem(name: 'Turkish Seafood Soup', desc: 'shrimp, mussels, calamari, tomato, lemon, olive oil, herbs', category: 'SEAFOOD', kcal100g: 60, proteins: 6.5, fats: 3.0, carbs: 3.5,
+   imageUrl: 'assets/images/soups/59.jpeg'),
+  FoodItem(name: 'Indian Prawn Curry Soup', desc: 'prawns, coconut milk, tomato, curry leaves, mustard seeds, turmeric', category: 'SEAFOOD', kcal100g: 88, proteins: 7.5, fats: 6.0, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/60.jpeg'),
 
   // --- VEGETABLE (15) ---
-  FoodItem(name: 'Russian Shchi', desc: 'cabbage, potatoes, carrots, onion, tomato paste, sour cream', category: 'VEGETABLE', kcal100g: 35, proteins: 1.5, fats: 1.5, carbs: 5.5, imageUrl: 'assets/images/soups/61.png'),
-  FoodItem(name: 'Italian Minestrone', desc: 'zucchini, tomato, beans, pasta, basil, parmesan, olive oil', category: 'VEGETABLE', kcal100g: 55, proteins: 2.5, fats: 2.0, carbs: 8.5, imageUrl: 'assets/images/soups/62.png'),
-  FoodItem(name: 'French Soupe au Pistou', desc: 'beans, zucchini, tomato, pasta, basil pesto, garlic', category: 'VEGETABLE', kcal100g: 60, proteins: 3.0, fats: 2.5, carbs: 9.0, imageUrl: 'assets/images/soups/63.png'),
-  FoodItem(name: 'Indian Dal Soup', desc: 'red lentils, tomato, onion, turmeric, cumin, ginger, coriander', category: 'VEGETABLE', kcal100g: 65, proteins: 4.5, fats: 2.0, carbs: 9.5, imageUrl: 'assets/images/soups/64.png'),
-  FoodItem(name: 'Lebanese Lentil Soup', desc: 'lentils, onion, cumin, lemon juice, olive oil, coriander', category: 'VEGETABLE', kcal100g: 70, proteins: 4.5, fats: 2.5, carbs: 10.0, imageUrl: 'assets/images/soups/65.png'),
-  FoodItem(name: 'Spanish Gazpacho', desc: 'tomatoes, cucumber, peppers, garlic, olive oil, vinegar', category: 'VEGETABLE', kcal100g: 35, proteins: 1.0, fats: 2.0, carbs: 5.0, imageUrl: 'assets/images/soups/66.png'),
-  FoodItem(name: 'Thai Vegetable Tom Kha', desc: 'mushrooms, tofu, coconut milk, lemongrass, galangal, lime', category: 'VEGETABLE', kcal100g: 75, proteins: 2.5, fats: 6.0, carbs: 4.5, imageUrl: 'assets/images/soups/67.png'),
-  FoodItem(name: 'Moroccan Vegetable Harira', desc: 'chickpeas, lentils, tomato, celery, coriander, lemon, spices', category: 'VEGETABLE', kcal100g: 68, proteins: 4.0, fats: 2.0, carbs: 10.5, imageUrl: 'assets/images/soups/68.png'),
-  FoodItem(name: 'Ukrainian Green Borscht', desc: 'sorrel, potatoes, carrots, onion, egg, sour cream, dill', category: 'VEGETABLE', kcal100g: 42, proteins: 2.0, fats: 2.0, carbs: 5.5, imageUrl: 'assets/images/soups/69.png'),
-  FoodItem(name: 'Japanese Tofu Miso', desc: 'tofu, miso paste, seaweed, green onion, mushrooms, dashi', category: 'VEGETABLE', kcal100g: 38, proteins: 3.0, fats: 1.5, carbs: 3.5, imageUrl: 'assets/images/soups/70.png'),
-  FoodItem(name: 'Mexican Black Bean Soup', desc: 'black beans, tomato, onion, garlic, cumin, chili, lime', category: 'VEGETABLE', kcal100g: 72, proteins: 4.5, fats: 1.5, carbs: 12.0, imageUrl: 'assets/images/soups/71.png'),
-  FoodItem(name: 'Egyptian Lentil Soup', desc: 'red lentils, cumin, turmeric, onion, lemon, olive oil', category: 'VEGETABLE', kcal100g: 65, proteins: 4.0, fats: 2.0, carbs: 10.0, imageUrl: 'assets/images/soups/72.png'),
-  FoodItem(name: 'German Pea Soup', desc: 'split peas, carrots, celery, onion, marjoram, mustard, broth', category: 'VEGETABLE', kcal100g: 78, proteins: 5.0, fats: 1.5, carbs: 13.0, imageUrl: 'assets/images/soups/73.png'),
-  FoodItem(name: 'Turkish Red Lentil Soup', desc: 'red lentils, onion, butter, paprika, mint, lemon, broth', category: 'VEGETABLE', kcal100g: 68, proteins: 4.5, fats: 2.5, carbs: 10.0, imageUrl: 'assets/images/soups/74.png'),
-  FoodItem(name: 'Greek Fasolada', desc: 'white beans, tomato, carrots, celery, olive oil, herbs', category: 'VEGETABLE', kcal100g: 62, proteins: 3.5, fats: 2.5, carbs: 9.5, imageUrl: 'assets/images/soups/75.png'),
+  FoodItem(name: 'Russian Shchi', desc: 'cabbage, potatoes, carrots, onion, tomato paste, sour cream', category: 'VEGETABLE', kcal100g: 35, proteins: 1.5, fats: 1.5, carbs: 5.5, 
+  imageUrl: 'assets/images/soups/61.jpeg'),
+  FoodItem(name: 'Italian Minestrone', desc: 'zucchini, tomato, beans, pasta, basil, parmesan, olive oil', category: 'VEGETABLE', kcal100g: 55, proteins: 2.5, fats: 2.0, carbs: 8.5, 
+  imageUrl: 'assets/images/soups/62.jpeg'),
+  FoodItem(name: 'French Soupe au Pistou', desc: 'beans, zucchini, tomato, pasta, basil pesto, garlic', category: 'VEGETABLE', kcal100g: 60, proteins: 3.0, fats: 2.5, carbs: 9.0,
+   imageUrl: 'assets/images/soups/63.jpeg'),
+  FoodItem(name: 'Indian Dal Soup', desc: 'red lentils, tomato, onion, turmeric, cumin, ginger, coriander', category: 'VEGETABLE', kcal100g: 65, proteins: 4.5, fats: 2.0, carbs: 9.5,
+   imageUrl: 'assets/images/soups/64.jpeg'),
+  FoodItem(name: 'Lebanese Lentil Soup', desc: 'lentils, onion, cumin, lemon juice, olive oil, coriander', category: 'VEGETABLE', kcal100g: 70, proteins: 4.5, fats: 2.5, carbs: 10.0, 
+  imageUrl: 'assets/images/soups/65.jpeg'),
+  FoodItem(name: 'Spanish Gazpacho', desc: 'tomatoes, cucumber, peppers, garlic, olive oil, vinegar', category: 'VEGETABLE', kcal100g: 35, proteins: 1.0, fats: 2.0, carbs: 5.0, 
+  imageUrl: 'assets/images/soups/66.jpeg'),
+  FoodItem(name: 'Thai Vegetable Tom Kha', desc: 'mushrooms, tofu, coconut milk, lemongrass, galangal, lime', category: 'VEGETABLE', kcal100g: 75, proteins: 2.5, fats: 6.0, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/67.jpeg'),
+  FoodItem(name: 'Moroccan Vegetable Harira', desc: 'chickpeas, lentils, tomato, celery, coriander, lemon, spices', category: 'VEGETABLE', kcal100g: 68, proteins: 4.0, fats: 2.0, carbs: 10.5, 
+  imageUrl: 'assets/images/soups/68.jpeg'),
+  FoodItem(name: 'Ukrainian Green Borscht', desc: 'sorrel, potatoes, carrots, onion, egg, sour cream, dill', category: 'VEGETABLE', kcal100g: 42, proteins: 2.0, fats: 2.0, carbs: 5.5,
+   imageUrl: 'assets/images/soups/69.jpeg'),
+  FoodItem(name: 'Japanese Tofu Miso', desc: 'tofu, miso paste, seaweed, green onion, mushrooms, dashi', category: 'VEGETABLE', kcal100g: 38, proteins: 3.0, fats: 1.5, carbs: 3.5, 
+  imageUrl: 'assets/images/soups/70.jpeg'),
+  FoodItem(name: 'Mexican Black Bean Soup', desc: 'black beans, tomato, onion, garlic, cumin, chili, lime', category: 'VEGETABLE', kcal100g: 72, proteins: 4.5, fats: 1.5, carbs: 12.0,
+   imageUrl: 'assets/images/soups/71.jpeg'),
+  FoodItem(name: 'Egyptian Lentil Soup', desc: 'red lentils, cumin, turmeric, onion, lemon, olive oil', category: 'VEGETABLE', kcal100g: 65, proteins: 4.0, fats: 2.0, carbs: 10.0, 
+  imageUrl: 'assets/images/soups/72.jpeg'),
+  FoodItem(name: 'German Pea Soup', desc: 'split peas, carrots, celery, onion, marjoram, mustard, broth', category: 'VEGETABLE', kcal100g: 78, proteins: 5.0, fats: 1.5, carbs: 13.0, 
+  imageUrl: 'assets/images/soups/73.jpeg'),
+  FoodItem(name: 'Turkish Red Lentil Soup', desc: 'red lentils, onion, butter, paprika, mint, lemon, broth', category: 'VEGETABLE', kcal100g: 68, proteins: 4.5, fats: 2.5, carbs: 10.0,
+   imageUrl: 'assets/images/soups/74.jpeg'),
+  FoodItem(name: 'Greek Fasolada', desc: 'white beans, tomato, carrots, celery, olive oil, herbs', category: 'VEGETABLE', kcal100g: 62, proteins: 3.5, fats: 2.5, carbs: 9.5, 
+  imageUrl: 'assets/images/soups/75.jpeg'),
 
   // --- CREAM (15) ---
-  FoodItem(name: 'French Mushroom Cream', desc: 'mushrooms, cream, onion, garlic, butter, thyme, broth', category: 'CREAM', kcal100g: 85, proteins: 2.5, fats: 7.0, carbs: 5.5, imageUrl: 'assets/images/soups/76.png'),
-  FoodItem(name: 'Thai Pumpkin Cream', desc: 'pumpkin, coconut milk, ginger, garlic, lemongrass, spices', category: 'CREAM', kcal100g: 40, proteins: 1.2, fats: 2.5, carbs: 6.5, imageUrl: 'assets/images/soups/77.png'),
-  FoodItem(name: 'Italian Tomato Cream', desc: 'tomatoes, cream, basil, garlic, olive oil, parmesan', category: 'CREAM', kcal100g: 55, proteins: 1.5, fats: 4.0, carbs: 5.0, imageUrl: 'assets/images/soups/78.png'),
-  FoodItem(name: 'French Vichyssoise', desc: 'leek, potatoes, cream, onion, butter, chives, white pepper', category: 'CREAM', kcal100g: 75, proteins: 1.8, fats: 5.5, carbs: 7.0, imageUrl: 'assets/images/soups/79.png'),
-  FoodItem(name: 'American Broccoli Cheddar', desc: 'broccoli, cheddar, cream, onion, garlic, butter, broth', category: 'CREAM', kcal100g: 95, proteins: 4.5, fats: 7.5, carbs: 5.0, imageUrl: 'assets/images/soups/80.png'),
-  FoodItem(name: 'Spanish Roasted Pepper Cream', desc: 'roasted peppers, tomato, onion, garlic, cream, smoked paprika', category: 'CREAM', kcal100g: 65, proteins: 1.5, fats: 4.5, carbs: 6.0, imageUrl: 'assets/images/soups/81.png'),
-  FoodItem(name: 'Indian Carrot Ginger Cream', desc: 'carrots, ginger, coconut milk, onion, curry, coriander', category: 'CREAM', kcal100g: 58, proteins: 1.2, fats: 3.5, carbs: 8.0, imageUrl: 'assets/images/soups/82.png'),
-  FoodItem(name: 'French Asparagus Cream', desc: 'asparagus, cream, butter, onion, lemon, tarragon, broth', category: 'CREAM', kcal100g: 70, proteins: 2.5, fats: 5.5, carbs: 4.5, imageUrl: 'assets/images/soups/83.png'),
-  FoodItem(name: 'German Potato Cream', desc: 'potatoes, cream, bacon, onion, chives, mustard, broth', category: 'CREAM', kcal100g: 88, proteins: 3.0, fats: 6.0, carbs: 8.5, imageUrl: 'assets/images/soups/84.png'),
-  FoodItem(name: 'Turkish Red Lentil Cream', desc: 'red lentils, butter, paprika, onion, mint, lemon, cream', category: 'CREAM', kcal100g: 72, proteins: 3.5, fats: 4.0, carbs: 9.0, imageUrl: 'assets/images/soups/85.png'),
-  FoodItem(name: 'Japanese Corn Cream', desc: 'corn, cream, butter, dashi, miso, green onion, sesame', category: 'CREAM', kcal100g: 80, proteins: 2.5, fats: 5.0, carbs: 9.5, imageUrl: 'assets/images/soups/86.png'),
-  FoodItem(name: 'Mexican Avocado Cream', desc: 'avocado, cream, lime, jalapeño, onion, garlic, coriander', category: 'CREAM', kcal100g: 95, proteins: 1.5, fats: 8.5, carbs: 5.0, imageUrl: 'assets/images/soups/87.png'),
-  FoodItem(name: 'Norwegian Seafood Cream', desc: 'salmon, shrimp, cream, leek, dill, white wine, butter', category: 'CREAM', kcal100g: 105, proteins: 6.5, fats: 8.0, carbs: 4.0, imageUrl: 'assets/images/soups/88.png'),
-  FoodItem(name: 'Greek Spinach Cream', desc: 'spinach, feta, cream, onion, garlic, lemon, olive oil', category: 'CREAM', kcal100g: 68, proteins: 3.5, fats: 5.5, carbs: 4.0, imageUrl: 'assets/images/soups/89.png'),
-  FoodItem(name: 'Moroccan Chickpea Cream', desc: 'chickpeas, tahini, cumin, lemon, garlic, olive oil, paprika', category: 'CREAM', kcal100g: 82, proteins: 4.5, fats: 4.5, carbs: 10.0, imageUrl: 'assets/images/soups/90.png'),
+  FoodItem(name: 'French Mushroom Cream', desc: 'mushrooms, cream, onion, garlic, butter, thyme, broth', category: 'CREAM', kcal100g: 85, proteins: 2.5, fats: 7.0, carbs: 5.5, 
+  imageUrl: 'assets/images/soups/76.jpeg'),
+  FoodItem(name: 'Thai Pumpkin Cream', desc: 'pumpkin, coconut milk, ginger, garlic, lemongrass, spices', category: 'CREAM', kcal100g: 40, proteins: 1.2, fats: 2.5, carbs: 6.5,
+   imageUrl: 'assets/images/soups/77.jpeg'),
+  FoodItem(name: 'Italian Tomato Cream', desc: 'tomatoes, cream, basil, garlic, olive oil, parmesan', category: 'CREAM', kcal100g: 55, proteins: 1.5, fats: 4.0, carbs: 5.0, 
+  imageUrl: 'assets/images/soups/78.jpeg'),
+  FoodItem(name: 'French Vichyssoise', desc: 'leek, potatoes, cream, onion, butter, chives, white pepper', category: 'CREAM', kcal100g: 75, proteins: 1.8, fats: 5.5, carbs: 7.0, 
+  imageUrl: 'assets/images/soups/79.jpeg'),
+  FoodItem(name: 'American Broccoli Cheddar', desc: 'broccoli, cheddar, cream, onion, garlic, butter, broth', category: 'CREAM', kcal100g: 95, proteins: 4.5, fats: 7.5, carbs: 5.0, 
+  imageUrl: 'assets/images/soups/80.jpeg'),
+  FoodItem(name: 'Spanish Roasted Pepper Cream', desc: 'roasted peppers, tomato, onion, garlic, cream, smoked paprika', category: 'CREAM', kcal100g: 65, proteins: 1.5, fats: 4.5, carbs: 6.0, 
+  imageUrl: 'assets/images/soups/81.jpeg'),
+  FoodItem(name: 'Indian Carrot Ginger Cream', desc: 'carrots, ginger, coconut milk, onion, curry, coriander', category: 'CREAM', kcal100g: 58, proteins: 1.2, fats: 3.5, carbs: 8.0, 
+  imageUrl: 'assets/images/soups/82.jpeg'),
+  FoodItem(name: 'French Asparagus Cream', desc: 'asparagus, cream, butter, onion, lemon, tarragon, broth', category: 'CREAM', kcal100g: 70, proteins: 2.5, fats: 5.5, carbs: 4.5, 
+  imageUrl: 'assets/images/soups/83.jpeg'),
+  FoodItem(name: 'German Potato Cream', desc: 'potatoes, cream, bacon, onion, chives, mustard, broth', category: 'CREAM', kcal100g: 88, proteins: 3.0, fats: 6.0, carbs: 8.5, 
+  imageUrl: 'assets/images/soups/84.jpeg'),
+  FoodItem(name: 'Turkish Red Lentil Cream', desc: 'red lentils, butter, paprika, onion, mint, lemon, cream', category: 'CREAM', kcal100g: 72, proteins: 3.5, fats: 4.0, carbs: 9.0, 
+  imageUrl: 'assets/images/soups/85.jpeg'),
+  FoodItem(name: 'Japanese Corn Cream', desc: 'corn, cream, butter, dashi, miso, green onion, sesame', category: 'CREAM', kcal100g: 80, proteins: 2.5, fats: 5.0, carbs: 9.5,
+   imageUrl: 'assets/images/soups/86.jpeg'),
+  FoodItem(name: 'Mexican Avocado Cream', desc: 'avocado, cream, lime, jalapeño, onion, garlic, coriander', category: 'CREAM', kcal100g: 95, proteins: 1.5, fats: 8.5, carbs: 5.0,
+   imageUrl: 'assets/images/soups/87.jpeg'),
+  FoodItem(name: 'Norwegian Seafood Cream', desc: 'salmon, shrimp, cream, leek, dill, white wine, butter', category: 'CREAM', kcal100g: 105, proteins: 6.5, fats: 8.0, carbs: 4.0,
+   imageUrl: 'assets/images/soups/88.jpeg'),
+  FoodItem(name: 'Greek Spinach Cream', desc: 'spinach, feta, cream, onion, garlic, lemon, olive oil', category: 'CREAM', kcal100g: 68, proteins: 3.5, fats: 5.5, carbs: 4.0, 
+  imageUrl: 'assets/images/soups/89.jpeg'),
+  FoodItem(name: 'Moroccan Chickpea Cream', desc: 'chickpeas, tahini, cumin, lemon, garlic, olive oil, paprika', category: 'CREAM', kcal100g: 82, proteins: 4.5, fats: 4.5, carbs: 10.0,
+   imageUrl: 'assets/images/soups/90.jpeg'),
 ];
 
 
