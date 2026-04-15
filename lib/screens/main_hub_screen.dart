@@ -22,7 +22,6 @@ class MainHubScreen extends StatefulWidget {
 class _MainHubScreenState extends State<MainHubScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
-  bool _isFinished = false; // Для отслеживания окончания видео
   double unit = 0;
 
   // --- ТЕКСТОВЫЕ ПЕРЕМЕННЫЕ ---
@@ -56,7 +55,26 @@ class _MainHubScreenState extends State<MainHubScreen> {
   @override
   void initState() {
     super.initState();
-    _initVideo();
+    _controller = VideoPlayerController.asset('videos/intro.mov')
+      ..initialize().then((_) {
+        if (!mounted) return; 
+        
+        setState(() {
+          _isInitialized = true;
+        });
+        
+        _controller.setLooping(false); 
+        _controller.setVolume(1.0);    
+        _controller.play();            
+        
+        _controller.addListener(() {
+          if (_controller.value.position == _controller.value.duration) {
+            setState(() {}); 
+          }
+        });
+      }).catchError((error) {
+        debugPrint("Video player error: $error");
+      });
   }
 
   // --- ЛОГИКА ПЕРЕВОДА ---
@@ -80,43 +98,59 @@ class _MainHubScreenState extends State<MainHubScreen> {
     final mBTitle = await TranslationService.translateText("BUILDER", langCode);
     final mBDesc = await TranslationService.translateText("This app is your personal body builder. Training, nutrition, and evolution are combined here.", langCode);
     final mWTitle = await TranslationService.translateText("WORKOUTS", langCode);
-    final mWDesc = await TranslationService.translateText("Use ready-made programs or create your own.", langCode);
+    final mWDesc = await TranslationService.translateText("Use ready-made programs or create your own. Every workout has a memory.", langCode);
     final mETitle = await TranslationService.translateText("ENERGY & AVATAR", langCode);
-    final mEDesc = await TranslationService.translateText("Earn points and crystals. Watch your avatar evolve.", langCode);
+    final mEDesc = await TranslationService.translateText("Earn points and crystals. Watch your avatar evolve and unlock rare artifacts.", langCode);
     final tFoodTitle = await TranslationService.translateText("BIO-FOOD DESIGNER", langCode);
-    final tFoodDesc = await TranslationService.translateText("Create your own unique dishes.", langCode);
+    final mLabTitle = await TranslationService.translateText("BIO-MACHINE DESIGNER", langCode);
+    final mLabDesc = await TranslationService.translateText("Can't find a machine? Create your own unique equipment in the Bio-Machine Designer.", langCode);
+    // 1. Переводим первую (живую) часть
+    final tFoodDescPart1 = await TranslationService.translateText("Create your own unique dishes. Mix nutrients and save your personal recipes.", langCode);
+
+    // 2. Переводим юридическую часть отдельно (так она точно пройдет через лимит)
+    final tFoodDescPart2 = await TranslationService.translateText("All product names, logos, and brands are property of their respective owners. All company, product and service names used in this app are for identification purposes only. Use of these names, logos, and brands does not imply endorsement.", langCode);
+   
 
     if (mounted) {
       setState(() {
-        title = t1; subtitle = t2; manualBtn = t3; hubAvatar = tAv;
-        hubAnalytics = tAna; hubGym = tGym; hubBody = tBod; hubNutrition = tNut; hubLaboratory = tLab; hubSettings = tSet; hubFoodDesigner = tFood;
-        manualHeader = mHeader; builderTitle = mBTitle; builderDesc = mBDesc; workoutsTitle = mWTitle; workoutsDesc = mWDesc; energyTitle = mETitle; energyDesc = mEDesc; foodDesignerTitle = tFoodTitle; foodDesignerDesc = tFoodDesc;
+        // --- ГЛАВНЫЙ ЭКРАН ---
+        title = t1; 
+        subtitle = t2; 
+        manualBtn = t3; 
+        hubAvatar = tAv;
+        hubAnalytics = tAna; 
+        hubGym = tGym; 
+        hubBody = tBod; 
+        hubNutrition = tNut; 
+        hubLaboratory = tLab; 
+        hubSettings = tSet; 
+        hubFoodDesigner = tFood;
+
+        // --- ШТОРКА (МАНУАЛ) ---
+        manualHeader = mHeader; 
+        
+        builderTitle = mBTitle; 
+        builderDesc = mBDesc; 
+        
+        workoutsTitle = mWTitle; 
+        workoutsDesc = mWDesc; 
+        
+        energyTitle = mETitle; 
+        energyDesc = mEDesc;
+
+        // БИО-МАШИНЫ (Тот самый "беглец")
+        labTitle = mLabTitle; 
+        labDesc = mLabDesc;
+
+        // БИО-ФУД (Еда)
+        foodDesignerTitle = tFoodTitle; 
+        
+        // СОЕДИНЯЕМ ДВА ПЕРЕВОДА В ОДИН
+        foodDesignerDesc = "$tFoodDescPart1\n\n$tFoodDescPart2";
       });
     }
   }
 
-  // --- ОБНОВЛЕННАЯ ЛОГИКА ВИДЕО ---
-void _initVideo() {
-  _controller = VideoPlayerController.asset("videos/intro.mp4")
-    ..initialize().then((_) {
-      setState(() {
-        _isInitialized = true;
-        _controller.play();
-        _controller.setVolume(1.0);
-      });
-    });
-
-  _controller.addListener(() {
-    // Если видео дошло до конца И оно еще в режиме проигрывания
-    if (_controller.value.position >= _controller.value.duration && _controller.value.isPlaying) {
-      if (!_isFinished) { 
-        setState(() {
-          _isFinished = true; // Выбрасываем кнопку
-        });
-      }
-    }
-  });
-}
 
   // --- ПЛИТКА-МАГНИТ ДЛЯ АВАТАРА (ЗОЛОТАЯ) ---
   Widget _avatarVipTile() {
@@ -228,32 +262,63 @@ void _initVideo() {
     );
   }
 
-  Widget _infoBlock(String t, String s, IconData i) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: unit * 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(i, color: const Color(0xFFD4AF37), size: unit * 7),
-          SizedBox(width: unit * 4),
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.all(unit * 4),
-              decoration: BoxDecoration(color: const Color(0xFF1A1A1A), borderRadius: BorderRadius.circular(unit * 3), border: Border.all(color: Colors.white10)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(t, style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 4.2, fontWeight: FontWeight.w700)),
-                  SizedBox(height: unit * 1),
-                  Text(s, style: GoogleFonts.saira(color: const Color(0xFF757575), fontSize: unit * 3.6, height: 1.4)),
-                ],
-              ),
+Widget _infoBlock(String t, String s, IconData i) {
+  return Padding(
+    padding: EdgeInsets.only(bottom: unit * 5),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start, 
+      children: [
+        Icon(i, color: const Color(0xFFD4AF37), size: unit * 7),
+        SizedBox(width: unit * 4),
+        Expanded(
+          child: Container(
+            // ПАРАМЕТР 1: Мы НЕ задаем высоту (height). 
+            // Это значит, что Container сам вырастет вниз столько, сколько нужно.
+            padding: EdgeInsets.all(unit * 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A), 
+              borderRadius: BorderRadius.circular(unit * 3), 
+              border: Border.all(color: Colors.white10)
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // Важно! Заставляет колонку поджиматься под текст
+              children: [
+                Text(
+                  t, 
+                  style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 4.2, fontWeight: FontWeight.w700)
+                ),
+                SizedBox(height: unit * 1),
+                
+                // ПАРАМЕТР 2: Твоя страховка.
+                // Текст сначала пытается занять всё место (хоть 20 строк).
+                // Но если он встретит "преграду", он начнет уменьшаться.
+                FittedBox(
+                  fit: BoxFit.scaleDown, // Страховка: уменьшит шрифт, если текст не лезет по ширине
+                  alignment: Alignment.centerLeft,
+                  child: ConstrainedBox(
+                    // Ограничиваем только ширину, чтобы текст знал, где переноситься
+                    constraints: BoxConstraints(maxWidth: unit * 70), 
+                    child: Text(
+                      s,
+                      softWrap: true,
+                      // Мы НЕ ставим maxLines, чтобы окно росло бесконечно вниз.
+                      style: GoogleFonts.saira(
+                        color: const Color(0xFF757575), 
+                        fontSize: unit * 3.6, 
+                        height: 1.4
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -264,97 +329,111 @@ void _initVideo() {
         child: Column(
           children: [
             // ВИДЕО
-            // ВИДЕО
-Container(
-  height: unit * 55,
-  child: Stack(
-    alignment: Alignment.center,
-    children: [
-      if (_isInitialized)
-        AspectRatio(
-          aspectRatio: _controller.value.aspectRatio,
-          child: VideoPlayer(_controller),
-        ),
-      
-      // КНОПКА-ПРЕРЫВАТЕЛЬ
-      if (_isFinished)
-        GestureDetector(
-          onTap: () {
-            setState(() {
-              _isFinished = false; // Прячем кнопку
-              _controller.seekTo(Duration.zero); // В начало
-              _controller.play(); // Поехали!
-            });
-          },
-          child: Container(
-            padding: EdgeInsets.all(unit * 4),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              shape: BoxShape.circle, 
-              border: Border.all(color: const Color(0xFFD4AF37), width: 2),
+            Container(
+              height: unit * 55,
+              child: _isInitialized 
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        // Если видео играет — ставим паузу, если нет — запускаем!
+                        _controller.value.isPlaying 
+                            ? _controller.pause() 
+                            : _controller.play();
+                      });
+                    },
+                    child: AspectRatio(
+                      aspectRatio: _controller.value.aspectRatio, 
+                      child: VideoPlayer(_controller),
+                    ),
+                  ) 
+                : Container(),
             ),
-            child: Icon(Icons.play_arrow, color: const Color(0xFFD4AF37), size: unit * 10),
-          ),
+
+// ИНФО-ПАНЕЛЬ (Текст отдельно, иконки отдельно)
+Padding(
+  padding: EdgeInsets.symmetric(horizontal: unit * 5, vertical: unit * 2),
+  child: Row(
+    children: [
+      // КОМНАТА 1: Весь текст слева
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(subtitle, style: GoogleFonts.saira(color: Colors.white38, fontSize: unit * 3.5)),
+            ),
+            // Текст заголовка зажат!
+            FittedBox(
+              fit: BoxFit.scaleDown, // Если не лезет — станет мелким
+              child: Text(
+                title,
+                maxLines: 2,
+                style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 5, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
         ),
+      ),
+      
+      SizedBox(width: unit * 2), // Забор между текстом и иконками
+
+      // КОМНАТА 2: Иконки глобуса и синхронизации справа
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(icon: Icon(Icons.language, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: _showLanguageDialog),
+          IconButton(icon: Icon(Icons.cloud_sync, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: () {}),
+        ],
+      ),
     ],
   ),
 ),
-            // ИНФО-ПАНЕЛЬ
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: unit * 5, vertical: unit * 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(subtitle, style: GoogleFonts.saira(color: Colors.white38, fontSize: unit * 3.5, letterSpacing: 2)),
-                      Text(title, style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 5, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      IconButton(icon: Icon(Icons.language, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: _showLanguageDialog),
-                      IconButton(icon: Icon(Icons.cloud_sync, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: () {
-                        HapticFeedback.mediumImpact();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sync complete"), backgroundColor: Color(0xFF1A1A1A)));
-                      }),
-                    ],
-                  ),
-                ],
+// ИНСТРУКЦИЯ (Теперь реально резиновая под текст!)
+Padding(
+  padding: EdgeInsets.symmetric(horizontal: unit * 10, vertical: unit * 2),
+  child: GestureDetector(
+    onTap: () => _showInstructions(context),
+    child: Container(
+      // Убрали фиксированные отступы, даем контейнеру дышать
+      padding: EdgeInsets.symmetric(horizontal: unit * 4, vertical: unit * 2.5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFD4AF37).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(unit * 3),
+        border: Border.all(color: const Color(0xFFD4AF37)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center, // Центрируем иконку по вертикали, если строк будет много
+        children: [
+          // Иконка книжки (никуда не делась, стоит слева)
+          Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5),
+          
+          SizedBox(width: unit * 3),
+
+          // ТЕКСТ: Теперь он РЕЗИНОВЫЙ
+          Expanded( 
+            child: Text(
+              manualBtn,
+              textAlign: TextAlign.center,
+              // Убрали FittedBox! Теперь буквы будут крупными (unit * 4.2)
+              // Если текст длинный, он просто перепрыгнет на новую строку
+              softWrap: true, 
+              maxLines: 5, // Запас на 5 строк, чтобы влез любой перевод
+              style: GoogleFonts.saira(
+                color: const Color(0xFFD4AF37), 
+                fontWeight: FontWeight.w500,
+                fontSize: unit * 4.2, // Твой комфортный размер
+                height: 1.1, // Чтобы строки не слипались, но были компактными
               ),
             ),
-            // ИНСТРУКЦИЯ
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: unit * 15, vertical: unit * 2),
-              child: GestureDetector(
-                onTap: () => _showInstructions(context),
-                child: Container(
-                  padding: EdgeInsets.all(unit * 2.5),
-                  decoration: BoxDecoration(color: const Color(0xFFD4AF37).withOpacity(0.1), borderRadius: BorderRadius.circular(unit * 3), border: Border.all(color: const Color(0xFFD4AF37))),
-                  child: Row(
-  mainAxisAlignment: MainAxisAlignment.center,
-  children: [
-    Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5),
-    SizedBox(width: unit * 2),
-    // Вместо обычного Text используем масштабируемую версию
-    Flexible( 
-      child: FittedBox(
-        fit: BoxFit.scaleDown, // Буквы уменьшатся сами, если их много
-        child: Text(
-          manualBtn,
-          style: GoogleFonts.saira(
-            color: const Color(0xFFD4AF37),
-            fontWeight: FontWeight.w500,
           ),
-        ),
+        ],
       ),
     ),
-  ],
+  ),
 ),
-                )
-              ),
-            ),
             // СПИСОК КНОПОК
             Expanded(
               child: SingleChildScrollView(
@@ -390,12 +469,30 @@ Container(
         onTap: onTap,
         child: Container(
           padding: EdgeInsets.all(unit * 3),
-          decoration: BoxDecoration(color: const Color(0xFF1A1A1A).withOpacity(0.8), borderRadius: BorderRadius.circular(unit * 3), border: Border.all(color: color.withOpacity(0.2))),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A).withOpacity(0.8), 
+            borderRadius: BorderRadius.circular(unit * 3), 
+            border: Border.all(color: color.withOpacity(0.2))
+          ),
           child: Row(
             children: [
-              Icon(icon, color: color, size: unit * 6),
+              // Квадрат для иконки
+              SizedBox(
+                width: unit * 8, 
+                child: Icon(icon, color: color, size: unit * 6)
+              ),
               SizedBox(width: unit * 3),
-              Expanded(child: Text(title, style: GoogleFonts.saira(color: Colors.white70, fontSize: unit * 4, letterSpacing: 1.2))),
+              // ТЕКСТ: Теперь он ОБЯЗАН уменьшиться, если не влезает
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown, // Команда на уменьшение размера букв
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title, 
+                    style: GoogleFonts.saira(color: Colors.white70, fontSize: unit * 4, letterSpacing: 1.2)
+                  ),
+                ),
+              ),
               const Icon(Icons.chevron_right, color: Colors.white10),
             ],
           ),

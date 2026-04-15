@@ -48,123 +48,177 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
     super.dispose();
   }
 
-  // --- ЛОГИКА BIO-DETECTION ---
   Future<void> _processBioDetection(File imageFile) async {
-    if (_currentScans >= _dailyScanLimit) {
-      _showSimpleError("SCANNER ENERGY DEPLETED. RESTORES TOMORROW.");
-      return;
-    }
+  setState(() => _isAnalyzing = true);
+  _scanController.repeat(reverse: true);
 
-    setState(() => _isAnalyzing = true);
-    _scanController.repeat(reverse: true);
+  try {
+    const String apiKey = "AIzaSyAxYq5bIZYI7pErO0fSD1mfSiDcf-eD7ws"; // Вставь свой ключ сюда
+    // Тот самый адрес, который одобрил твой Google:
+    final String cloudUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$apiKey";
+    
+    final bytes = await imageFile.readAsBytes();
+    final base64Image = base64Encode(bytes).replaceAll(RegExp(r'\s+'), '');
 
-    // 1. ПРОВЕРКА СВЯЗИ
-    bool isOnline = await _checkConnectivity();
-    if (!isOnline) {
-      await _backupImageLocally(imageFile);
-      _stopAnalysis();
-      _showStatusDialog(
-        title: "OFFLINE MODE",
-        message: "Network unstable. Image saved to SmartBodyScan. You can process it later.",
-        isError: true
-      );
-      return;
-    }
+    final response = await http.post(
+      Uri.parse(cloudUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "contents": [{
+          "parts": [
+            {"text": "Identify the food in this image. Return a JSON object with fields: 'name' (string), 'kcal' (int), 'protein' (double), 'fat' (double), 'carbs' (double). Estimates for 100g. Return ONLY JSON."},
+            {"inline_data": {"mime_type": "image/jpeg", "data": base64Image}}
+          ]
+        }]
+      }),
+    ).timeout(const Duration(seconds: 30));
 
-    try {
-      // 2. ОБЛАЧНАЯ ИДЕНТИФИКАЦИЯ (GEMINI)
-      const String apiKey = "AIzaSyBXfTJRNkX-zH-mY2o9Yp6ltBHus6J7U6U"; // Вставь свой ключ!
-      final String cloudUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey";
-      
-      final bytes = await imageFile.readAsBytes();
-      final base64Image = base64Encode(bytes);
+    _stopAnalysis();
 
-      final response = await http.post(
-        Uri.parse(cloudUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "contents": [{
-            "parts": [
-              {"text": "Identify only the main food item in this image. Return one word or a short phrase in English."},
-              {"inline_data": {"mime_type": "image/jpeg", "data": base64Image}}
-            ]
-          }]
-        }),
-      ).timeout(const Duration(seconds: 15));
-
-      if (response.statusCode == 200) {
+    if (response.statusCode == 200) {
         final result = jsonDecode(response.body);
-        String detectedLabel = result['candidates'][0]['content']['parts'][0]['text']?.trim() ?? "Unknown Food";
+        String rawText = result['candidates']?[0]['content']?['parts']?[0]['text'] ?? "";
+        String cleanJson = rawText.replaceAll('```json', '').replaceAll('```', '').trim();
         
-        _stopAnalysis();
-        if (mounted) setState(() => _currentScans++);
-        _handleIdentificationResult(detectedLabel);
+        try {
+          final foodData = jsonDecode(cleanJson);
+          _stopAnalysis();
+          
+          // ВЕРНУЛИ ДИАЛОГ! Передаем в него все данные
+          _showResultDialog(
+            label: foodData['name'] ?? foodData['NAME'] ?? "Unknown Dish",
+            kcal: (foodData['kcal'] ?? foodData['KCAL'] ?? 0).toDouble(),
+            p: (foodData['protein'] ?? foodData['PROTEIN'] ?? 0.0).toDouble(),
+            f: (foodData['fat'] ?? foodData['FAT'] ?? 0.0).toDouble(),
+            c: (foodData['carbs'] ?? foodData['CARBS'] ?? 0.0).toDouble(),
+          );
+        } catch (e) {
+          _stopAnalysis();
+          _showResultDialog(label: "Unknown Dish", kcal: 0.0, p: 0.0, f: 0.0, c: 0.0);
+        }
       } else {
-        throw Exception("Cloud error");
+        _stopAnalysis();
+        _showSimpleError("Identification failed. Try again.");
       }
     } catch (e) {
       _stopAnalysis();
-      _showStatusDialog(
-        title: "SENSORS FAILURE",
-        message: "Cloud identification failed. Using local sensors.",
-        isError: true
-      );
+      // Вместо общей фразы выведем реальную причину ошибки
+      _showSimpleError("LOGIC ERROR: ${e.toString().split(':').last.trim().toUpperCase()}");
+      debugPrint("FULL ERROR: $e"); // Это напечатается в консоли Xcode
+      await _backupImageLocally(imageFile);
     }
   }
 
-  void _handleIdentificationResult(String label) {
-    _showResultDialog(label: label, inLibrary: false);
-  }
-
   // --- UI ДИАЛОГИ ---
-  void _showResultDialog({required String label, required bool inLibrary}) {
+  void _showResultDialog({
+    required String label, 
+    required double kcal, 
+    double p = 0.0, 
+    double f = 0.0, 
+    double c = 0.0
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF05100A),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.amber)),
-        title: Text(label.toUpperCase(), style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20), 
+          side: const BorderSide(color: Colors.amber)
+        ),
+        title: Text(label.toUpperCase(), 
+          style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
         content: const Text(
           "NOT FOUND IN YOUR LOCAL DATABASE. USE GLOBAL DATA OR SELECT CATEGORY?",
-          textAlign: TextAlign.center, style: TextStyle(color: Colors.white70),
+          textAlign: TextAlign.center, 
+          style: TextStyle(color: Colors.white70),
         ),
         actions: [
+          // КНОПКА GLOBAL DATA (Теперь ведет на превью)
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              _fetchGlobalNutrition(label);
+              Navigator.pop(context); // Закрыть выбор
+              _showNutritionPreview(label: label, kcal: kcal, p: p, f: f, c: c); // Показать таблицу
             },
             child: const Text("GLOBAL DATA", style: TextStyle(color: Colors.blueAccent)),
           ),
+          // КНОПКА CATEGORIES
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
             onPressed: () {
               Navigator.pop(context);
               _navigateToCategories(label);
             },
-            child: const Text("CATEGORIES", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text("CATEGORIES", 
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _fetchGlobalNutrition(String label) async {
-    final url = Uri.parse("https://world.openfoodfacts.org/cgi/search.pl?search_terms=$label&json=1");
-    try {
-      final response = await http.get(url);
-      final data = jsonDecode(response.body);
-      double kcal = 0.0;
-      if (data['products'] != null && data['products'].isNotEmpty) {
-        kcal = (data['products'][0]['nutriments']?['energy-kcal_100g'] ?? 0.0).toDouble();
-      }
-      _navigateToCreator(label, kcal);
-    } catch (_) {
-      _navigateToCreator(label, 0.0);
-    }
+void _showNutritionPreview({
+    required String label, 
+    required double kcal, 
+    required double p, 
+    required double f, 
+    required double c
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF05100A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20), 
+          side: const BorderSide(color: Colors.amber, width: 2)
+        ),
+        title: Text("NUTRITION DATA (100g)", 
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label.toUpperCase(), style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w500)),
+            const Divider(color: Colors.amber, height: 30),
+            _nutritionRow("CALORIES", "${kcal.toInt()} kcal"),
+            _nutritionRow("PROTEINS", "${p.toStringAsFixed(1)} g"),
+            _nutritionRow("FATS", "${f.toStringAsFixed(1)} g"),
+            _nutritionRow("CARBS", "${c.toStringAsFixed(1)} g"),
+          ],
+        ),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+              ),
+              onPressed: () {
+                Navigator.pop(context); // Закрыть таблицу
+                _navigateToCreator(label, kcal, p: p, f: f, c: c); // В конструктор!
+              },
+              child: const Text("TO CREATOR", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
+  // Вспомогательный виджет для строк таблицы
+  Widget _nutritionRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 14)),
+          Text(value, style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
   // --- НАВИГАЦИЯ ---
   void _navigateToCategories(String label) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => FoodCategoryScreen(
@@ -174,10 +228,13 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
     )));
   }
 
-  void _navigateToCreator(String name, double kcal) {
+  void _navigateToCreator(String name, double kcal, {double p = 0.0, double f = 0.0, double c = 0.0}) {
     Navigator.push(context, MaterialPageRoute(builder: (context) => BioCreatorForm(
       initialDishName: name,
       initialCalories: kcal,
+      initialProtein: p,
+      initialFat: f,
+      initialCarbs: c,
       mealName: widget.mealName,
       imageFile: _image,
     )));

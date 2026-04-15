@@ -7,15 +7,24 @@ import 'dart:io'; // <--- ОБЯЗАТЕЛЬНО добавь этот импо�
 class BioCreatorForm extends StatefulWidget {
   final String? initialDishName;
   final double? initialCalories;
-  final File? imageFile; // <--- ДОБАВЛЯЕМ ЭТУ СТРОЧКУ
-  
+  final File? imageFile; // Оставь одну эту строчку
+  final double? initialProtein;
+  final double? initialFat;
+  final double? initialCarbs;
+  final String mealName;
+
+  // Обнови конструктор, чтобы он выглядел аккуратно:
   const BioCreatorForm({
     super.key,
     this.initialDishName,
     this.initialCalories,
-    this.imageFile, required String mealName,
+    this.imageFile,
+    this.initialProtein,
+    this.initialFat,
+    this.initialCarbs,
+    required this.mealName,
   });
-
+  
   @override
   State<BioCreatorForm> createState() => _BioCreatorFormState();
 }
@@ -48,10 +57,15 @@ class _BioCreatorFormState extends State<BioCreatorForm> {
     super.initState();
     _nameController = TextEditingController(text: widget.initialDishName ?? '');
     _caloriesController = TextEditingController(text: widget.initialCalories?.toInt().toString() ?? '');
-    
-    _proteinsController = TextEditingController();
-    _fatsController = TextEditingController();
-    _carbsController = TextEditingController();
+// Теперь подставляем данные из Сканера в твои контроллеры:
+  _proteinsController = TextEditingController(text: widget.initialProtein?.toString() ?? '');
+  _fatsController = TextEditingController(text: widget.initialFat?.toString() ?? '');
+  _carbsController = TextEditingController(text: widget.initialCarbs?.toString() ?? '');
+
+
+    //_proteinsController = TextEditingController();
+    // _fatsController = TextEditingController();
+    // _carbsController = TextEditingController();
     _sugarController = TextEditingController();
     _potassiumController = TextEditingController();
     _magnesiumController = TextEditingController();
@@ -60,6 +74,10 @@ class _BioCreatorFormState extends State<BioCreatorForm> {
     _vitCController = TextEditingController();
     _vitDController = TextEditingController();
     _vitB12Controller = TextEditingController();
+    // Если сканер прислал фото, сразу кладем его в нашу "коробочку" для отображения
+    if (widget.imageFile != null) {
+      _selectedImage = widget.imageFile;
+    }
   }
 
   @override

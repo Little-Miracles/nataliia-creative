@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TranslationService {
   static Future<String> translateText(String text, String targetCode) async {
     final String cleanCode = targetCode.trim().toLowerCase();
+    // Если выбран английский — отдаем оригинал сразу
+  if (cleanCode == 'en' || cleanCode == 'english') return text;
     
     // 1. ОПРЕДЕЛЯЕМ ЯЗЫК (сохраняем твою логику)
     String lang;
@@ -18,7 +20,7 @@ class TranslationService {
       lang = 'uk'; // По умолчанию украинский
     }
 
-    // 2. ПРОВЕРКА ЛИМИТА (3 раза в день)
+    /*// 2. ПРОВЕРКА ЛИМИТА (3 раза в день)
     final prefs = await SharedPreferences.getInstance();
     final String today = DateTime.now().toString().substring(0, 10);
     int count = prefs.getInt('trans_count') ?? 0;
@@ -33,7 +35,7 @@ class TranslationService {
     if (count >= 3) {
       // Сообщение на английском, как ты просила
       return "LIMIT 3/3 REACHED. TRY TOMORROW";
-    }
+    }*/
 
     // 3. БЕСПЛАТНЫЙ ОБЛАЧНЫЙ ЗАПРОС
     final url = Uri.parse(
@@ -44,7 +46,7 @@ class TranslationService {
       final response = await http.get(url);
       
       if (response.statusCode == 200) {
-        await prefs.setInt('trans_count', count + 1);
+        ///await prefs.setInt('trans_count', count + 1);
         final data = jsonDecode(response.body);
         
         String result = data[0][0][0];
