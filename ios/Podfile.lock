@@ -25,10 +25,6 @@ PODS:
     - google_mlkit_commons
     - GoogleMLKit/ObjectDetection (~> 4.0.0)
     - GoogleMLKit/ObjectDetectionCustom (~> 4.0.0)
-  - google_mlkit_translation (0.9.0):
-    - Flutter
-    - google_mlkit_commons
-    - GoogleMLKit/Translate (~> 4.0.0)
   - GoogleDataTransport (9.4.1):
     - GoogleUtilities/Environment (~> 7.7)
     - nanopb (< 2.30911.0, >= 2.30908.0)
@@ -44,9 +40,6 @@ PODS:
   - GoogleMLKit/ObjectDetectionCustom (4.0.0):
     - GoogleMLKit/MLKitCore
     - MLKitObjectDetectionCustom (~> 3.0.0)
-  - GoogleMLKit/Translate (4.0.0):
-    - GoogleMLKit/MLKitCore
-    - MLKitTranslate (~> 3.0.0)
   - GoogleToolboxForMac/DebugUtils (2.3.2):
     - GoogleToolboxForMac/Defines (= 2.3.2)
   - GoogleToolboxForMac/Defines (2.3.2)
@@ -59,8 +52,6 @@ PODS:
     - GoogleToolboxForMac/Defines (= 2.3.2)
     - "GoogleToolboxForMac/NSString+URLArguments (= 2.3.2)"
   - "GoogleToolboxForMac/NSString+URLArguments (2.3.2)"
-  - GoogleToolboxForMac/StringEncoding (2.3.2):
-    - GoogleToolboxForMac/Defines (= 2.3.2)
   - GoogleUtilities/Environment (7.13.3):
     - GoogleUtilities/Privacy
     - PromisesObjC (< 3.0, >= 1.2)
@@ -93,13 +84,6 @@ PODS:
   - MLKitImageLabelingCommon (5.0.0):
     - MLKitCommon (~> 9.0)
     - MLKitVision (~> 5.0)
-  - MLKitNaturalLanguage (5.0.0):
-    - GoogleToolboxForMac/Logger (~> 2.1)
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
-    - "GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)"
-    - GoogleToolboxForMac/StringEncoding (~> 2.1)
-    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
-    - MLKitCommon (~> 9.0)
   - MLKitObjectDetection (3.0.0):
     - MLKitCommon (~> 9.0)
     - MLKitObjectDetectionCommon (~> 5.0)
@@ -113,9 +97,6 @@ PODS:
     - MLKitObjectDetectionCommon (~> 5.0)
     - MLKitVision (~> 5.0)
     - MLKitVisionKit (~> 6.0)
-  - MLKitTranslate (3.0.0):
-    - MLKitNaturalLanguage (~> 5.0)
-    - SSZipArchive (< 2.2, >= 2.1)
   - MLKitVision (5.0.0):
     - GoogleToolboxForMac/Logger (~> 2.1)
     - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
@@ -147,7 +128,6 @@ PODS:
   - sqflite_darwin (0.0.4):
     - Flutter
     - FlutterMacOS
-  - SSZipArchive (2.1.5)
   - TensorFlowLiteC (2.12.0):
     - TensorFlowLiteC/Core (= 2.12.0)
   - TensorFlowLiteC/Core (2.12.0)
@@ -186,7 +166,6 @@ DEPENDENCIES:
   - google_mlkit_barcode_scanning (from `.symlinks/plugins/google_mlkit_barcode_scanning/ios`)
   - google_mlkit_commons (from `.symlinks/plugins/google_mlkit_commons/ios`)
   - google_mlkit_object_detection (from `.symlinks/plugins/google_mlkit_object_detection/ios`)
-  - google_mlkit_translation (from `.symlinks/plugins/google_mlkit_translation/ios`)
   - health (from `.symlinks/plugins/health/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - mobile_scanner (from `.symlinks/plugins/mobile_scanner/ios`)
@@ -210,16 +189,13 @@ SPEC REPOS:
     - MLKitBarcodeScanning
     - MLKitCommon
     - MLKitImageLabelingCommon
-    - MLKitNaturalLanguage
     - MLKitObjectDetection
     - MLKitObjectDetectionCommon
     - MLKitObjectDetectionCustom
-    - MLKitTranslate
     - MLKitVision
     - MLKitVisionKit
     - nanopb
     - PromisesObjC
-    - SSZipArchive
     - TensorFlowLiteC
     - TensorFlowLiteSwift
 
@@ -244,8 +220,6 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_mlkit_commons/ios"
   google_mlkit_object_detection:
     :path: ".symlinks/plugins/google_mlkit_object_detection/ios"
-  google_mlkit_translation:
-    :path: ".symlinks/plugins/google_mlkit_translation/ios"
   health:
     :path: ".symlinks/plugins/health/ios"
   image_picker_ios:
@@ -278,7 +252,6 @@ SPEC CHECKSUMS:
   google_mlkit_barcode_scanning: 677dbd0a43df527f5a4055cdfc53cf86ff02c01e
   google_mlkit_commons: f27386da2a4d88eb7c56b4dd38dfcf61d9257d57
   google_mlkit_object_detection: c2c939f830e85e05ee409544838d989e81e6625e
-  google_mlkit_translation: 69ffd583b469193ef2e0cbc413f3d04bca7570d9
   GoogleDataTransport: 6c09b596d841063d76d4288cc2d2f42cc36e1e2a
   GoogleMLKit: 2bd0dc6253c4d4f227aad460f69215a504b2980e
   GoogleToolboxForMac: 8bef7c7c5cf7291c687cf5354f39f9db6399ad34
@@ -291,11 +264,9 @@ SPEC CHECKSUMS:
   MLKitBarcodeScanning: 04e264482c5f3810cb89ebc134ef6b61e67db505
   MLKitCommon: c1b791c3e667091918d91bda4bba69a91011e390
   MLKitImageLabelingCommon: 79ffbc10bd0c3a6407aa423aeb076f76a8883e15
-  MLKitNaturalLanguage: cf9de96911516fc83297429b7d7b6b33bfa56a93
   MLKitObjectDetection: 065c494fb18d01b3580eaa29f0df3854bee8b5cf
   MLKitObjectDetectionCommon: 424e43365d7ef7dd7005a4799e5303eeb4287fec
   MLKitObjectDetectionCustom: ed2376de1d1893e761a843f3490169c7c4de9633
-  MLKitTranslate: e805e2873e0fbb211547c714b40c22c08cb8d7cb
   MLKitVision: 8baa5f46ee3352614169b85250574fde38c36f49
   MLKitVisionKit: 5b5472d40ffc143bda693ba20a3cff44fe627d41
   mobile_scanner: 8baa97c31b83d096766bfaca0d40679afee62958
@@ -305,7 +276,6 @@ SPEC CHECKSUMS:
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
-  SSZipArchive: cefe1364104a0231268a5deb8495bdf2861f52f0
   TensorFlowLiteC: 20785a69299185a379ba9852b6625f00afd7984a
   TensorFlowLiteSwift: 3a4928286e9e35bdd3e17970f48e53c80d25e793
   tflite_flutter: 64b192e11352fe36943ab6656e1d49207f1a5595

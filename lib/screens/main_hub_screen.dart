@@ -22,6 +22,7 @@ class MainHubScreen extends StatefulWidget {
 class _MainHubScreenState extends State<MainHubScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isFinished = false; // Для отслеживания окончания видео
   double unit = 0;
 
   // --- ТЕКСТОВЫЕ ПЕРЕМЕННЫЕ ---
@@ -105,14 +106,14 @@ void _initVideo() {
       });
     });
 
-  // Добавляем слушатель, чтобы видео не «умирало» в конце
   _controller.addListener(() {
-    if (_controller.value.position == _controller.value.duration) {
-      setState(() {
-        // Видео дошло до конца, ставим на паузу и перематываем в начало
-        _controller.seekTo(Duration.zero);
-        _controller.pause();
-      });
+    // Если видео дошло до конца И оно еще в режиме проигрывания
+    if (_controller.value.position >= _controller.value.duration && _controller.value.isPlaying) {
+      if (!_isFinished) { 
+        setState(() {
+          _isFinished = true; // Выбрасываем кнопку
+        });
+      }
     }
   });
 }
@@ -263,25 +264,41 @@ void _initVideo() {
         child: Column(
           children: [
             // ВИДЕО
-            Container(
-              height: unit * 55,
-              child: _isInitialized 
-                ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        // Если видео играет — ставим паузу, если нет — запускаем!
-                        _controller.value.isPlaying 
-                            ? _controller.pause() 
-                            : _controller.play();
-                      });
-                    },
-                    child: AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio, 
-                      child: VideoPlayer(_controller),
-                    ),
-                  ) 
-                : Container(),
+            // ВИДЕО
+Container(
+  height: unit * 55,
+  child: Stack(
+    alignment: Alignment.center,
+    children: [
+      if (_isInitialized)
+        AspectRatio(
+          aspectRatio: _controller.value.aspectRatio,
+          child: VideoPlayer(_controller),
+        ),
+      
+      // КНОПКА-ПРЕРЫВАТЕЛЬ
+      if (_isFinished)
+        GestureDetector(
+          onTap: () {
+            setState(() {
+              _isFinished = false; // Прячем кнопку
+              _controller.seekTo(Duration.zero); // В начало
+              _controller.play(); // Поехали!
+            });
+          },
+          child: Container(
+            padding: EdgeInsets.all(unit * 4),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              shape: BoxShape.circle, 
+              border: Border.all(color: const Color(0xFFD4AF37), width: 2),
             ),
+            child: Icon(Icons.play_arrow, color: const Color(0xFFD4AF37), size: unit * 10),
+          ),
+        ),
+    ],
+  ),
+),
             // ИНФО-ПАНЕЛЬ
             Padding(
               padding: EdgeInsets.symmetric(horizontal: unit * 5, vertical: unit * 2),
@@ -315,8 +332,27 @@ void _initVideo() {
                 child: Container(
                   padding: EdgeInsets.all(unit * 2.5),
                   decoration: BoxDecoration(color: const Color(0xFFD4AF37).withOpacity(0.1), borderRadius: BorderRadius.circular(unit * 3), border: Border.all(color: const Color(0xFFD4AF37))),
-                  child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5), SizedBox(width: unit * 2), Text(manualBtn, style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontWeight: FontWeight.w500))]),
-                ),
+                  child: Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5),
+    SizedBox(width: unit * 2),
+    // Вместо обычного Text используем масштабируемую версию
+    Flexible( 
+      child: FittedBox(
+        fit: BoxFit.scaleDown, // Буквы уменьшатся сами, если их много
+        child: Text(
+          manualBtn,
+          style: GoogleFonts.saira(
+            color: const Color(0xFFD4AF37),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    ),
+  ],
+),
+                )
               ),
             ),
             // СПИСОК КНОПОК
