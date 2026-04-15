@@ -94,23 +94,28 @@ class _MainHubScreenState extends State<MainHubScreen> {
     }
   }
 
-  // --- ЛОГИКА ВИДЕО ---
-  void _initVideo() {
-    _controller = VideoPlayerController.asset("videos/intro.mp4")
-      ..initialize().then((_) {
-        setState(() {
-          _isInitialized = true;
-          _controller.play();
-          _controller.setVolume(1.0);
-        });
+  // --- ОБНОВЛЕННАЯ ЛОГИКА ВИДЕО ---
+void _initVideo() {
+  _controller = VideoPlayerController.asset("videos/intro.mp4")
+    ..initialize().then((_) {
+      setState(() {
+        _isInitialized = true;
+        _controller.play();
+        _controller.setVolume(1.0);
       });
-  }
+    });
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  // Добавляем слушатель, чтобы видео не «умирало» в конце
+  _controller.addListener(() {
+    if (_controller.value.position == _controller.value.duration) {
+      setState(() {
+        // Видео дошло до конца, ставим на паузу и перематываем в начало
+        _controller.seekTo(Duration.zero);
+        _controller.pause();
+      });
+    }
+  });
+}
 
   // --- ПЛИТКА-МАГНИТ ДЛЯ АВАТАРА (ЗОЛОТАЯ) ---
   Widget _avatarVipTile() {
@@ -260,7 +265,22 @@ class _MainHubScreenState extends State<MainHubScreen> {
             // ВИДЕО
             Container(
               height: unit * 55,
-              child: _isInitialized ? AspectRatio(aspectRatio: _controller.value.aspectRatio, child: VideoPlayer(_controller)) : Container(),
+              child: _isInitialized 
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        // Если видео играет — ставим паузу, если нет — запускаем!
+                        _controller.value.isPlaying 
+                            ? _controller.pause() 
+                            : _controller.play();
+                      });
+                    },
+                    child: AspectRatio(
+                      aspectRatio: _controller.value.aspectRatio, 
+                      child: VideoPlayer(_controller),
+                    ),
+                  ) 
+                : Container(),
             ),
             // ИНФО-ПАНЕЛЬ
             Padding(
