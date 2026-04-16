@@ -241,36 +241,29 @@ class ActiveSessionProvider with ChangeNotifier {
     }
   }
 
+  // ... (начало файла до метода finishSession оставляем без изменений) ...
+
   Future<void> finishSession(String name, BuildContext context) async {
     if (_currentRunningWorkout == null) return;
 
+    // 1. ПЕРВЫМ ДЕЛОМ: Останавливаем все таймеры сразу!
+    _totalStopwatch.stop();
+    _totalUiTimer?.cancel();
+    _stopRestEngine();
+
     final customLibrary = Provider.of<CustomWorkoutProvider>(context, listen: false);
     final metrics = Provider.of<MetricsProvider>(context, listen: false);
-    
-// --- ПРОВЕРКА ДАННЫХ ДЛЯ НАТАЛЬИ ---
-    print("--- ОТЧЕТ ПЕРЕД СОХРАНЕНИЕМ ---");
-    print("1. Имя тренировки в сессии: ${_currentRunningWorkout?.name}");
-    print("2. ID тренировки в сессии: ${_currentRunningWorkout?.id}");
-    print("3. Сколько упражнений записано в блокноте: ${_sessionLog.length}");
-    
-    int checkIndex = customLibrary.myCustomList.indexWhere((w) => w.id == _currentRunningWorkout?.id);
-    print("4. Нашли эту папку в архиве? (индекс): $checkIndex");
-    
-    if (_sessionLog.isEmpty) {
-      print("ВНИМАНИЕ: Блокнот пустой! Данные из карточек не дошли до провайдера.");
-    }
-    print("-------------------------------");
 
     List<String> exercisesDetails = [];
     double totalKcal = 0.0;
 
+    // Сборка лога (твоя логика без паразитов)
     _sessionLog.forEach((exerciseTitle, sets) {
       if (sets.isNotEmpty) {
         final String titleUpper = exerciseTitle.toUpperCase();
         List<String> currentSetsDetails = [];
         double exerciseKcalTotal = 0;
 
-        // Определяем, кардио это или нет для префикса C=
         bool isCardio = exerciseTitle.toLowerCase().contains('run') || 
                         exerciseTitle.toLowerCase().contains('walk') || 
                         exerciseTitle.toLowerCase().contains('cycl') || 
@@ -278,7 +271,6 @@ class ActiveSessionProvider with ChangeNotifier {
 
         for (int i = 0; i < sets.length; i++) {
           final s = sets[i];
-          // БЕРЕМ ГОТОВЫЕ КАЛОРИИ ИЗ СЕТА (те, что пришли с экрана!)
           double currentKcal = s.kcal; 
           String duration = "${s.workDuration.inMinutes.toString().padLeft(2, '0')}:${(s.workDuration.inSeconds % 60).toString().padLeft(2, '0')}";
 
@@ -297,47 +289,62 @@ class ActiveSessionProvider with ChangeNotifier {
       }
     });
 
-    // 1. Считаем, какой по счету будет эта запись ВНУТРИ данной карточки
+    // Определение номера сессии и финализация лога
+    String finalName = name.isEmpty ? _currentRunningWorkout!.name : name.toUpperCase();
     int internalSessionNumber = 1;
-    final int index = customLibrary.myCustomList.indexWhere((w) => w.id == _currentRunningWorkout!.id);
+    
+    // Ищем индекс по ID или по Имени (для страховки)
+    int index = customLibrary.myCustomList.indexWhere((w) => w.id == _currentRunningWorkout!.id);
+    if (index < 0) {
+      index = customLibrary.myCustomList.indexWhere((w) => w.name == finalName);
+    }
     
     if (index >= 0) {
       internalSessionNumber = customLibrary.myCustomList[index].history.length + 1;
     }
 
-    // 2. Добавляем красивый заголовок с номером сессии в начало лога
     String timeResult = "${totalTime.inMinutes.toString().padLeft(2, '0')}:${(totalTime.inSeconds % 60).toString().padLeft(2, '0')}";
-    
-    // Добавляем строку "SESSION #..." в самый верх блока истории
     String sessionHeader = "SESSION #$internalSessionNumber"; 
-    
     String finalLog = "$sessionHeader\n${exercisesDetails.join("\n")}\n| $timeResult | ${totalKcal.toStringAsFixed(1)} kcal";
     
-    // --- ДАЛЕЕ ОСТАВЛЯЕМ ЛОГИКУ СОХРАНЕНИЯ КАК БЫЛА ---
-    String finalName = name.isEmpty ? "NEW SESSION" : name.toUpperCase();
-    
     try {
-      if (index >= 0) {
-        // Добавляем в существующую карточку
-        customLibrary.addSessionToHistory(_currentRunningWorkout!.id, finalLog);
+      // 1. Ищем папку по строгому совпадению ID
+      int index = customLibrary.myCustomList.indexWhere((w) => w.id == _currentRunningWorkout!.id);
+      
+      // 2. Если по ID не нашли, пробуем по ИМЕНИ (чтобы 5-я не улетела в 4-ю)
+      if (index < 0) {
+        index = customLibrary.myCustomList.indexWhere((w) => w.name == finalName);
+      }
+
+      if (index >= 0 && finalName != "NEW SESSION") {
+        // Добавляем в СУЩЕСТВУЮЩУЮ папку, если имена или ID совпали
+        customLibrary.addSessionToHistory(customLibrary.myCustomList[index].id, finalLog);
       } else {
-        // Создаем новую и добавляем первый лог
+        // СОЗДАЕМ НОВУЮ ПАПКУ (для тренировки "5", если её еще нет)
         customLibrary.createNewRoutine(finalName, List<Exercise>.from(_currentRunningWorkout!.exercises));
-        await Future.delayed(const Duration(milliseconds: 200));
-        if (customLibrary.myCustomList.isNotEmpty) {
-           customLibrary.addSessionToHistory(customLibrary.myCustomList.last.id, finalLog);
+        
+        // Ждем 300мс, чтобы Провайдер успел обновить список в памяти
+        await Future.delayed(const Duration(milliseconds: 300));
+        
+        // Находим свежесозданную папку и пишем историю туда
+        final int newIndex = customLibrary.myCustomList.indexWhere((w) => w.name == finalName);
+        if (newIndex >= 0) {
+          customLibrary.addSessionToHistory(customLibrary.myCustomList[newIndex].id, finalLog);
         }
       }
-      // ... остальной код (metrics, saveToDisk)
       
-      await metrics.addBurnedCalories(totalKcal).timeout(const Duration(seconds: 1));
       await customLibrary.saveToDisk();
+      await metrics.addBurnedCalories(totalKcal).timeout(const Duration(seconds: 1));
+      
     } catch (e) {
-      debugPrint("Ошибка при сохранении: $e");
+      debugPrint("SAVE ERROR: $e");
     } finally {
       clearWorkout();
+      notifyListeners();
     }
   }
+
+// ... (остаток файла оставляем как есть) ...
 
   bool isInEvolution(String title) => _evolutionBasket.any((e) => e.title == title);
   bool isInProtocol(String title) => _protocolBasket.any((e) => e.title == title);

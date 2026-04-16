@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 
@@ -28,6 +29,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterL
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env"); // ДОБАВЬ ВОТ ЭТУ СТРОЧКУ
   await StorageService.init(); 
   tz.initializeTimeZones();
   
@@ -83,7 +85,7 @@ class SmartBodyLifeApp extends StatelessWidget {
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF05100A),
       ),
-      initialRoute: '/hub', 
+      initialRoute: '/', 
       routes: {
         '/': (context) => const WelcomeScreen(),
         '/hub': (context) => const MainHubScreen(),

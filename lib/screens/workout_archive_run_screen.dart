@@ -52,7 +52,8 @@ class _WorkoutArchiveRunScreenState extends State<WorkoutArchiveRunScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      _buildExerciseList(session, exercises), 
+                      _buildExerciseList(session, exercises),
+                      const _SessionHistoryList(), // ДОБАВЬ ВОТ ЭТО! 
                       const SizedBox(height: 50),
                     ],
                   ),
@@ -214,5 +215,117 @@ class _WorkoutArchiveRunScreenState extends State<WorkoutArchiveRunScreen> {
     int mins = totalSeconds ~/ 60;
     int secs = totalSeconds % 60;
     return "${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+  }
+}
+
+  class _SessionHistoryList extends StatelessWidget {
+  const _SessionHistoryList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<ActiveSessionProvider>(
+      builder: (context, session, child) {
+        if (session.sessionLog.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(25, 30, 25, 10),
+              child: Text(
+                "SESSION LOG",
+                style: TextStyle(
+                  color: const Color(0xFFFFAB00).withOpacity(0.7),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w300,
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ),
+            ...session.sessionLog.entries.map((entry) {
+              final exerciseTitle = entry.key;
+              final String titleLower = exerciseTitle.toLowerCase();
+              
+              bool isCardio = titleLower.contains('run') || 
+                              titleLower.contains('walk') || 
+                              titleLower.contains('cycl') || 
+                              titleLower.contains('elliptical');
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.02),
+                  borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      exerciseTitle.toUpperCase(),
+                      style: TextStyle(
+                          color: isCardio ? Colors.greenAccent : const Color(0xFFC0C0C0).withOpacity(0.9),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          letterSpacing: 1.2),
+                    ),
+                    const SizedBox(height: 12),
+                    ...entry.value.asMap().entries.map((setEntry) {
+                      final setData = setEntry.value;
+                      final String kcalValue = setData.kcal.toStringAsFixed(1);
+                      final String duration = "${setData.workDuration.inMinutes.toString().padLeft(2, '0')}:${(setData.workDuration.inSeconds % 60).toString().padLeft(2, '0')}";
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: const BoxDecoration(
+                          border: Border(bottom: BorderSide(color: Colors.white10, width: 0.5)),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(isCardio ? "SESSION" : "SET ${setEntry.key + 1}",
+                                style: TextStyle(
+                                    color: isCardio ? Colors.greenAccent : const Color(0xFFC0C0C0), 
+                                    fontSize: 15, 
+                                    fontWeight: FontWeight.w300)),
+                            const Spacer(),
+                            if (isCardio) 
+                               _metric(duration, "min")
+                            else ...[
+                               _metric("${setData.weight}", "kg"),
+                               const SizedBox(width: 8),
+                               _metric("${setData.reps}", "reps"),
+                            ],
+                            const SizedBox(width: 20),
+                            _metric(kcalValue, "kcal"),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              );
+            }),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _metric(String value, String label) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(value,
+            style: const TextStyle(
+                color: Color(0xFFC0C0C0),
+                fontSize: 18,
+                fontWeight: FontWeight.w300,
+                fontFamily: 'monospace')),
+        const SizedBox(width: 3),
+        Text(label, style: const TextStyle(color: Colors.white38, fontSize: 10)),
+      ],
+    );
   }
 }

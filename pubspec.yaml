@@ -36,9 +36,10 @@ dependencies:
   fl_chart: ^0.69.2
   
   # КАЛЕНДАРЬ И СИНХРОНИЗАЦИЯ 📅
-  add_2_calendar: ^2.0.0
-  device_calendar: ^3.9.0
-  
+  #add_2_calendar: ^2.0.0
+  device_calendar: ^4.3.2
+  timezone: 0.9.0
+  flutter_timezone: ^5.0.2
   # ПАМЯТЬ И БАЗА ДАННЫХ
   path_provider: ^2.1.5
   sqflite: ^2.3.0
@@ -54,6 +55,7 @@ dependencies:
   timezone: ^0.10.0
   flutter_timezone: ^5.0.2
 
+  flutter_dotenv: ^5.1.0  # Добавь вот это
 
 dev_dependencies:
   flutter_test:
@@ -80,7 +82,7 @@ flutter:
     - assets/images/soups/
     - assets/images/salads/
     - assets/images/mains/
-  
+    - .env
 
 flutter_launcher_icons:
   android: "launcher_icon"

@@ -129,7 +129,7 @@ class _MainDishesScreenState extends State<MainDishesScreen> {
     proteins: 18.0,
     fats: 15.0,
     carbs: 2.0,
-    imageUrl: 'assets/images/mains/6.png'
+    imageUrl: 'assets/images/mains/6.jpeg'
   ),
 
   FoodItem(

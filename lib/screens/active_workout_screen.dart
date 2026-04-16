@@ -26,9 +26,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         elevation: 0,
+        // ИСПРАВЛЕНО: Теперь стрелочка работает более надежно
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFFFFAB00)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacementNamed(context, '/hub');
+            }
+          },
         ),
         title: const Text("PERSONAL ROUTINES", 
           style: TextStyle(
@@ -77,7 +84,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       onTap: () {
         setState(() {
           expandedIndex = isExpanded ? null : index;
-          // Тут ты удалила строчку, и осталась либо пустота, либо лишняя скобка
         });
       },
       child: AnimatedContainer(
@@ -170,56 +176,47 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                         child: _buildActionButton("RE-RUN", Icons.play_arrow),
                       ),
                       GestureDetector(
-  onTap: () {
-    // ВЫЗЫВАЕМ НОВУЮ ШТОРКУ ДЛЯ ГРАФИКА
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true, // Позволяет шторке быть высокой
-      backgroundColor: Colors.transparent, // Чтобы видеть скругления
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7, // 70% высоты экрана
-        decoration: const BoxDecoration(
-          color: Color(0xFF0A0A0A), // Глубокий черный
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-          border: Border(top: BorderSide(color: Color(0xFFFFAB00), width: 1)),
-        ),
-        child: Column(
-          children: [
-            // Полоска сверху для красоты
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40, height: 4,
-              decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(2)),
-            ),
-            // ЗАГОЛОВОК
-            Text(workout.name.toUpperCase(), 
-              style: const TextStyle(color: Color(0xFFFFAB00), letterSpacing: 2, fontSize: 16)),
-            const SizedBox(height: 20),
-            // САМ ГРАФИК (теперь ему тут просторно!)
-            Expanded(
-              child: WorkoutProgressChart(
-  history: workout.history.map((h) => "${h.date} ${h.log.join(' ')}").toList(),
-),
-            )
-          ],
-        ),
-      ),
-    );
-  },
-  child: _buildActionButton("STATS", Icons.bar_chart),
-),
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            backgroundColor: Colors.transparent,
+                            builder: (context) => Container(
+                              height: MediaQuery.of(context).size.height * 0.7,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF0A0A0A),
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+                                border: Border(top: BorderSide(color: Color(0xFFFFAB00), width: 1)),
+                              ),
+                              child: Column(
+                                children: [
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(vertical: 12),
+                                    width: 40, height: 4,
+                                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(2)),
+                                  ),
+                                  Text(workout.name.toUpperCase(), 
+                                    style: const TextStyle(color: Color(0xFFFFAB00), letterSpacing: 2, fontSize: 16)),
+                                  const SizedBox(height: 20),
+                                  Expanded(
+                                    child: WorkoutProgressChart(
+                                      // ИСПРАВЛЕНО: Формат данных теперь "лог | дата"
+                                      history: workout.history.map((h) => "${h.log.join('\n')} | ${h.date}").toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        child: _buildActionButton("STATS", Icons.bar_chart),
+                      ),
                       GestureDetector(
                         onTap: () => _showNotesSheet(context, workout),
                         child: _buildActionButton("MY NOTES", Icons.edit_note),
                       ),
                     ],
                   ),
-                  
-                  //if (_showStats) 
-                   // Padding(  
-                  // padding: const EdgeInsets.only(top: 20),
-                  //    child: WorkoutProgressChart(history: workout.sessionResults ?? []),
-                  //  ),
                 ],
               ),
             ],
@@ -247,7 +244,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   void _showNotesSheet(BuildContext context, WorkoutTemplate workout) {
-    TextEditingController notesController = TextEditingController(text: "Had a great workout today...");
+    TextEditingController notesController = TextEditingController(text: "...");
 
     showModalBottomSheet(
       context: context,

@@ -77,8 +77,11 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
     }
     double dynamicMaxY = (maxVal * 1.2).roundToDouble();
 
-    return Column(
+    return SingleChildScrollView(
+    child: Column(
+      mainAxisSize: MainAxisSize.min, // Чтобы колонка не растягивалась зря
       children: [
+        // Заголовок
         const Padding(
           padding: EdgeInsets.symmetric(vertical: 12),
           child: Text("WORKOUT ANALYTICS", style: TextStyle(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
@@ -196,10 +199,12 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
           ),
         ),
         const SizedBox(height: 10),
-        _buildLegend(),
+        _buildLegend(), // Теперь легенда точно влезет, её можно будет проскроллить!
+        const SizedBox(height: 20), // Маленький отступ снизу
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildLegend() => const Row(
     mainAxisAlignment: MainAxisAlignment.center, 

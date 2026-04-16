@@ -25,27 +25,30 @@ class CustomWorkoutProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Обнови только этот метод в custom_workout_provider.dart
-  void addSessionToHistory(String workoutId, String results) {
+void addSessionToHistory(String workoutId, String results) {
     int index = _myCustomList.indexWhere((w) => w.id == workoutId);
     if (index >= 0) {
-      // Создаем сессию
+      final now = DateTime.now();
+      
+      // 1. Создаем сессию для внутренней истории (объектная модель)
       final newSession = WorkoutSession(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        date: DateTime.now(),
-        log: [results], // Тот самый текст: "20kg x 10 🔥..."
+        id: now.millisecondsSinceEpoch.toString(),
+        date: now,
+        log: [results], 
         exercises: List.from(_myCustomList[index].exercises), 
       );
 
-      // Добавляем в основной список истории (откуда берет ГРАФИК)
       _myCustomList[index].history.add(newSession);
       
-      // Добавляем в результаты (откуда берет список HISTORY)
+      // 2. Добавляем в текстовые результаты (для простого отображения)
       _myCustomList[index].sessionResults ??= [];
       _myCustomList[index].sessionResults!.add(results);
       
-      saveToDisk();
-      notifyListeners();
+      // СРАЗУ сохраняем, чтобы ничего не потерялось
+      saveToDisk().then((_) {
+        debugPrint("SUCCESS: Workout saved to v5 archive");
+        notifyListeners();
+      });
     }
   }
 

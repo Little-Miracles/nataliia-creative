@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path; // Добавила для правильных путей
 import 'package:smart_body_life/screens/food_category_screen.dart';
 import 'package:smart_body_life/screens/bio_creator_form.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum FrameSize { snack, meal, large }
 
@@ -53,7 +54,7 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
   _scanController.repeat(reverse: true);
 
   try {
-    const String apiKey = "AIzaSyAxYq5bIZYI7pErO0fSD1mfSiDcf-eD7ws"; // Вставь свой ключ сюда
+    String apiKey = dotenv.env['FOOD_API_KEY'] ?? '';// Вставь свой ключ сюда
     // Тот самый адрес, который одобрил твой Google:
     final String cloudUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$apiKey";
     

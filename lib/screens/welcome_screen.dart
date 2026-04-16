@@ -103,7 +103,7 @@ Container(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );*/
       // ЛОГИКА ПЕРЕХОДА (ТЕПЕРЬ В ХАБ)
-Navigator.pushReplacementNamed(context, '/hub');
+Navigator.pushReplacementNamed(context, '/hub'); // Переходим в ХАБ, который уже решит, куда дальше
     },
     style: ElevatedButton.styleFrom(
       // ФОН: Глубокий изумрудный (чуть ярче дна, чтобы кнопка была видна)
