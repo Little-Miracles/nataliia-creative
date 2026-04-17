@@ -79,3 +79,5 @@ flutter_launcher_icons:
   adaptive_icon_background: "#001A10"
   adaptive_icon_foreground: "ui_images/icon.png"
 
+dependency_overrides:
+  intl: 0.19.0
