@@ -17,7 +17,16 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 subprojects {
-    afterEvaluate { project ->
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'com.builttoroam' && details.requested.name == 'device_calendar') {
+                // Это просто заставляет календарь быть на связи
+            }
+        }
+    }
+    
+    // Новое «лекарство», которое срабатывает без задержек:
+    afterProject { project ->
         if (project.hasProperty('android')) {
             project.android {
                 if (namespace == null) {
