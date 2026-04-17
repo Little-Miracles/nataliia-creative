@@ -11,7 +11,7 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // 1. Оставляем 1.8, раз 11 не помогла (не в этом корень зла)
+    // Настройка Java
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -20,25 +20,25 @@ subprojects {
         kotlinOptions { jvmTarget = "1.8" }
     }
 
-    // 2. ХИРУРГИЯ: Насильно поднимаем SDK всем плагинам до 36
-    // Это единственный способ заставить ML Kit увидеть lStar
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) { 
-                    compileSdkVersion 36 
-                } else {
-                    compileSdk 36
-                }
-            }
-        }
-    }
-
-    // 3. Твоя стратегия примирения библиотек
-    configurations.all {
+    // ХИРУРГИЯ БЕЗ afterEvaluate:
+    // Напрямую заставляем все плагины использовать SDK 36
+    project.configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
+        }
+    }
+
+    // Принудительный SDK для каждого плагина
+    project.afterEvaluate {
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 36
+                buildToolsVersion "36.0.0"
+                defaultConfig {
+                    targetSdkVersion 36
+                }
+            }
         }
     }
 }
