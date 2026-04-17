@@ -16,12 +16,14 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        // Включаем поддержку современных библиотек Java (исправляет твою последнюю ошибку)
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 
     signingConfigs {
@@ -37,15 +39,21 @@ android {
         applicationId = "com.nataliia.smart_body_life"
         testNamespace = "com.nataliia.smart_body_life"
         
-        minSdkVersion = 26 
-        targetSdk = 34 
-        versionCode = 2 
-        versionName = "2.0.0"
+        // Включаем поддержку больших библиотек
+        multiDexEnabled true
+        
+        minSdkVersion 26 
+        targetSdk 34 
+        versionCode 2 
+        versionName "2.0.0"
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.release
+            // Добавляем сжатие ресурсов для уменьшения размера APK
+            shrinkResources false 
+            minifyEnabled false
         }
     }
 }
@@ -55,5 +63,6 @@ flutter {
 }
 
 dependencies {
+    // Эта библиотека помогает запускать новый код на старых версиях Android
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
