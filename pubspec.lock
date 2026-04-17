@@ -189,10 +189,10 @@ packages:
     dependency: "direct main"
     description:
       name: device_calendar
-      sha256: e5170a5a5a2027135705b099fe5f9b0dce415e27c94997b34e64f28de54e4226
+      sha256: "5a1ce7887b4ffbaf3743078c8314dede5e694cddd69bab43f35ce815c5d82a7d"
       url: "https://pub.dev"
     source: hosted
-    version: "3.9.0"
+    version: "4.3.1"
   device_info_plus:
     dependency: transitive
     description:
@@ -350,6 +350,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.3"
+  flutter_native_timezone:
+    dependency: transitive
+    description:
+      name: flutter_native_timezone
+      sha256: ed7bfb982f036243de1c068e269182a877100c994f05143c8b26a325e28c1b02
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -384,14 +392,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.3.3"
-  google_mlkit_barcode_scanning:
-    dependency: "direct main"
-    description:
-      name: google_mlkit_barcode_scanning
-      sha256: "965183a8cd5cef8477ceea5dbdf29c34a739cf0cfbf1bdad54cd3f9f1807afe5"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.10.0"
   google_mlkit_commons:
     dependency: "direct main"
     description:
@@ -616,14 +616,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  mobile_scanner:
-    dependency: "direct main"
-    description:
-      name: mobile_scanner
-      sha256: cf978740676ba5b0c17399baf117984b31190bb7a6eaa43e51229ed46abc42ee
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.5.2"
   nested:
     dependency: transitive
     description:
@@ -632,14 +624,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  openfoodfacts:
-    dependency: "direct main"
-    description:
-      name: openfoodfacts
-      sha256: "51bb760342865523a207d1df72e0a022d131a10a9ea0b5b663ed7be93837c561"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.30.2"
   package_config:
     dependency: transitive
     description:
@@ -873,10 +857,10 @@ packages:
     dependency: transitive
     description:
       name: sprintf
-      sha256: ec76d38910b6f1c854ce1353c62d37e7ef82b53dc5ab048c25400d35970776d1
+      sha256: "1fc9ffe69d4df602376b52949af107d8f5703b77cda567c4d7d86a0693120f23"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "7.0.0"
   sqflite:
     dependency: "direct main"
     description:
@@ -977,10 +961,10 @@ packages:
     dependency: "direct main"
     description:
       name: timezone
-      sha256: dd14a3b83cfd7cb19e7888f1cbc20f258b8d71b54c06f79ac585f14093a287d1
+      sha256: "2236ec079a174ce07434e89fcd3fcda430025eb7692244139a9cf54fdcf1fc7d"
       url: "https://pub.dev"
     source: hosted
-    version: "0.10.1"
+    version: "0.9.4"
   typed_data:
     dependency: transitive
     description:

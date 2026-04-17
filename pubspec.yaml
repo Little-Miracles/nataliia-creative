@@ -80,3 +80,6 @@ flutter_launcher_icons:
   image_path: "ui_images/icon.png"
   adaptive_icon_background: "#001A10"
   adaptive_icon_foreground: "ui_images/icon.png"
+
+dependency_overrides:
+  timezone: 0.9.4
