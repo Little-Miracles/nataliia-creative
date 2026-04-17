@@ -13,12 +13,18 @@ if (keyPropertiesFile.exists()) {
 android {
     namespace = "com.nataliia.smart_body_life"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    
+    // ДОБАВЬ ЭТО СЮДА:
+    kotlin {
+        jvmToolchain(17)
+    }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17 // Было 17
+        sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    // ... остальное без изменений ...
+}
     kotlinOptions {
         jvmTarget = "17" // Было 17
     }
