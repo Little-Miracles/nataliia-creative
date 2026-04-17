@@ -17,23 +17,20 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-// ВОТ НАШ НОВЫЙ БЕЗОТКАЗНЫЙ БЛОК
 subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            // Если у библиотеки нет своего namespace, даем ей временный
-            if (project.android.namespace == null) {
-                project.android.namespace = project.group
-            }
+    project.configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            // Это просто пинок системе, чтобы она проснулась
         }
     }
-}
-
-// Это заставит Gradle принять настройки даже если он уже "ушел на обед"
-gradle.settingsEvaluated { settings ->
-    settings.gradle.rootProject.subprojects { subproject ->
-        if (subproject.hasProperty('android')) {
-            subproject.android.namespace = subproject.group
+    // Прямое назначение паспорта без ожиданий
+    afterEvaluate {
+        if (project.hasProperty('android')) {
+            project.android {
+                if (namespace == null) {
+                    namespace = "com.nataliia.${project.name.replaceAll("-", "_")}"
+                }
+            }
         }
     }
 }
