@@ -53,7 +53,7 @@ class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
   }
 
   Future<void> _fetchHealthData() async {
-    final health = Health();
+    final health = HealthFactory();
     final metrics = Provider.of<MetricsProvider>(context, listen: false);
     final types = [HealthDataType.STEPS];
     final permissions = [HealthDataAccess.READ];
