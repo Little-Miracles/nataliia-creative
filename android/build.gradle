@@ -11,21 +11,16 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Это заставит КАЖДЫЙ плагин (включая device_info_plus) использовать 17
-    afterEvaluate { project ->
-        if (project.hasProperty("android")) {
-            project.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-                // Для тех, у кого есть Kotlin
-                if (project.plugins.hasPlugin("kotlin-android")) {
-                    kotlinOptions {
-                        jvmTarget = "17"
-                    }
-                }
-            }
+    // Находим все задачи по компиляции Java и принуждаем к 17
+    tasks.withType(JavaCompile).configureEach {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    // Находим все задачи по компиляции Kotlin и принуждаем к 17
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "17"
         }
     }
 }
