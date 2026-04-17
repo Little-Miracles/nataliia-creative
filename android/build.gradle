@@ -11,35 +11,26 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Настройка Java (оставляем 1.8, раз она стабильна)
+    // Прямая настройка SDK для всех плагинов (лечит lStar)
+    project.extensions.findByType(com.android.build.gradle.BaseExtension)?.with {
+        compileSdkVersion 36
+        buildToolsVersion "36.0.0"
+        defaultConfig {
+            targetSdkVersion 36
+        }
+    }
+
+    // Настройка Java
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    // Силовое обновление библиотек
+    // Принудительные версии библиотек
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
-        }
-    }
-}
-
-// Отдельный блок, который сработает ПРАВИЛЬНО для всех подпроектов
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            android {
-                // Это заставит google_mlkit_commons использовать SDK 36
-                // в котором lStar точно существует
-                compileSdkVersion 36
-                buildToolsVersion "36.0.0"
-                
-                defaultConfig {
-                    targetSdkVersion 36
-                }
-            }
         }
     }
 }
