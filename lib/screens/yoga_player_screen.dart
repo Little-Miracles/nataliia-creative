@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:add_2_calendar/add_2_calendar.dart';
+//import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:flutter/material.dart';
 import 'package:smart_body_life/data/relax_data.dart';
 import 'package:smart_body_life/data/exercise_library_data.dart';
@@ -42,14 +42,14 @@ class _YogaTimerPlayerScreenState extends State<YogaTimerPlayerScreen> {
   }
 
   void _addToCalendar() {
-    final Event event = Event(
+    /*final Event event = Event(
       title: 'Smart Body: ${widget.programName}',
       description: 'Burned ${_totalCaloriesBurned.toStringAsFixed(1)} kcal',
       location: 'Home Workout',
       startDate: DateTime.now(),
       endDate: DateTime.now().add(const Duration(minutes: 30)),
     );
-    Add2Calendar.addEvent2Cal(event);
+    Add2Calendar.addEvent2Cal(event);*/
   }
 
   Widget _buildLibraryRow(IconData icon, String label, String text) {
