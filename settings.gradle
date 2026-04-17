@@ -18,8 +18,8 @@ pluginManagement {
 
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    id "com.android.application" version "8.5.0" apply false // Снизили с 8.11 до стабильной 8.5
-    id "org.jetbrains.kotlin.android" version "1.9.20" apply false // Снизили до 1.9, которую понимают ВСЕ библиотеки
+    id "com.android.application" version "8.1.0" apply false // Снизили с 8.11 до стабильной 8.5
+    id "org.jetbrains.kotlin.android" version "1.8.22" apply false // Снизили до 1.9, которую понимают ВСЕ библиотеки
 }
 
 include ":app"

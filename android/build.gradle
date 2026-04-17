@@ -12,14 +12,12 @@ subprojects {
     project.evaluationDependsOn(":app")
 
     tasks.withType(JavaCompile).configureEach {
-        // Силовой метод: принуждаем к 11
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
 
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            // Котлин тоже переводим на 11
             jvmTarget = "11"
         }
     }
