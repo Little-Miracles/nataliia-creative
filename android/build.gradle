@@ -17,12 +17,10 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 subprojects {
-    afterEvaluate {
-        if (it.hasProperty('android')) {
-            it.android {
-                if (namespace == null) {
-                    namespace = "com.nataliia.smart_body_life"
-                }
+    project.beforeEvaluate {
+        if (project.hasProperty("android")) {
+            project.android {
+                namespace = "com.nataliia.smart_body_life"
             }
         }
     }
