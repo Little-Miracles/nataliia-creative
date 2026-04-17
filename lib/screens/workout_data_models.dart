@@ -108,6 +108,9 @@ class WorkoutTemplate {
   List<WorkoutSession> history; 
 
   List<String>? sessionResults;
+  
+  // ДОБАВЛЕНО: Поле для хранения заметок блокнота
+  String? notes; 
 
   WorkoutTemplate({
     required this.id,
@@ -115,11 +118,13 @@ class WorkoutTemplate {
     required this.exercises,
     this.history = const [], 
     this.sessionResults,
+    this.notes, // Добавлено в конструктор
   });
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
+    'notes': notes, // Добавлено в сохранение
     'sessionResults': sessionResults,
     'history_logs': history.map((s) => s.log.isNotEmpty ? s.log.first : "").toList(),
   };
@@ -128,6 +133,7 @@ class WorkoutTemplate {
     final template = WorkoutTemplate(
       id: json['id'] ?? '',
       name: json['name'] ?? '',
+      notes: json['notes'], // Добавлено в чтение
       exercises: [], 
       history: [],   
     );
@@ -142,7 +148,7 @@ class WorkoutTemplate {
         id: DateTime.now().toString(),
         date: DateTime.now(),
         log: [l],
-        exercises: [], // Оставляем для совместимости
+        exercises: [],
       )).toList();
     }
 
@@ -154,12 +160,12 @@ class WorkoutSession {
   final String id;
   final DateTime date;
   List<String> log; 
-  final List<dynamic> exercises; // Убираем вопрос, делаем обязательным
+  final List<dynamic> exercises;
 
   WorkoutSession({
     required this.id,
     required this.date,
     required this.log,
-    this.exercises = const [], // Если данных нет, пусть будет пустой список, а не ошибка
+    this.exercises = const [], 
   });
 }

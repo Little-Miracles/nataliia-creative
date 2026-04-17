@@ -244,7 +244,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
   }
 
   void _showNotesSheet(BuildContext context, WorkoutTemplate workout) {
-    TextEditingController notesController = TextEditingController(text: "...");
+    // 1. ТЕПЕРЬ ПОДТЯГИВАЕМ СУЩЕСТВУЮЩИЙ ТЕКСТ (вместо "...")
+    TextEditingController notesController = TextEditingController(text: workout.notes ?? "");
 
     showModalBottomSheet(
       context: context,
@@ -269,7 +270,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
                     style: const TextStyle(color: Color(0xFFFFAB00), fontWeight: FontWeight.bold, fontSize: 14)),
                   IconButton(
                     icon: const Icon(Icons.check_circle_outline, color: Color(0xFFFFAB00)),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      // 2. ВОТ ОН, НАШ ПРОВОД! Вызываем сохранение в провайдере
+                      context.read<CustomWorkoutProvider>().updateWorkoutNotes(
+                        workout.id, 
+                        notesController.text
+                      );
+                      Navigator.pop(context); // Закрываем шторку
+                    },
                   ),
                 ],
               ),
@@ -293,7 +301,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen> {
       ),
     );
   }
-
   Widget _buildEmptyHint() {
     return const Center(
       child: Text("FOLDER IS EMPTY\nCREATE AND SAVE A ROUTINE FIRST", 
