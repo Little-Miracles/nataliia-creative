@@ -17,12 +17,12 @@ android {
 
     compileOptions {
         coreLibraryDesugaringEnabled true 
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8 // Было 17
+        targetCompatibility = JavaVersion.VERSION_1_8 // Было 17
     }
 
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8" // Было 17
     }
 
     signingConfigs {
@@ -58,20 +58,19 @@ flutter {
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
-// Этот блок заставляет все сторонние библиотеки использовать те же настройки Java, что и твой проект
 subprojects {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+    
     afterEvaluate { project ->
         if (project.hasProperty("android")) {
             project.android {
                 compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-                // Если в подпроекте используется Kotlin, усмиряем и его
-                if (project.plugins.hasPlugin("kotlin-android") || project.plugins.hasPlugin("kotlin")) {
-                    kotlinOptions {
-                        jvmTarget = "17"
-                    }
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
                 }
             }
         }
