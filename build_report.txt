@@ -1,0 +1,9 @@
+[  +44 ms] executing: sysctl hw.optional.arm64
+[   +7 ms] Exit code 1 from: sysctl hw.optional.arm64
+[        ] sysctl: unknown oid 'hw.optional.arm64'
+[  +17 ms] Could not find an option named "--stacktrace".
+
+[   +1 ms] Run 'flutter -h' (or 'flutter <command> -h') for available flutter commands and options.
+[        ] Running 1 shutdown hook
+[        ] Shutdown hooks complete
+[        ] exiting with code 64

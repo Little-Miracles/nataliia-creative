@@ -1,0 +1,64 @@
+== Customization Debug: agents (agent) ==
+Window: Core VS Code
+Active root: /Users/nata/Developer/smart_body_life
+Sections: [agents, skills, instructions, prompts, hooks, mcpServers, plugins]
+Filter sources: [local, user, plugin, extension, builtin]
+
+--- Active Harness ---
+  id: vscode
+  label: Local
+  hasItemProvider: false
+  hasSyncProvider: false
+  hiddenSections: (none)
+  workspaceSubpaths: (none)
+  hideGenerateButton: false
+  requiredAgentId: (none)
+  instructionFileFilter: (none)
+
+Filter includedUserFileRoots: (all)
+
+--- Stage 1: Raw PromptsService Data ---
+  listPromptFilesForStorage(local):  0 files
+  listPromptFilesForStorage(user):   0 files
+  listPromptFilesForStorage(ext):    3 files
+    /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/plan-agent/Plan.agent.md
+    /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/ask-agent/Ask.agent.md
+    /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/explore-agent/Explore.agent.md
+  listPromptFiles (merged):          3 files
+  getCustomAgents:                   3 agents
+    Plan [extension] /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/plan-agent/Plan.agent.md
+    Ask [extension] /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/ask-agent/Ask.agent.md
+    Explore [extension] /Users/nata/Library/Application Support/Code/User/globalStorage/github.copilot-chat/explore-agent/Explore.agent.md
+
+--- Stage 2: After applyStorageSourceFilter ---
+  Input: 3 → Filtered: 3
+    local:     0
+    user:      0
+    extension: 3
+
+--- Stage 3: Widget State (loadItems → filterItems) ---
+  allItems (after loadItems): 3
+    local:     0
+    user:      0
+    extension: 3
+    plugin:    0
+    - Ask [storage=extension, groupKey=builtin]
+    - Explore [storage=extension, groupKey=builtin]
+    - Plan [storage=extension, groupKey=builtin]
+  displayEntries (after filterItems): 4
+    file items shown: 3
+    group "Built-in": count=3, collapsed=false
+
+--- Source Folders (creation targets) ---
+  [local] /Users/nata/Developer/smart_body_life/.github/agents
+  [local] /Users/nata/Developer/smart_body_life/.claude/agents
+  [local] /Users/nata/.claude/agents
+  [local] /Users/nata/.copilot/agents
+  [user] /Users/nata/Library/Application Support/Code/User/prompts
+
+--- Resolved Source Folders (discovery order) ---
+  [local] /Users/nata/Developer/smart_body_life/.github/agents (source=github-workspace)
+  [local] /Users/nata/Developer/smart_body_life/.claude/agents (source=claude-workspace)
+  [user] /Users/nata/.claude/agents (source=claude-personal)
+  [user] /Users/nata/.copilot/agents (source=copilot-personal)
+  [user] /Users/nata/Library/Application Support/Code/User/prompts (source=copilot-personal)
