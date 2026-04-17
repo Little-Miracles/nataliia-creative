@@ -13,20 +13,10 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // ДОБАВЛЯЕМ ЭТОТ БЛОК ВНУТРЬ subprojects
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                if (project.plugins.hasPlugin('kotlin-android')) {
-                    kotlinOptions {
-                        jvmTarget = '1.8'
-                    }
-                }
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_1_8
-                    targetCompatibility JavaVersion.VERSION_1_8
-                }
-            }
+    // Прямая настройка без afterEvaluate
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
         }
     }
 }
