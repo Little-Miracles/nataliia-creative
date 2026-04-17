@@ -18,19 +18,9 @@ tasks.register("clean", Delete) {
 }
 
 subprojects {
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            // Это просто пинок системе, чтобы она проснулась
-        }
-    }
-    // Прямое назначение паспорта без ожиданий
-    afterEvaluate {
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) {
-                    namespace = "com.nataliia.${project.name.replaceAll("-", "_")}"
-                }
-            }
+    if (project.hasProperty('android')) {
+        project.android {
+            namespace = "com.nataliia.${project.name.replaceAll("-", "_")}"
         }
     }
 }
