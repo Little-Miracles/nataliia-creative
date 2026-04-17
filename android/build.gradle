@@ -11,13 +11,14 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Принудительная синхронизация всех модулей (health, audioplayers и др.) на Java 21
+    // Все задачи Kotlin — на 21
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
         kotlinOptions {
             jvmTarget = "21"
         }
     }
 
+    // Все задачи Java — на 21
     tasks.withType(JavaCompile).all {
         sourceCompatibility = "21"
         targetCompatibility = "21"
