@@ -3,6 +3,12 @@ allprojects {
         google()
         mavenCentral()
     }
+    // Глобальные переменные, которые плагины подхватят автоматически
+    project.ext {
+        compileSdkVersion = 36
+        targetSdkVersion = 36
+        buildToolsVersion = "36.0.0"
+    }
 }
 
 rootProject.buildDir = "../build"
@@ -11,22 +17,13 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Прямая настройка SDK для всех плагинов (лечит lStar)
-    project.extensions.findByType(com.android.build.gradle.BaseExtension)?.with {
-        compileSdkVersion 36
-        buildToolsVersion "36.0.0"
-        defaultConfig {
-            targetSdkVersion 36
-        }
-    }
-
-    // Настройка Java
+    // Настройка Java (оставляем твою рабочую 1.8)
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    // Принудительные версии библиотек
+    // Принудительное разрешение конфликтов библиотек
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
