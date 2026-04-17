@@ -16,11 +16,11 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_21 // Было 17
-        targetCompatibility JavaVersion.VERSION_21
+        sourceCompatibility JavaVersion.VERSION_1.8 // Было 17
+        targetCompatibility JavaVersion.VERSION_1.8
     }
     kotlinOptions {
-        jvmTarget = "21" // Было 17
+        jvmTarget = "1.8" // Было 17
     }
 
     signingConfigs {

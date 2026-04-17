@@ -11,8 +11,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21 // Было VERSION_17
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_1.8 // Было VERSION_17
+        targetCompatibility = JavaVersion.VERSION_1.8
     }
 
     kotlinOptions {
