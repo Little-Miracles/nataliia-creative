@@ -1,4 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
+
 import 'package:flutter/material.dart';
 import 'package:health/health.dart';
 import 'package:provider/provider.dart';
@@ -18,7 +18,6 @@ class EvolutionSessionScreen extends StatefulWidget {
 class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
   bool _isSelectingGender = false;
   int? _openedVaultIndex;
-  final AudioPlayer _audioPlayer = AudioPlayer();
   late VideoPlayerController _videoController;
   bool _isVideoInitialized = false;
   String? heartMessage;
@@ -89,7 +88,7 @@ class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
   @override
   void initState() {
     super.initState();
-    _audioPlayer.play(AssetSource('sounds/crystal_drop.mp3'));
+    ///_audioPlayer.play(AssetSource('sounds/crystal_drop.mp3'));
     _videoController = VideoPlayerController.asset('videos/avatar.mov');
     _videoController.initialize().then((_) {
       if (mounted) {
@@ -103,7 +102,7 @@ class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
   @override
   void dispose() {
     _videoController.dispose();
-    _audioPlayer.dispose();
+    ///_audioPlayer.dispose();
     super.dispose();
   }
 
