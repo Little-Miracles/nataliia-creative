@@ -15,20 +15,14 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    // 1. Toolchain — наш главный синхронизатор
-    kotlin {
-        jvmToolchain(17)
-    }
-
-    // 2. Настройки Java
+    // 1. Устанавливаем 11 версию везде, чтобы плагины не спотыкались
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
-    // 3. Настройки Kotlin (теперь ОНИ ВНУТРИ блока android)
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "11"
     }
 
     signingConfigs {
@@ -55,7 +49,7 @@ android {
             signingConfig = signingConfigs.release
         }
     }
-} // <--- Вот эта скобка закрывает блок android
+}
 
 flutter {
     source = "../.."
