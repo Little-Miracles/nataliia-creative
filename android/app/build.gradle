@@ -16,13 +16,11 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        coreLibraryDesugaringEnabled true 
-        sourceCompatibility = JavaVersion.VERSION_1_8 // Было 17
-        targetCompatibility = JavaVersion.VERSION_1_8 // Было 17
+        sourceCompatibility JavaVersion.VERSION_21 // Было 17
+        targetCompatibility JavaVersion.VERSION_21
     }
-
     kotlinOptions {
-        jvmTarget = "1.8" // Было 17
+        jvmTarget = "21" // Было 17
     }
 
     signingConfigs {
@@ -61,7 +59,7 @@ dependencies {
 subprojects {
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "21"
         }
     }
     

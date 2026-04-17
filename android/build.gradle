@@ -13,10 +13,9 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Прямая настройка без afterEvaluate
     tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = "21"
         }
     }
 }
