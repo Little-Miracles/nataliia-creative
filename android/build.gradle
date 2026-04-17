@@ -17,13 +17,12 @@ tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
+// ВОТ НАШ НОВЫЙ БЕЗОТКАЗНЫЙ БЛОК
 subprojects {
-    project.afterEvaluate {
-        if (project.hasProperty('android')) {
-            project.android {
-                if (namespace == null) {
-                    namespace project.group
-                }
+    if (project.hasProperty('android')) {
+        project.android {
+            if (namespace == null) {
+                namespace project.group
             }
         }
     }
