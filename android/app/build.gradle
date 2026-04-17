@@ -60,5 +60,5 @@ flutter {
 // ДОБАВЬ ЭТОТ БЛОК В САМЫЙ НИЗ ФАЙЛА:
 dependencies {
     // Меняем 2.0.4 на 2.1.4
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
