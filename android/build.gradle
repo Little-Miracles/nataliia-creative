@@ -6,25 +6,24 @@ allprojects {
 }
 
 rootProject.buildDir = "../build"
-subprojects {
-    project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Принудительно ставим версию Java для всех подпроектов
-    tasks.withType(JavaCompile) {
-        options.compilerArgs << "-Xlint:-options"
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+    // Принудительная синхронизация всех модулей (health, audioplayers и др.) на Java 21
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "21"
+        }
     }
 
-    // Принудительно ставим версию Kotlin для всех подпроектов
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
+    tasks.withType(JavaCompile).all {
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
     }
 }
 
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
