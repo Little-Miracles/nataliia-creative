@@ -13,20 +13,22 @@ if (keyPropertiesFile.exists()) {
 android {
     namespace = "com.nataliia.smart_body_life"
     compileSdk = flutter.compileSdkVersion
-    
-    // ДОБАВЬ ЭТО СЮДА:
+    ndkVersion = flutter.ndkVersion
+
+    // 1. Toolchain — наш главный синхронизатор
     kotlin {
         jvmToolchain(17)
     }
 
+    // 2. Настройки Java
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    // ... остальное без изменений ...
-}
+
+    // 3. Настройки Kotlin (теперь ОНИ ВНУТРИ блока android)
     kotlinOptions {
-        jvmTarget = "17" // Было 17
+        jvmTarget = "17"
     }
 
     signingConfigs {
@@ -53,7 +55,7 @@ android {
             signingConfig = signingConfigs.release
         }
     }
-}
+} // <--- Вот эта скобка закрывает блок android
 
 flutter {
     source = "../.."
