@@ -11,14 +11,26 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
+    // --- ВОТ ЭТОТ БЛОК МЫ ДОБАВЛЯЕМ ДЛЯ ЛЕЧЕНИЯ ВИДЕОПЛЕЕРА ---
+    subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty('android')) {
+                project.android {
+                    if (namespace == null) {
+                        namespace project.group
+                    }
+                }
+            }
+        }
+    }
+    // -------------------------------------------------------
+
     namespace = "com.nataliia.smart_body_life"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // Добавь эту строку обязательно:
         coreLibraryDesugaringEnabled true 
-        
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -38,7 +50,7 @@ android {
 
     defaultConfig {
         applicationId = "com.nataliia.smart_body_life"
-        testNamespace = "com.nataliia.smart_body_life" // <--- ДОБАВЬ ЭТО СЕЙЧАС
+        testNamespace = "com.nataliia.smart_body_life"
         
         minSdkVersion = 26 
         targetSdk = 34 
@@ -56,8 +68,8 @@ android {
 flutter {
     source = "../.."
 }
-// ДОБАВЬ ЭТОТ БЛОК В САМЫЙ НИЗ ФАЙЛА:
+
 dependencies {
-    // Меняем 2.0.4 на 2.1.4
+    // Оставляем 2.0.4, раз она работает стабильнее
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }
