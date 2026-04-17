@@ -32,9 +32,7 @@ dependencies:
   fl_chart: ^0.69.2
   
   # КАЛЕНДАРЬ (Версия 4.3.1 для фикса ошибки Namespace)
-  add_2_calendar: ^2.2.5
-  device_calendar: 4.3.1
-  timezone: ^0.9.4
+ 
   flutter_timezone: ^5.0.2
 
   # ХРАНЕНИЕ ДАННЫХ
@@ -81,5 +79,3 @@ flutter_launcher_icons:
   adaptive_icon_background: "#001A10"
   adaptive_icon_foreground: "ui_images/icon.png"
 
-dependency_overrides:
-  timezone: 0.9.4
