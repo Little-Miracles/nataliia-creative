@@ -37,15 +37,14 @@ android {
     }
 
     defaultConfig {
-    applicationId = "com.nataliia.smart_body_life"
-    
-    // Прямо указываем версию 26 (Android 8.0 Oreo)
-    minSdkVersion = 26 
-    
-    targetSdk = 34 
-    versionCode = 1 
-    versionName = "1.0.0"
-}
+        applicationId = "com.nataliia.smart_body_life"
+        testNamespace = "com.nataliia.smart_body_life" // <--- ДОБАВЬ ЭТО СЕЙЧАС
+        
+        minSdkVersion = 26 
+        targetSdk = 34 
+        versionCode = 1 
+        versionName = "1.0.0"
+    }
 
     buildTypes {
         release {
