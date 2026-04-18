@@ -24,6 +24,7 @@ dependencies:
   
   # МУЛЬТИМЕДИА
   video_player: ^2.8.1
+  audioplayers: 5.2.1
   
   # ЗДОРОВЬЕ И АНАЛИТИКА
   health: ^10.1.1
