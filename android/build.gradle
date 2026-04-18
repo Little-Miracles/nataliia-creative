@@ -5,9 +5,9 @@ allprojects {
     }
     // Глобальные переменные, которые плагины подхватят автоматически
     project.ext {
-        compileSdkVersion = 36
-        targetSdkVersion = 36
-        buildToolsVersion = "36.0.0"
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        buildToolsVersion = "34.0.0"
     }
 }
 
@@ -17,13 +17,18 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Настройка Java (оставляем твою рабочую 1.8)
+    // ПРИНУДИТЕЛЬНО ставим всем плагинам Java 1.8
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
 
-    // Принудительное разрешение конфликтов библиотек
+    // Твоя защита от конфликтов
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
