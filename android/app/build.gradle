@@ -4,18 +4,6 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
-// 1. ПРИНУДИТЕЛЬНЫЙ ПРИКАЗ ДЛЯ ВСЕХ ПЛАГИНОВ (ВЫНЕСЛИ НАРУЖУ)
-rootProject.subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileSdkVersion 34
-                buildToolsVersion "34.0.0"
-            }
-        }
-    }
-}
-
 def keyProperties = new Properties()
 def keyPropertiesFile = rootProject.file('key.properties')
 if (keyPropertiesFile.exists()) {
