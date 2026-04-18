@@ -1,32 +1,32 @@
-allprojects {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    // Глобальные переменные, которые плагины подхватят автоматически
-    project.ext {
-        compileSdkVersion = 34
-        targetSdkVersion = 34
-        buildToolsVersion = "34.0.0"
-    }
-}
-
-rootProject.buildDir = "../build"
-
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // Принудительно ставим Java 1.8 (безопасно для твоего ноутбука)
+    // 1. Принудительно осаживаем ВСЕ плагины до SDK 34
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                compileSdkVersion 34
+                buildToolsVersion "34.0.0"
+                
+                // Это заставит плагины использовать Java 1.8 твоего ноутбука
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
+                }
+            }
+        }
+    }
+
+    // 2. Твой блок JavaCompile (оставляем)
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    // РУЧНОЕ ТОРМОЖЕНИЕ ВЕРСИЙ (Resolution Strategy)
+    // 3. Твой блок Resolution Strategy (оставляем)
     configurations.all {
         resolutionStrategy {
-            // Заставляем все библиотеки Google использовать версии, совместимые с SDK 34
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
             force 'androidx.browser:browser:1.8.0'
