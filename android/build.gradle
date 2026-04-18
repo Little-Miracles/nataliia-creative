@@ -28,11 +28,24 @@ subprojects {
         }
     }
 
-    // Твоя защита от конфликтов
     configurations.all {
         resolutionStrategy {
+            // Твои текущие force (оставь их)
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
+
+            // НОВЫЕ СТРОКИ: понижаем версии, которые требуют SDK 36/35
+            force 'androidx.browser:browser:1.8.0'
+            force 'androidx.activity:activity:1.9.0'
+            force 'androidx.activity:activity-ktx:1.13.1'
+            force 'androidx.health.connect:connect-client:1.1.0-alpha11'
+            
+            // Заставляем media3 (плеер) использовать версию для SDK 34
+            eachDependency { DependencyResolveDetails details ->
+                if (details.requested.group == 'androidx.media3') {
+                    details.useVersion '1.3.1'
+                }
+            }
         }
     }
 }
