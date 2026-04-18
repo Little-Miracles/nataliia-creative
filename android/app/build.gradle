@@ -15,21 +15,18 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
-    // Ускоряем сборку для старого ноутбука и игнорируем мелкие ошибки ресурсов
-    aaptOptions {
-        errorFormatMode = "human"
-        noCompress 'png', 'jpg'
-    }
+    // УДАЛИЛИ aaptOptions ОТСЮДА
 
     compileOptions {
         coreLibraryDesugaringEnabled true
-        sourceCompatibility JavaVersion.VERSION_1_8 // Замени 11 на 1.8
-        targetCompatibility JavaVersion.VERSION_1_8 // Замени 11 на 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = "1.8" // Замени 11 на 1.8
+        jvmTarget = "1.8"
     }
+    
 
     signingConfigs {
         release {
