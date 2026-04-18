@@ -15,7 +15,17 @@ android {
     compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
-    // УДАЛИЛИ aaptOptions ОТСЮДА
+    // ВСТАВЛЯЕМ ПРИНУДИТЕЛЬНОЕ ПОНИЖЕНИЕ ДЛЯ ПЛАГИНОВ ТУТ:
+    rootProject.subprojects {
+        afterEvaluate { project ->
+            if (project.hasProperty('android')) {
+                project.android {
+                    compileSdkVersion 34
+                    buildToolsVersion "34.0.0"
+                }
+            }
+        }
+    }
 
     compileOptions {
         coreLibraryDesugaringEnabled true
@@ -27,7 +37,6 @@ android {
         jvmTarget = "1.8"
     }
     
-
     signingConfigs {
         release {
             keyAlias = keyProperties['keyAlias']
@@ -47,7 +56,6 @@ android {
         versionCode 2 
         versionName "2.0.0"
 
-        // Инъекция для подавления ошибки lStar
         resConfigs "en", "uk", "de", "fr", "es"
     }
 
