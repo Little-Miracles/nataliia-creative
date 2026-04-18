@@ -17,35 +17,24 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // ПРИНУДИТЕЛЬНО ставим всем плагинам Java 1.8
+    // Принудительно ставим Java 1.8 (безопасно для твоего ноутбука)
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
-    }
 
+    // РУЧНОЕ ТОРМОЖЕНИЕ ВЕРСИЙ (Resolution Strategy)
     configurations.all {
         resolutionStrategy {
-            // Твои текущие force (оставь их)
+            // Заставляем все библиотеки Google использовать версии, совместимые с SDK 34
             force 'androidx.core:core:1.13.1'
             force 'androidx.core:core-ktx:1.13.1'
-
-            // НОВЫЕ СТРОКИ: понижаем версии, которые требуют SDK 36/35
             force 'androidx.browser:browser:1.8.0'
+            force 'androidx.fragment:fragment:1.7.1'
             force 'androidx.activity:activity:1.9.0'
-            force 'androidx.activity:activity-ktx:1.13.1'
-            force 'androidx.health.connect:connect-client:1.1.0-alpha11'
-            
-            // Заставляем media3 (плеер) использовать версию для SDK 34
-            eachDependency { DependencyResolveDetails details ->
-                if (details.requested.group == 'androidx.media3') {
-                    details.useVersion '1.3.1'
-                }
-            }
+            force 'androidx.lifecycle:lifecycle-common:2.7.0'
+            force 'androidx.lifecycle:lifecycle-runtime:2.7.0'
+            force 'androidx.lifecycle:lifecycle-viewmodel:2.7.0'
         }
     }
 }
