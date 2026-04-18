@@ -1,3 +1,9 @@
+ext {
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    buildToolsVersion = "34.0.0"
+}
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
