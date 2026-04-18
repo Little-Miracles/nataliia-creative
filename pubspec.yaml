@@ -26,7 +26,7 @@ dependencies:
   video_player: ^2.8.1
   
   # ЗДОРОВЬЕ И АНАЛИТИКА
-  health: ^10.3.0
+  health: ^10.1.1
   permission_handler: ^11.3.1
   fl_chart: ^0.69.2
   
