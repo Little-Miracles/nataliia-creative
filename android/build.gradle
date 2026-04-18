@@ -2,29 +2,26 @@ subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 
-    // 1. Принудительно осаживаем ВСЕ плагины до SDK 34
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            project.android {
-                compileSdkVersion 34
-                buildToolsVersion "34.0.0"
-                
-                // Это заставит плагины использовать Java 1.8 твоего ноутбука
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_1_8
-                    targetCompatibility JavaVersion.VERSION_1_8
-                }
+    // ПРИНУДИТЕЛЬНЫЙ ПОРЯДОК БЕЗ afterEvaluate
+    if (project.hasProperty('android')) {
+        project.android {
+            compileSdkVersion 34
+            buildToolsVersion "34.0.0"
+            
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_1_8
+                targetCompatibility JavaVersion.VERSION_1_8
             }
         }
     }
 
-    // 2. Твой блок JavaCompile (оставляем)
+    // Твой блок JavaCompile (оставляем)
     tasks.withType(JavaCompile).configureEach {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    // 3. Твой блок Resolution Strategy (оставляем)
+    // Твой блок Resolution Strategy (оставляем)
     configurations.all {
         resolutionStrategy {
             force 'androidx.core:core:1.13.1'
