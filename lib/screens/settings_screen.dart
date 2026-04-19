@@ -112,7 +112,7 @@ _buildToggleItem(
     );
   }
 
-  Widget _buildVipCard() {
+Widget _buildVipCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -127,8 +127,8 @@ _buildToggleItem(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("ACCESS LEVEL: BASIC", style: TextStyle(color: gold, fontWeight: FontWeight.bold)),
-              const Text("Upgrade to PRO for extra artifacts", 
+              Text("ACCESS LEVEL: FULL", style: TextStyle(color: gold, fontWeight: FontWeight.bold)),
+              const Text("All current bio-modules are active", // Заменили "Upgrade to PRO"
                 style: TextStyle(color: Colors.white54, fontSize: 11)),
             ],
           ),

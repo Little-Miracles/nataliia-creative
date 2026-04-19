@@ -52,9 +52,14 @@ class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
   }
 
   Future<void> _fetchHealthData() async {
-    final health = Health();
+    // Вместо HealthFactory теперь просто Health()
+    Health health = Health();
     final metrics = Provider.of<MetricsProvider>(context, listen: false);
+    
+    // Типы данных теперь пишутся через HealthDataType.STEPS (тут почти так же)
     final types = [HealthDataType.STEPS];
+    
+    // ВНИМАНИЕ: Здесь небольшое изменение в названии доступа
     final permissions = [HealthDataAccess.READ];
 
     try {
