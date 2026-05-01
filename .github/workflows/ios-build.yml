@@ -64,9 +64,13 @@ jobs:
             archive \
             CODE_SIGNING_ALLOWED=NO || true
 
-      - name: 6. Upload Archive (Safe Exit)
+      - name: 6. Upload Final Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_Archive_Build2
-          path: build/ios/archive/Runner.xcarchive
+          name: SmartBodyLife_Package_Final
+          path: |
+            build/ios/archive/
+            build/ios/ipa/
+            ios/*.xcarchive
+            **/Runner.xcarchive
