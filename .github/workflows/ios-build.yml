@@ -33,14 +33,12 @@ jobs:
 
       - name: 4. Prepare Project Dependencies
         run: |
-          # Просто скачиваем библиотеки, используя ваш исправленный pubspec.yaml
+          # Мы доверяем вашим ручным правкам на GitHub
           flutter pub get
-          
-          # Устанавливаем правильный ID приложения
-          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
 
       - name: 5. Build iOS Archive
         run: |
+          # Теперь Котик просто берет проект и пытается его упаковать
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -archivePath build/ios/archive/Runner.xcarchive \
