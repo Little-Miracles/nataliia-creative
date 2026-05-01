@@ -16,21 +16,18 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Repair iOS Project Structure
-        run: |
-          # Это создаст недостающие файлы ios/Runner.xcodeproj
-          # Мы делаем это ПЕРЕД установкой библиотек
-          flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
+      - name: 3. Check Folders
+        run: ls -R  # Котик просто перечислит все папки, чтобы мы увидели правду
 
-      - name: 4. Prepare Project Dependencies
+      - name: 4. Emergency Restore (Only if missing)
         run: |
-          # Теперь ставим ваши библиотеки (health 9.0.1 подтянется сама)
-          flutter pub get
+          # Эта команда создаст структуру, ТОЛЬКО если папки ios реально нет
+          if [ ! -d "ios" ]; then
+            flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
+          fi
 
-      - name: 5. Build iOS App
-        run: |
-          # Теперь папка ios на месте, и Котик сможет начать сборку
-          flutter build ios --release --no-codesign
+      - name: 5. Prepare Dependencies
+        run: flutter pub get  # Подтягиваем вашу health 9.0.1
 
       - name: 6. Deliver Artifacts
         if: always()
