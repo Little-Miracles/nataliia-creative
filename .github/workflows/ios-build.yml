@@ -50,27 +50,24 @@ jobs:
           PLIST="ios/Runner/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :NSCalendarsUsageDescription string 'Приложению нужен доступ к календарю.'" $PLIST || true
 
-      - name: 5. Manual Xcode Archive
+      - name: 5. Archive ONLY with Xcode
         run: |
-          # Собираем код, игнорируя ошибки проверки команды (добавили || true)
-          flutter build ios --release --no-codesign --build-number=2 --no-tree-shake-icons || true
-          
-          # Создаем архив. Если даже тут возникнет заминка, || true пропустит нас к выдаче артефакта
+          # Мы НЕ используем flutter build, чтобы он не мешал.
+          # Сразу просим Xcode собрать проект в кучу.
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -archivePath build/ios/archive/Runner.xcarchive \
             -sdk iphoneos \
             -configuration Release \
             archive \
-            CODE_SIGNING_ALLOWED=NO || true
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            CODE_SIGNING_IDENTITY=""
 
-      - name: 6. Upload Final Artifact
+      - name: 6. Upload Everything Found
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_Package_Final
-          path: |
-            build/ios/archive/
-            build/ios/ipa/
-            ios/*.xcarchive
-            **/Runner.xcarchive
+          name: SmartBodyLife_Direct_Archive
+          path: build/ios/archive/
