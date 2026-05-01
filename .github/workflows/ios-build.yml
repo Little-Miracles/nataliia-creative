@@ -16,27 +16,21 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
 
-      - name: 3. Install Certificates
+      - name: 3. Prepare Dependencies
         run: |
-          # Ваши документы и сертификаты — Котик обязан их использовать
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision
-
-      - name: 4. Prepare Project
-        run: |
-          # Мы заставляем Котика увидеть ваш pubspec.yaml и скачать библиотеки
+          # Используем ваш pubspec.yaml, где зафиксирована версия 9.0.1
           flutter pub get
 
-      - name: 5. Standard Build
+      - name: 4. Build iOS App
         run: |
-          # Мы НЕ отключаем ничего. Мы говорим: собирай iOS как положено.
-          # Если папка на месте (а она на месте!), он её увидит.
+          # Котик заходит в ту самую папку ios, которую вы видите на фото
           flutter build ios --release --no-codesign
 
-      - name: 6. Deliver Artifacts
+      - name: 5. Deliver Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_iOS_App
+          name: SmartBodyLife_App
           path: build/ios/iphoneos/*.app
+          if-no-files-found: warn
           retention-days: 5
