@@ -58,12 +58,12 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO || true
 
-      - name: 6. Emergency Artifact Search
+      - name: 6. Final Artifact Delivery
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_Package_Final
+          name: SmartBodyLife_iOS_App
           path: |
-            build/ios/archive/
-            ./build/ios/archive/Runner.xcarchive
-            ~/Library/Developer/Xcode/DerivedData/**/ArchiveIntermediates/**/InstallationBuildProductsLocation/Applications/*.app
+            build/ios/archive/Runner.xcarchive/Products/Applications/*.app
+            build/ios/archive/*.xcarchive
+          retention-days: 5
