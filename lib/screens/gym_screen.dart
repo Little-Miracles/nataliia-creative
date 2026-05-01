@@ -23,7 +23,6 @@ import 'weight_loss_plans_screen.dart';
 import 'muscle_gain_plans_screen.dart';
 import 'package:smart_body_life/screens/my_artifacts_screen.dart';
 //import 'package:smart_body_life/screens/live_action_timer_screen.dart';
-import 'evolution_session_screen.dart';
 
 // --- ДАННЫЕ (kMachineData) ---
 const Map<String, List<Map<String, String>>> kMachineData = {
