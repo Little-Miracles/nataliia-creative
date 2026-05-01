@@ -33,9 +33,10 @@ jobs:
 
       - name: 4. Repair Project and Fix Versions
         run: |
+          # Сначала чистим кэш, чтобы "Котик" не путался
           flutter pub get
-          # Принудительно откатываем библиотеку под ваш код
-          flutter pub add health:9.1.0 
+          # Используем "9.0.1" — ту версию, которую сервер сам предложил в логах
+          flutter pub add health:9.0.1 
           flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
