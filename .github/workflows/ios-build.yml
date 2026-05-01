@@ -1,27 +1,36 @@
-name: SMART-BODY-LIFE-VERIFY-FIX
+name: SMART-BODY-LIFE-FINAL-BUILD
 
 on:
   workflow_dispatch:
 
 jobs:
-  verify:
+  build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout
+      - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Check New File Path
-        run: |
-          echo "Checking the specific file you just created:"
-          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
-            echo "SUCCESS: File found at ios/Runner.xcodeproj/project.pbxproj"
-          else
-            echo "ERROR: File still not found in the expected location."
-            echo "Let's see where it actually is:"
-            find . -name "project.pbxproj"
-          fi
+      - name: 2. Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: stable
 
-      - name: 3. Final Audit Status
+      - name: 3. Prepare Dependencies
         run: |
-          [ -d "ios/Runner.xcodeproj" ] && echo "xcodeproj folder: EXISTS" || echo "xcodeproj folder: MISSING"
-          [ -f "ios/Runner.xcodeproj/project.pbxproj" ] && echo "project.pbxproj: FOUND" || echo "project.pbxproj: NOT FOUND"
+          # Устанавливаем библиотеки (включая ваш health 9.0.1)
+          flutter pub get
+
+      - name: 4. Build iOS App
+        run: |
+          # Теперь Котик видит файл Runner.xcodeproj и начнет сборку
+          flutter build ios --release --no-codesign
+
+      - name: 5. Deliver Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartBodyLife_iOS_App
+          path: build/ios/iphoneos/*.app
+          if-no-files-found: warn
+          retention-days: 5
