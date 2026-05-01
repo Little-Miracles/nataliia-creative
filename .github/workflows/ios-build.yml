@@ -1,37 +1,28 @@
-name: SMART-BODY-LIFE-FINAL-TRIUMPH
+name: SMART-BODY-LIFE-DIAGNOSTIC
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  check-files:
     runs-on: macos-15
     steps:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          channel: stable
-
-      - name: 3. Prepare Dependencies
+      - name: 2. List all files (The Light)
         run: |
-          flutter pub get
-
-      - name: 4. Diagnostic - Find Project File
-        run: |
-          echo "Current directory structure:"
+          # Команда покажет абсолютно всё, что Котик видит в корне и в папке ios
+          echo "Full project structure:"
           ls -R
-          echo "Searching for Runner.xcodeproj..."
-          find . -name "Runner.xcodeproj"
-
-      - name: 5. Deliver Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartBodyLife_App
-          path: build/ios/iphoneos/*.app
-          if-no-files-found: warn
-          retention-days: 5
+          
+      - name: 3. Verify specific paths
+        run: |
+          # Проверяем наличие файла, который вы видите на фото
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            echo "SUCCESS: Project file found at ios/Runner.xcodeproj"
+          else
+            echo "ERROR: Project file NOT found in ios/Runner.xcodeproj"
+            # Ищем, где он спрятался
+            find . -name "Runner.xcodeproj"
+          fi
