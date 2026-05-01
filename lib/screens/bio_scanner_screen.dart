@@ -56,7 +56,7 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
   try {
     String apiKey = dotenv.env['FOOD_API_KEY'] ?? '';// Вставь свой ключ сюда
     // Тот самый адрес, который одобрил твой Google:
-    final String cloudUrl = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=$apiKey";
+    final String cloudUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey";
     
     final bytes = await imageFile.readAsBytes();
     final base64Image = base64Encode(bytes).replaceAll(RegExp(r'\s+'), '');
@@ -99,7 +99,7 @@ class _BioScannerScreenState extends State<BioScannerScreen> with SingleTickerPr
         }
       } else {
         _stopAnalysis();
-        _showSimpleError("Identification failed. Try again.");
+        _showSimpleError("SERVER ERROR: ${response.statusCode} - ${response.reasonPhrase}");
       }
     } catch (e) {
       _stopAnalysis();
