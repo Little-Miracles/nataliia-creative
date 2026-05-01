@@ -1,32 +1,27 @@
-name: SMART-BODY-LIFE-AUDIT
+name: SMART-BODY-LIFE-VERIFY-FIX
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  verify:
     runs-on: macos-15
     steps:
       - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. File Audit Report
+      - name: 2. Check New File Path
         run: |
-          echo "STEP 1: Root Folder Content"
-          ls -F
-          
-          echo "STEP 2: iOS Folder Check"
-          if [ -d "ios" ]; then
-            echo "RESULT: Folder 'ios' EXISTS"
-            ls -F ios/
+          echo "Checking the specific file you just created:"
+          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
+            echo "SUCCESS: File found at ios/Runner.xcodeproj/project.pbxproj"
           else
-            echo "RESULT: Folder 'ios' IS MISSING"
+            echo "ERROR: File still not found in the expected location."
+            echo "Let's see where it actually is:"
+            find . -name "project.pbxproj"
           fi
 
-          echo "STEP 3: Critical Files Check"
-          [ -f "ios/Podfile" ] && echo "Podfile: FOUND" || echo "Podfile: NOT FOUND"
-          [ -d "ios/Runner.xcodeproj" ] && echo "xcodeproj: FOUND" || echo "xcodeproj: NOT FOUND"
-          [ -d "ios/Runner.xcworkspace" ] && echo "xcworkspace: FOUND" || echo "xcworkspace: NOT FOUND"
-
-          echo "STEP 4: Deep Search"
-          find . -name "Runner.xcodeproj" -o -name "Podfile"
+      - name: 3. Final Audit Status
+        run: |
+          [ -d "ios/Runner.xcodeproj" ] && echo "xcodeproj folder: EXISTS" || echo "xcodeproj folder: MISSING"
+          [ -f "ios/Runner.xcodeproj/project.pbxproj" ] && echo "project.pbxproj: FOUND" || echo "project.pbxproj: NOT FOUND"
