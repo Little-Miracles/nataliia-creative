@@ -3,21 +3,25 @@ name: SMART-BODY-LIFE-DIAGNOSTIC
 on:
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Успокаиваем Котика по поводу Node.js
-
 jobs:
-  check-files:
+  check-map:
     runs-on: macos-15
     steps:
       - name: 1. Checkout repository
         uses: actions/checkout@v4
 
-      - name: 2. List all files (The Light)
+      - name: 2. Reveal all folders
         run: |
-          echo "Current location:"
-          pwd
-          echo "What is inside the main folder:"
+          # Котик просто выпишет список всех папок, которые он скачал
+          echo "Current directory contents:"
           ls -F
-          echo "Is there an ios folder here? Let's check specifically:"
-          ls -d ios/ || echo "Folder 'ios' is NOT found in the root"
+          
+          # Мы проверяем регистр: ios или iOS?
+          echo "Checking specifically for ios directory:"
+          find . -maxdepth 2 -name "ios" -o -name "iOS"
+          
+      - name: 3. Search for the missing file
+        run: |
+          # Ищем Runner.xcodeproj по всей карте проекта
+          echo "Searching for Runner.xcodeproj..."
+          find . -name "Runner.xcodeproj"
