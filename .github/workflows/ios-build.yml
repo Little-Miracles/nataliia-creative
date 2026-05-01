@@ -31,22 +31,15 @@ jobs:
           DIST_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
           cp ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$DIST_UUID.mobileprovision
 
-      - name: 4. Force Repair Project & Dependencies
+      - name: 4. Prepare Project Dependencies
         run: |
-          # 1. Жестко прописываем версию health в pubspec.yaml
-          sed -i '' 's/health:.*/health: 9.0.1/g' pubspec.yaml
-          
-          # 2. Обновляем зависимости
+          # Просто скачиваем библиотеки, используя ваш исправленный pubspec.yaml
           flutter pub get
           
-          # 3. Настраиваем iOS проект
-          flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
+          # Устанавливаем правильный ID приложения
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "f2e7364b-98c7-44ad-a0dc-84acd2d0fd80";/g' ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 5. Hard Archive
+      - name: 5. Build iOS Archive
         run: |
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
@@ -58,12 +51,13 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO || true
 
-      - name: 6. Final Artifact Delivery
+      - name: 6. Deliver Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_iOS_App
+          name: SmartBodyLife_Package
           path: |
-            build/ios/archive/Runner.xcarchive/Products/Applications/*.app
-            build/ios/archive/*.xcarchive
+            **/*.app
+            **/*.xcarchive
+          if-no-files-found: warn
           retention-days: 5
