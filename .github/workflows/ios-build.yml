@@ -33,29 +33,17 @@ jobs:
 
       - name: 4. Prepare Project Dependencies
         run: |
-          # Мы доверяем вашим ручным правкам на GitHub
           flutter pub get
 
-      - name: 5. Build iOS Archive
+      - name: 5. Build iOS App
         run: |
-          # Теперь Котик просто берет проект и пытается его упаковать
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -archivePath build/ios/archive/Runner.xcarchive \
-            -sdk iphoneos \
-            -configuration Release \
-            archive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            COMPILER_INDEX_STORE_ENABLE=NO || true
+          # Собираем полноценно. Flutter сам найдет ваши сертификаты в системе.
+          flutter build ios --release --no-codesign
 
       - name: 6. Deliver Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_Package
-          path: |
-            **/*.app
-            **/*.xcarchive
-          if-no-files-found: warn
+          name: SmartBodyLife_iOS_App
+          path: build/ios/iphoneos/*.app
           retention-days: 5
