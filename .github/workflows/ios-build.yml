@@ -3,6 +3,9 @@ name: SMART-BODY-LIFE-DIAGNOSTIC
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Успокаиваем Котика по поводу Node.js
+
 jobs:
   check-files:
     runs-on: macos-15
@@ -12,17 +15,9 @@ jobs:
 
       - name: 2. List all files (The Light)
         run: |
-          # Команда покажет абсолютно всё, что Котик видит в корне и в папке ios
-          echo "Full project structure:"
-          ls -R
-          
-      - name: 3. Verify specific paths
-        run: |
-          # Проверяем наличие файла, который вы видите на фото
-          if [ -f "ios/Runner.xcodeproj/project.pbxproj" ]; then
-            echo "SUCCESS: Project file found at ios/Runner.xcodeproj"
-          else
-            echo "ERROR: Project file NOT found in ios/Runner.xcodeproj"
-            # Ищем, где он спрятался
-            find . -name "Runner.xcodeproj"
-          fi
+          echo "Current location:"
+          pwd
+          echo "What is inside the main folder:"
+          ls -F
+          echo "Is there an ios folder here? Let's check specifically:"
+          ls -d ios/ || echo "Folder 'ios' is NOT found in the root"
