@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    # Используем более новую систему для свежего SDK
     runs-on: macos-15
     steps:
       - name: 1. Checkout repository
@@ -24,45 +23,34 @@ jobs:
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > dist.p12
           echo "${{ secrets.DEV_P12_BASE64 }}" | base64 --decode > dev.p12
-          
           PASS=$(echo "${{ secrets.P12_PASSWORD }}" | xargs)
           security import dist.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
           security import dev.p12 -k "$KEYCHAIN_PATH" -P "$PASS" -A -T /usr/bin/codesign
-          
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
-
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision
           echo "${{ secrets.DEV_PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/dev.mobileprovision
-          
           DIST_UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< $(security cms -D -i ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision))
           cp ~/Library/MobileDevice/Provisioning\ Profiles/dist.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/$DIST_UUID.mobileprovision
-          
           echo "DIST_UUID=$DIST_UUID" >> $GITHUB_ENV
           echo "BUNDLE_ID=com.nataliia.smartbodylife" >> $GITHUB_ENV
 
       - name: 4. Repair and Configure Project
         run: |
           flutter pub get
-          # Генерируем проект
           rm -rf ios/Runner.xcodeproj
           rm -rf ios/Runner.xcworkspace
           flutter create . --platforms ios --org com.nataliia --project-name smartbodylife
-          
-          # Подставляем твои ID и Команду
           sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.nataliia.smartbodylife;/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "PCSW3AKAPF";/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-
+          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "f2e7364b-98c7-44ad-a0dc-84acd2d0fd80";/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/PROVISIONING_PROFILE = "";/PROVISIONING_PROFILE = "f2e7364b-98c7-44ad-a0dc-84acd2d0fd80";/g' ios/Runner.xcodeproj/project.pbxproj
           PLIST="ios/Runner/Info.plist"
-          # ДОБАВЛЯЕМ ОПИСАНИЕ ДЛЯ КАЛЕНДАРЯ (Фикс ошибки 90683)
           /usr/libexec/PlistBuddy -c "Add :NSCalendarsUsageDescription string 'Приложению нужен доступ к календарю для планирования ваших тренировок.'" $PLIST || true
-
-          # Поддержка всех ориентаций для iPad
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad array" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:0 string UIInterfaceOrientationPortrait" $PLIST || true
           /usr/libexec/PlistBuddy -c "Add :UISupportedInterfaceOrientations~ipad:1 string UIInterfaceOrientationPortraitUpsideDown" $PLIST || true
@@ -74,9 +62,7 @@ jobs:
 
       - name: 5. Archive and Export IPA
         run: |
-          # Собираем архив с НОВЫМ номером сборки (build-number=2)
-          flutter build ipa --release --no-codesign --build-number=2
-          
+          flutter build ipa --release --no-codesign --build-number=2 --no-tree-shake-icons
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -96,7 +82,6 @@ jobs:
           </dict>
           </plist>
           EOF
-
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
