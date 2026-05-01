@@ -18,13 +18,14 @@ jobs:
 
       - name: 3. Prepare Dependencies
         run: |
-          # Используем ваш pubspec.yaml, где зафиксирована версия 9.0.1
           flutter pub get
 
-      - name: 4. Build iOS App
+      - name: 4. Diagnostic - Find Project File
         run: |
-          # Котик заходит в ту самую папку ios, которую вы видите на фото
-          flutter build ios --release --no-codesign
+          echo "Current directory structure:"
+          ls -R
+          echo "Searching for Runner.xcodeproj..."
+          find . -name "Runner.xcodeproj"
 
       - name: 5. Deliver Artifacts
         if: always()
