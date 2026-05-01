@@ -11,6 +11,7 @@ import 'package:smart_body_life/screens/settings_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'package:smart_body_life/utils/translation_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'evolution_session_screen.dart';
 
 class MainHubScreen extends StatefulWidget {
   const MainHubScreen({super.key});
