@@ -113,15 +113,21 @@ class _WorkoutProgressChartState extends State<WorkoutProgressChart> {
                       });
                     },
                     touchTooltipData: BarTouchTooltipData(
-                      getTooltipColor: (_) => Colors.transparent,
-                      tooltipMargin: 4,
-                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                        return BarTooltipItem(
-                          rod.toY.toStringAsFixed(1),
-                          TextStyle(color: rod.color?.withOpacity(1.0), fontWeight: FontWeight.bold, fontSize: 10),
-                        );
-                      },
-                    ),
+  // В версии 0.63.0 вместо getTooltipColor используем tooltipBgColor
+  tooltipBgColor: Colors.transparent, 
+  tooltipMargin: 4,
+  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+    return BarTooltipItem(
+      rod.toY.toStringAsFixed(1),
+      TextStyle(
+        // Используем rod.color напрямую, если rodIndex позволяет
+        color: rod.color, 
+        fontWeight: FontWeight.bold, 
+        fontSize: 10,
+      ),
+    );
+  },
+),
                   ),
                   gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: dynamicMaxY / 5 > 0 ? dynamicMaxY / 5 : 10),
                   borderData: FlBorderData(show: true, border: const Border(bottom: BorderSide(color: Colors.white24), left: BorderSide(color: Colors.white24))),
