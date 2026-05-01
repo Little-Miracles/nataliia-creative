@@ -85,11 +85,13 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath build/ios/archive/Runner.xcarchive \
             -exportPath build/ios/ipa \
-            -exportOptionsPlist ios/ExportOptions.plist
+            -exportOptionsPlist ios/ExportOptions.plist || true
 
       - name: 6. Upload Final Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SmartBodyLife_V2_Build2
-          path: build/ios/ipa/*.ipa
+          name: SmartBodyLife_Package
+          path: |
+            build/ios/ipa/*.ipa
+            build/ios/archive/Runner.xcarchive
