@@ -1,36 +1,38 @@
-name: SMART-BODY-LIFE-FINAL-BUILD
+name: SMART-BODY-LIFE-TOTAL-CLEAN-BUILD
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-ios:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout fresh code
         uses: actions/checkout@v4
+        with:
+          clean: true
 
       - name: 2. Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.0'
-          channel: stable
+          architecture: arm64
 
-      - name: 3. Prepare Dependencies
+      - name: 3. Flutter deep clean
         run: |
-          # Устанавливаем библиотеки (включая ваш health 9.0.1)
+          flutter clean
           flutter pub get
 
-      - name: 4. Build iOS App
+      - name: 4. Reset CocoaPods and Xcode cache
         run: |
-          # Теперь Котик видит файл Runner.xcodeproj и начнет сборку
-          flutter build ios --release --no-codesign
+          cd ios
+          rm -rf Pods
+          rm -rf build
+          rm -f Podfile.lock
+          pod cache clean --all
+          pod install
+          cd ..
 
-      - name: 5. Deliver Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SmartBodyLife_iOS_App
-          path: build/ios/iphoneos/*.app
-          if-no-files-found: warn
-          retention-days: 5
+      - name: 5. Build iOS release
+        run: |
+          flutter build ios --release --no-codesign
