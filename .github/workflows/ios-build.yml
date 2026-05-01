@@ -91,7 +91,7 @@ jobs:
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
-              <string>$DIST_UUID</string>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
             </dict>
           </dict>
           </plist>
