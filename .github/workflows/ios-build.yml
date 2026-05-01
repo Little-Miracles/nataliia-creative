@@ -1,27 +1,32 @@
-name: SMART-BODY-LIFE-DIAGNOSTIC
+name: SMART-BODY-LIFE-AUDIT
 
 on:
   workflow_dispatch:
 
 jobs:
-  check-map:
+  audit:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout repository
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Reveal all folders
+      - name: 2. File Audit Report
         run: |
-          # Котик просто выпишет список всех папок, которые он скачал
-          echo "Current directory contents:"
+          echo "STEP 1: Root Folder Content"
           ls -F
           
-          # Мы проверяем регистр: ios или iOS?
-          echo "Checking specifically for ios directory:"
-          find . -maxdepth 2 -name "ios" -o -name "iOS"
-          
-      - name: 3. Search for the missing file
-        run: |
-          # Ищем Runner.xcodeproj по всей карте проекта
-          echo "Searching for Runner.xcodeproj..."
-          find . -name "Runner.xcodeproj"
+          echo "STEP 2: iOS Folder Check"
+          if [ -d "ios" ]; then
+            echo "RESULT: Folder 'ios' EXISTS"
+            ls -F ios/
+          else
+            echo "RESULT: Folder 'ios' IS MISSING"
+          fi
+
+          echo "STEP 3: Critical Files Check"
+          [ -f "ios/Podfile" ] && echo "Podfile: FOUND" || echo "Podfile: NOT FOUND"
+          [ -d "ios/Runner.xcodeproj" ] && echo "xcodeproj: FOUND" || echo "xcodeproj: NOT FOUND"
+          [ -d "ios/Runner.xcworkspace" ] && echo "xcworkspace: FOUND" || echo "xcworkspace: NOT FOUND"
+
+          echo "STEP 4: Deep Search"
+          find . -name "Runner.xcodeproj" -o -name "Podfile"
