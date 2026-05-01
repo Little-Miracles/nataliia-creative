@@ -78,3 +78,4 @@ dependency_overrides:
   google_fonts: 6.1.0
   http: 1.1.0
   audioplayers: 5.2.1
+  win32: 5.2.0
