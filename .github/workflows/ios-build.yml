@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-IPA-DELIVERY
+name: SMART-BODY-LIFE-SYNC-FINAL
 
 on:
   workflow_dispatch:
@@ -19,34 +19,31 @@ jobs:
       - name: 3. Create .env
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Import Your Certificate (P12)
+      - name: 4. Import Apple Certificates
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Install Provisioning Profile
+      - name: 5. Install Provisioning Profile (SMART_DISTRIBUTION)
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Мы устанавливаем профиль по его UUID, как указано в вашем Plist
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "Профиль готов."
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
+          cp ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
       - name: 6. Prepare Project
         run: |
           flutter clean
           flutter pub get
 
-      - name: 7. Build Ready-to-Send IPA
+      - name: 7. Build IPA
         run: |
-          # Собираем IPA напрямую. 
-          # Мы убрали --no-codesign, чтобы Flutter завершил упаковку посылки
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist
 
-      - name: 8. Upload Finished IPA
+      - name: 8. Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-READY-IPA
-          # Забираем только готовый файл .ipa
+          name: smart-body-life-ready-ipa
           path: build/ios/ipa/*.ipa
           retention-days: 10
