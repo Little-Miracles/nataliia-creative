@@ -10,18 +10,36 @@ jobs:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Check Default Flutter Version
-        run: flutter --version
+      - name: 2. Установка Flutter (по умолчанию)
+        uses: subosito/flutter-action@v2
+        with:
+          # Мы не указываем версию, чтобы увидеть, какую ОН хочет поставить сам
+          architecture: arm64
 
-      - name: 3. Audit Assets and Env
+      - name: 3. Пытаем Котика (Версии и Доктор)
         run: |
-          echo "Проверка наличия .env:"
-          ls -a | grep .env || echo "Файл .env НЕ НАЙДЕН"
-          echo "Проверка структуры папок:"
-          ls -R ui_images/ | head -n 5
+          echo "=== ВЕРСИЯ ФЛАТТЕРА ==="
+          flutter --version
+          echo "=== ОТЧЕТ ДОКТОРА ==="
+          flutter doctor -v
 
-      - name: 4. Flutter Doctor (Full Report)
-        run: flutter doctor -v
+      - name: 4. Проверка окружения Apple
+        run: |
+          echo "=== ВЕРСИЯ XCODE ==="
+          xcodebuild -version
+          echo "=== ПРОВЕРКА ПУТЕЙ ==="
+          ls -la ios/
 
-      - name: 5. Dry Run Build (Checking Dependencies)
-        run: flutter pub get
+      - name: 5. Проверка секретного ключа
+        run: |
+          if [ -f .env ]; then
+            echo "Файл .env на месте (уже был в репозитории)"
+          else
+            echo "Файла .env НЕТ в репозитории"
+            echo "${{ secrets.ENV_FILE }}" > .env
+            if [ -s .env ]; then
+              echo "Файл .env успешно создан из Секретов GitHub"
+            else
+              echo "Секрет ENV_FILE пустой или не настроен"
+            fi
+          fi
