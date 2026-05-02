@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    # Пробуем явно macOS 15, там должен быть более свежий Xcode
+    # Явно указываем macOS 15 для доступа к Xcode 26
     runs-on: macos-15 
     steps:
       - name: 1. Checkout code
