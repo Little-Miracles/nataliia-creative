@@ -29,19 +29,14 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
   
   @override
   Widget build(BuildContext context) {
-    // ИСПОЛЬЗУЕМ ВЕРСИЮ ДЛЯ FLUTTER 3.19
-    return PopScope(
-      canPop: false, // Блокируем системный назад
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        
+    // ЗАМЕНЯЕМ PopScope НА WillPopScope (совместимо с Flutter 3.13)
+    return WillPopScope(
+      onWillPop: () async {
         // Логика сброса при выходе
         Provider.of<WorkoutTrackerProvider>(context, listen: false).resetDataAndExit(widget.plan);
         
-        // Мануально закрываем экран
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
+        // Возвращаем true, чтобы разрешить выход, или false, чтобы заблокировать
+        return true; 
       },
       child: Scaffold(
         backgroundColor: kBgColor,
