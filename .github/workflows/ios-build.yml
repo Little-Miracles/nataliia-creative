@@ -1,45 +1,38 @@
-name: SMART-BODY-LIFE-DIAGNOSTIC-AUDIT
+name: SMART-BODY-LIFE-FINAL-BUILD
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  build-ios:
     runs-on: macos-14
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Установка Flutter (по умолчанию)
+      - name: 2. Setup Flutter 3.13.9
         uses: subosito/flutter-action@v2
         with:
-          # Мы не указываем версию, чтобы увидеть, какую ОН хочет поставить сам
+          flutter-version: '3.13.9'
           architecture: arm64
 
-      - name: 3. Пытаем Котика (Версии и Доктор)
+      - name: 3. Create .env from Secret
         run: |
-          echo "=== ВЕРСИЯ ФЛАТТЕРА ==="
-          flutter --version
-          echo "=== ОТЧЕТ ДОКТОРА ==="
-          flutter doctor -v
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "Ключ для распознавания еды успешно добавлен"
 
-      - name: 4. Проверка окружения Apple
+      - name: 4. Clear and Get Packages
         run: |
-          echo "=== ВЕРСИЯ XCODE ==="
-          xcodebuild -version
-          echo "=== ПРОВЕРКА ПУТЕЙ ==="
-          ls -la ios/
+          flutter clean
+          flutter pub get
 
-      - name: 5. Проверка секретного ключа
+      - name: 5. Build iOS
         run: |
-          if [ -f .env ]; then
-            echo "Файл .env на месте (уже был в репозитории)"
-          else
-            echo "Файла .env НЕТ в репозитории"
-            echo "${{ secrets.ENV_FILE }}" > .env
-            if [ -s .env ]; then
-              echo "Файл .env успешно создан из Секретов GitHub"
-            else
-              echo "Секрет ENV_FILE пустой или не настроен"
-            fi
-          fi
+          flutter build ios --release --no-codesign --tree-shake-icons
+
+      - name: 6. Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-ios-release
+          path: build/ios/iphoneos/Runner.app
+          retention-days: 10    
