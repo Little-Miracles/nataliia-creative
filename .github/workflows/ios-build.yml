@@ -1,41 +1,27 @@
-name: SMART-BODY-LIFE-TOTAL-CLEAN-BUILD
+name: SMART-BODY-LIFE-DIAGNOSTIC-AUDIT
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-ios:
-    runs-on: macos-15
+  audit:
+    runs-on: macos-14
     steps:
-      - name: 1. Checkout fresh code
+      - name: 1. Checkout code
         uses: actions/checkout@v4
-        with:
-          clean: true
 
-      - name: 2. Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.24.0'
-          architecture: arm64
+      - name: 2. Check Default Flutter Version
+        run: flutter --version
 
-      - name: 3. Flutter deep clean
+      - name: 3. Audit Assets and Env
         run: |
-          flutter clean
-          flutter pub get
+          echo "Проверка наличия .env:"
+          ls -a | grep .env || echo "Файл .env НЕ НАЙДЕН"
+          echo "Проверка структуры папок:"
+          ls -R ui_images/ | head -n 5
 
-      - name: 4. Reset CocoaPods and Xcode cache
-        run: |
-          cd ios
-          rm -rf Pods
-          rm -rf build
-          rm -f Podfile.lock
-          pod cache clean --all
-          pod install
-          cd ..
+      - name: 4. Flutter Doctor (Full Report)
+        run: flutter doctor -v
 
-      - name: 5. Create .env from Secret
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 6. Build iOS release
-        run: |
-          flutter build ios --release --no-codesign --verbose
+      - name: 5. Dry Run Build (Checking Dependencies)
+        run: flutter pub get
