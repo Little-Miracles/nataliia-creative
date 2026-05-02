@@ -13,19 +13,13 @@ dependencies:
   provider: ^6.1.2
   intl: 0.19.0
   image_picker: ^1.0.0
-  http_parser: 4.0.0
-  
-  
-  
+  http_parser: 4.0.0 
   video_player: 2.4.5
   health: 9.0.0
   fl_chart: 0.63.0
   add_2_calendar: ^2.0.0
   sqflite: ^2.3.0
-
-  # ИСПРАВЛЕНО: Приземляем версию для совместимости с Flutter 3.13!
   collection: 1.17.2
-
   flutter_local_notifications: ^17.0.0
   flutter_dotenv: ^5.1.0
   path_provider: ^2.1.1
@@ -68,7 +62,6 @@ dependency_overrides:
   intl: 0.19.0
   path_provider: 2.1.1
   shared_preferences: 2.2.2
-  # ИСПРАВЛЕНО: Ставим стабильную версию для SDK 3.13
   flutter_timezone: ^4.1.1
   collection: 1.18.0 
   timezone: 0.9.2
@@ -78,5 +71,5 @@ dependency_overrides:
   google_fonts: 6.1.0
   http: 1.1.0
   http_parser: 4.0.0
-  win32: 4.1.4
+  win32: 3.0.0
   audioplayers: 5.2.1
