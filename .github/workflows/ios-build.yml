@@ -5,9 +5,8 @@ on:
 
 jobs:
   build:
-    # МЕНЯЕМ macos-14 на macos-latest (или macos-15, если доступно), 
-    # чтобы получить Xcode 26 и iOS 26 SDK
-    runs-on: macos-latest 
+    # Пробуем явно macOS 15, там должен быть более свежий Xcode
+    runs-on: macos-15 
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
