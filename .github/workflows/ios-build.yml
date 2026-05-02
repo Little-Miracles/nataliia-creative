@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: SMART-BODY-LIFE-PACKAGE-ONLY
 
 on:
   workflow_dispatch:
@@ -19,31 +19,20 @@ jobs:
       - name: 3. Create .env from Secret
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Import Apple Certificates
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.P12_BASE64 }}
-          p12-password: ${{ secrets.P12_PASSWORD }}
-
-      - name: 5. Install Provisioning Profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Мы кладем ваш SMART_DISTRIBUTION профиль по его официальному UUID
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-
-      - name: 6. Get Packages
+      - name: 4. Get Packages
         run: |
           flutter clean
           flutter pub get
 
-      - name: 7. Build Signed IPA
+      - name: 5. Build Unsigned IPA (Наша посылка)
         run: |
-          # Используем только те команды, которые показал ваш терминал
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Мы официально запрещаем Котику подписывать что-либо
+          # Это уберет ошибку "No profiles found"
+          flutter build ipa --release --no-codesign
 
-      - name: 8. Save Artifact
+      - name: 6. Save Package for Manual Signing
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-final-signed
-          path: build/ios/ipa/*.ipa
+          name: smart-body-life-unsigned-package
+          path: build/ios/archive/*.xcarchive
           retention-days: 10
