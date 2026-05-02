@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-SYNC-WITH-PLIST
+name: SMART-BODY-LIFE-FINAL-GET-ALL
 
 on:
   workflow_dispatch:
@@ -28,7 +28,7 @@ jobs:
       - name: 5. Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Используем именно тот UUID, который прописан в вашем Plist
+          # Используем UUID из вашего ExportOptions.plist
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
       - name: 6. Prepare Project
@@ -38,15 +38,15 @@ jobs:
 
       - name: 7. Build Signed IPA
         run: |
-          # Главное изменение: мы заставляем Котика подчиняться вашему ExportOptions.plist
-          # Флаг --no-codesign нужен, чтобы Xcode не искал профили разработки впустую
+          # Собираем строго по вашему Plist
           flutter build ipa --release \
             --no-codesign \
             --export-options-plist=ios/ExportOptions.plist
 
-      - name: 8. Give Me the Ready IPA
+      - name: 8. Give Me Everything from Build Folder
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-READY-TO-SEND
-          path: build/ios/ipa/*.ipa
+          name: smart-body-life-RESULT
+          # Указываем путь шире, чтобы забрать и IPA, и Archive, если он там
+          path: build/ios/
           retention-days: 10
