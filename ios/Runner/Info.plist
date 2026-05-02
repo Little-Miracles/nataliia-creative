@@ -21,7 +21,7 @@
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleVersion</key>
-    <string>3</string>
+    <string>4</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.healthcare-fitness</string>
     <key>LSRequiresIPhoneOS</key>
@@ -31,6 +31,8 @@
         <key>NSAllowsArbitraryLoads</key>
         <true/>
     </dict>
+    <key>NSCalendarsUsageDescription</key>
+    <string>This app requires calendar access to help you schedule your body care activities and training sessions.</string>
     <key>NSCameraUsageDescription</key>
     <string>The app needs camera access for Bio-Scanning food items.</string>
     <key>NSHealthShareUsageDescription</key>
