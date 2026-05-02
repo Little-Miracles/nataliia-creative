@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-PACKAGE-ONLY
+name: SMART-BODY-LIFE-FINAL-DELIVERY
 
 on:
   workflow_dispatch:
@@ -19,20 +19,34 @@ jobs:
       - name: 3. Create .env from Secret
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Get Packages
+      - name: 4. Import Hybrid Certificate (Ваша печать)
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.P12_BASE64 }} # Ваш new_dist.p12
+          p12-password: ${{ secrets.P12_PASSWORD }}
+
+      - name: 5. Install Distribution Profile (Ваш паспорт)
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          # Мы кладем именно SMART_DISTRIBUTION профиль
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+
+      - name: 6. Get Packages
         run: |
           flutter clean
           flutter pub get
 
-      - name: 5. Build Unsigned IPA (Наша посылка)
+      - name: 7. Build and Seal IPA (Финальная упаковка)
         run: |
-          # Мы официально запрещаем Котику подписывать что-либо
-          # Это уберет ошибку "No profiles found"
-          flutter build ipa --release --no-codesign
+          # ВАЖНО: Мы запрещаем Котику искать профили разработки (--no-codesign на этапе архива)
+          # Но разрешаем упаковать финальный IPA через ваш ExportOptions
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist
 
-      - name: 6. Save Package for Manual Signing
+      - name: 8. Give Me the Finished Box
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-unsigned-package
-          path: build/ios/archive/*.xcarchive
+          name: smart-body-life-READY-TO-SEND
+          # Котик выдаст вам готовый .ipa в этой папке
+          path: build/ios/ipa/*.ipa
           retention-days: 10
