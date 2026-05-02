@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-SIGNED-BUILD
+name: SMART-BODY-LIFE-FINAL-SIGNED-BUILD
 
 on:
   workflow_dispatch:
@@ -17,32 +17,37 @@ jobs:
           architecture: arm64
 
       - name: 3. Create .env from Secret
-        run: echo "${{ secrets.ENV_FILE }}" > .env
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Import Apple Certificates
+      - name: 4. Import Apple Certificates (P12)
         uses: apple-actions/import-codesign-certs@v3
         with:
+          # Сюда вставляем содержимое из p12_base64.txt
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Install Provisioning Profile
+      - name: 5. Install Provisioning Profile (SMART_DISTRIBUTION)
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+          # Декодируем содержимое из вашего файла NEW_SMART_PROFIL.txt
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 6. Get Packages
+      - name: 6. Prepare Project
         run: |
           flutter clean
           flutter pub get
 
-      - name: 7. Build Signed IPA
+      - name: 7. Build IPA (Manual Signing)
         run: |
-          # Собираем полноценный файл для Apple
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем с использованием ваших ручных настроек
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --allow-provisioning-updates
 
-      - name: 8. Save Signed IPA
+      - name: 8. Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-ready-to-apple
+          name: smart-body-life-signed-ipa
           path: build/ios/ipa/*.ipa
           retention-days: 10
