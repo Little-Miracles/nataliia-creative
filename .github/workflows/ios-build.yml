@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-SIGNED-BUILD
+name: SMART-BODY-LIFE-TOTAL-SUCCESS
 
 on:
   workflow_dispatch:
@@ -17,37 +17,33 @@ jobs:
           architecture: arm64
 
       - name: 3. Create .env from Secret
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Import Apple Certificates (P12)
+      - name: 4. Import Apple Certificates
         uses: apple-actions/import-codesign-certs@v3
         with:
-          # Сюда вставляем содержимое из p12_base64.txt
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Install Provisioning Profile (SMART_DISTRIBUTION)
+      - name: 5. Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Декодируем содержимое из вашего файла NEW_SMART_PROFIL.txt
+          # Мы кладем ваш SMART_DISTRIBUTION профиль по его официальному UUID
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 6. Prepare Project
+      - name: 6. Get Packages
         run: |
           flutter clean
           flutter pub get
 
-      - name: 7. Build IPA (Manual Signing)
+      - name: 7. Build Signed IPA
         run: |
-          # Собираем с использованием ваших ручных настроек
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --allow-provisioning-updates
+          # Используем только те команды, которые показал ваш терминал
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: 8. Upload Artifact
+      - name: 8. Save Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-signed-ipa
+          name: smart-body-life-final-signed
           path: build/ios/ipa/*.ipa
           retention-days: 10
