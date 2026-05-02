@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-DELIVERY
+name: SMART-BODY-LIFE-SYNC-WITH-PLIST
 
 on:
   workflow_dispatch:
@@ -16,37 +16,37 @@ jobs:
           flutter-version: '3.13.9'
           architecture: arm64
 
-      - name: 3. Create .env from Secret
+      - name: 3. Create .env
         run: echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Import Hybrid Certificate (Ваша печать)
+      - name: 4. Import Your Certificate (P12)
         uses: apple-actions/import-codesign-certs@v3
         with:
-          p12-file-base64: ${{ secrets.P12_BASE64 }} # Ваш new_dist.p12
+          p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Install Distribution Profile (Ваш паспорт)
+      - name: 5. Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Мы кладем именно SMART_DISTRIBUTION профиль
+          # Используем именно тот UUID, который прописан в вашем Plist
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 6. Get Packages
+      - name: 6. Prepare Project
         run: |
           flutter clean
           flutter pub get
 
-      - name: 7. Build and Seal IPA (Финальная упаковка)
+      - name: 7. Build Signed IPA
         run: |
-          # ВАЖНО: Мы запрещаем Котику искать профили разработки (--no-codesign на этапе архива)
-          # Но разрешаем упаковать финальный IPA через ваш ExportOptions
+          # Главное изменение: мы заставляем Котика подчиняться вашему ExportOptions.plist
+          # Флаг --no-codesign нужен, чтобы Xcode не искал профили разработки впустую
           flutter build ipa --release \
+            --no-codesign \
             --export-options-plist=ios/ExportOptions.plist
 
-      - name: 8. Give Me the Finished Box
+      - name: 8. Give Me the Ready IPA
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-READY-TO-SEND
-          # Котик выдаст вам готовый .ipa в этой папке
           path: build/ios/ipa/*.ipa
           retention-days: 10
