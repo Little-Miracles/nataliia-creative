@@ -5,16 +5,28 @@ on:
 
 jobs:
   build:
-    # Явно указываем macOS 15 для доступа к Xcode 26
-    runs-on: macos-15 
+    runs-on: macos-15
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
+      - name: 1.1 Force Xcode 26 (Apple Requirement 2026)
+        run: |
+          # Ищем Xcode 26 в списке доступных и переключаемся на него
+          AVAILABLE_XCODE=$(ls /Applications | grep "Xcode_26" | head -n 1)
+          if [ -z "$AVAILABLE_XCODE" ]; then
+            echo "Xcode 26 NOT FOUND on this runner. Trying latest available..."
+            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          else
+            echo "Found $AVAILABLE_XCODE. Switching..."
+            sudo xcode-select -s /Applications/$AVAILABLE_XCODE/Contents/Developer
+          fi
+          xcodebuild -version
+
       - name: 2. Setup Flutter 3.13.9
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.13.9' # Ваша версия Flutter остается прежней
+          flutter-version: '3.13.9'
           architecture: arm64
 
       - name: 3. Create .env
