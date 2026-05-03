@@ -1,16 +1,10 @@
 platform :ios, '17.0'
 
-# Стандартный блок настройки Flutter
 generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-unless File.exist?(generated_xcode_build_settings_path)
-  raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
-end
-
 File.foreach(generated_xcode_build_settings_path) do |line|
   matches = line.match(/FLUTTER_ROOT\=(.*)/)
   @flutter_root = matches[1].strip if matches
 end
-
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), @flutter_root)
 
 flutter_ios_podfile_setup
@@ -18,7 +12,6 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -26,31 +19,25 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # --- СУПЕР-БЛОК МАНИФЕСТОВ (ВКЛЮЧАЯ FLUTTER) ---
-    # Список целей, куда мы принудительно вшиваем манифест
-    privacy_targets = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
-    
-    if privacy_targets.include?(target.name)
-      # Путь к нашему манифесту в папке Runner
+    # Решение для Flutter.framework и плагинов
+    if ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter'].include?(target.name)
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
-      
       if File.exist?(privacy_path)
-        # Проверяем, поддерживает ли цель ресурсы (для Flutter это теперь сработает)
-        if target.respond_to?(:resources_build_phase)
-          puts "Injecting Privacy Manifest into target: #{target.name}"
-          file_ref = installer.pods_project.new_file(privacy_path)
-          target.resources_build_phase.add_file_reference(file_ref, true)
-        end
+        # Создаем ресурсную фазу, которую Xcode обязан подписать
+        bundle_target = installer.pods_project.new_target(:bundle, 'PrivacyResources', :ios)
+        bundle_target.build_configurations.each { |config| config.build_settings['PRODUCT_NAME'] = 'PrivacyResources' }
+        
+        file_ref = installer.pods_project.new_file(privacy_path)
+        bundle_target.add_resources([file_ref])
+        
+        # Связываем этот бандл с целью
+        target.add_dependency(bundle_target)
       end
     end
-    # --- КОНЕЦ БЛОКА МАНИФЕСТОВ ---
 
     target.build_configurations.each do |config|
-      # Устанавливаем 17.0 для соответствия требованиям 2026 года
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
-      # Настройка для обхода ошибок в macOS 15
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
 end
