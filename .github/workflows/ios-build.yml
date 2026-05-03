@@ -12,13 +12,10 @@ jobs:
 
       - name: 1.1 Force Xcode 26 (Apple Requirement 2026)
         run: |
-          # Ищем Xcode 26 в списке доступных и переключаемся на него
           AVAILABLE_XCODE=$(ls /Applications | grep "Xcode_26" | head -n 1)
           if [ -z "$AVAILABLE_XCODE" ]; then
-            echo "Xcode 26 NOT FOUND on this runner. Trying latest available..."
             sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           else
-            echo "Found $AVAILABLE_XCODE. Switching..."
             sudo xcode-select -s /Applications/$AVAILABLE_XCODE/Contents/Developer
           fi
           xcodebuild -version
@@ -41,30 +38,16 @@ jobs:
       - name: 5. Install Provisioning Profile
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Ставим профиль под его реальным именем
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          # Создаем копию с UUID для ExportOptions
           cp ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
       - name: 6. Prepare Project
         run: |
           flutter clean
           flutter pub get
-          
-          # 1. Основной манифест в папку ресурсов
-          mkdir -p ios/Runner/Resources
-          cp ios/Runner/PrivacyInfo.xcprivacy ios/Runner/Resources/PrivacyInfo.xcprivacy
-          
-          # 2. Манифест для Flutter Framework
+          # Ручная подстраховка для самого Flutter Framework
           mkdir -p ios/Flutter/Flutter.framework
           cp ios/Runner/PrivacyInfo.xcprivacy ios/Flutter/Flutter.framework/PrivacyInfo.xcprivacy
-          
-          # 3. Манифесты для сторонних SDK (создаем пустые структуры для копирования)
-          # Это гарантирует, что при сборке Xcode подхватит их
-          for plugin in device_info_plus url_launcher_ios video_player_avfoundation; do
-            mkdir -p "ios/Pods/$plugin/Resources"
-            cp ios/Runner/PrivacyInfo.xcprivacy "ios/Pods/$plugin/Resources/PrivacyInfo.xcprivacy"
-          done
 
       - name: 7. Build Sealed IPA
         run: |
@@ -80,35 +63,25 @@ jobs:
       - name: 9. Audit Privacy Manifests (Pre-flight Check)
         run: |
           echo "Checking if Privacy Manifests are included in the frameworks..."
-          # Путь к скомпилированному приложению
+          # Поиск папки с приложением внутри архива
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
           
           if [ -z "$APP_PATH" ]; then
-            echo "Error: App not found for audit."
+            echo "Error: App bundle not found for audit."
             exit 1
           fi
 
-          echo "Found App at: $APP_PATH"
+          echo "Auditing: $APP_PATH"
           
-          # Проверка основного бандла
-          if [ -f "$APP_PATH/PrivacyInfo.xcprivacy" ]; then
-            echo "✅ Main App Manifest: FOUND"
-          else
-            echo "❌ Main App Manifest: MISSING"
-          fi
+          echo "--- RESULT ---"
+          [ -f "$APP_PATH/PrivacyInfo.xcprivacy" ] && echo "✅ Main App Manifest: FOUND" || echo "❌ Main App Manifest: MISSING"
+          [ -f "$APP_PATH/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy" ] && echo "✅ Flutter.framework Manifest: FOUND" || echo "❌ Flutter.framework Manifest: MISSING"
 
-          # Проверка Flutter.framework
-          if [ -f "$APP_PATH/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy" ]; then
-            echo "✅ Flutter.framework Manifest: FOUND"
-          else
-            echo "❌ Flutter.framework Manifest: MISSING"
-          fi
-
-          # Список плагинов для проверки
           for plugin in device_info_plus url_launcher_ios video_player_avfoundation; do
-            if find "$APP_PATH/Frameworks" -name "$plugin*" -exec test -e "{}/PrivacyInfo.xcprivacy" \; ; then
+            if find "$APP_PATH/Frameworks" -name "${plugin}*" -exec test -e "{}/PrivacyInfo.xcprivacy" \; -print | grep -q "."; then
                echo "✅ $plugin Manifest: FOUND"
             else
                echo "❌ $plugin Manifest: MISSING"
             fi
           done
+          echo "--------------"
