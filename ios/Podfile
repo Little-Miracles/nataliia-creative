@@ -19,14 +19,13 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Список целей, которые требует Apple
+    # Список папок, куда «нотариус» (Xcode) должен положить файл и поставить печать
     relevant_sdk = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
     
     if relevant_sdk.include?(target.name)
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
       if File.exist?(privacy_path)
-        puts "Adding Privacy Manifest directly to target: #{target.name}"
-        # Добавляем файл как ресурс напрямую в цель плагина
+        # Кладем файл в «чертежи» сборки конкретной папки
         file_ref = installer.pods_project.new_file(privacy_path)
         target.resources_build_phase.add_file_reference(file_ref, true)
       end
