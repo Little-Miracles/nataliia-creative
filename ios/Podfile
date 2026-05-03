@@ -1,10 +1,15 @@
 platform :ios, '17.0'
 
 generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+unless File.exist?(generated_xcode_build_settings_path)
+  raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+end
+
 File.foreach(generated_xcode_build_settings_path) do |line|
   matches = line.match(/FLUTTER_ROOT\=(.*)/)
   @flutter_root = matches[1].strip if matches
 end
+
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), @flutter_root)
 
 flutter_ios_podfile_setup
@@ -12,6 +17,7 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
@@ -19,21 +25,27 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Список папок, куда «нотариус» (Xcode) должен положить файл и поставить печать
+    # Список целей, куда раскладываем манифест
     relevant_sdk = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
     
     if relevant_sdk.include?(target.name)
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
       if File.exist?(privacy_path)
-        # Кладем файл в «чертежи» сборки конкретной папки
-        file_ref = installer.pods_project.new_file(privacy_path)
-        target.resources_build_phase.add_file_reference(file_ref, true)
+        # ПРОВЕРКА: имеет ли цель фазу ресурсов (чтобы не было ошибки undefined method)
+        if target.respond_to?(:resources_build_phase)
+          puts "Adding Privacy Manifest to target: #{target.name}"
+          file_ref = installer.pods_project.new_file(privacy_path)
+          target.resources_build_phase.add_file_reference(file_ref, true)
+        else
+          puts "Skipping #{target.name}: no resources build phase"
+        end
       end
     end
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
 end
