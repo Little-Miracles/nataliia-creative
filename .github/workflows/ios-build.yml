@@ -46,25 +46,30 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 7. Build and Finalize Manifests (High Precision)
+      - name: 7. Build and Finalize Manifests (Precision Signing)
         run: |
-          # 1. Сборка архива
+          # 1. Собираем архив
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          # 2. Поиск фреймворка
+          # 2. Находим путь к Flutter.framework
           FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
           
           if [ -n "$FLUTTER_FRAMEWORK" ]; then
             echo "Injecting manifest into: $FLUTTER_FRAMEWORK"
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
             
-            # Находим точное имя вашего сертификата в связке ключей
-            CERT_NAME=$(security find-identity -v -p codesigning signing_temp.keychain | grep "iPhone Distribution" | sed -E 's/.*"(.*)".*/\1/')
-            echo "Using Certificate: $CERT_NAME"
+            # Находим уникальный ID (хеш) сертификата Distribution
+            CERT_ID=$(security find-identity -v -p codesigning signing_temp.keychain | grep "iPhone Distribution" | awk '{print $2}' | head -n 1)
             
-            # Переподписываем официальным сертификатом
-            /usr/bin/codesign --force --sign "$CERT_NAME" --timestamp=none "$FLUTTER_FRAMEWORK"
-            echo "✅ Flutter.framework officially re-signed."
+            if [ -n "$CERT_ID" ]; then
+              echo "Using Certificate ID: $CERT_ID"
+              # Переподписываем, используя ID сертификата
+              /usr/bin/codesign --force --sign "$CERT_ID" --timestamp=none "$FLUTTER_FRAMEWORK"
+              echo "✅ Flutter.framework officially re-signed with Certificate ID."
+            else
+              echo "❌ Distribution Certificate NOT FOUND in keychain!"
+              exit 1
+            fi
           fi
           
       - name: 8. Give Me the Sealed Box
