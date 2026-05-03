@@ -48,29 +48,25 @@ jobs:
 
       - name: 7. Build, Inject and Re-sign Manifests
         run: |
-          # 1. Собираем IPA и архив
+          # 1. Собираем архив
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          # 2. Находим путь к приложению внутри собранного архива
+          # 2. Находим путь к приложению
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
           
-          # 3. Функция для внедрения манифеста и ПЕРЕПОДПИСКИ фреймворка
+          # 3. Функция переподписи
           inject_and_sign() {
             local TARGET_FRAMEWORK="$1"
             if [ -d "$TARGET_FRAMEWORK" ]; then
               echo "Processing: $TARGET_FRAMEWORK"
-              # Копируем манифест внутрь фреймворка
               cp ios/Runner/PrivacyInfo.xcprivacy "$TARGET_FRAMEWORK/PrivacyInfo.xcprivacy"
               
-              # Переподписываем фреймворк, чтобы Apple не ругалась на изменение содержимого
-              # Используем имя сертификата, которое импортировали в шаге 4
-              /usr/bin/codesign --force --sign "iPhone Distribution" --timestamp=none "$TARGET_FRAMEWORK"
-            else
-              echo "Warning: $TARGET_FRAMEWORK not found."
+              # Используем '-' для автоматического поиска подходящей подписи в текущем keychain
+              /usr/bin/codesign --force --sign "-" --timestamp=none "$TARGET_FRAMEWORK"
             fi
           }
 
-          # 4. Применяем ко всем проблемным SDK
+          # 4. Применяем ко всем фреймворкам
           inject_and_sign "$APP_PATH/Frameworks/Flutter.framework"
           inject_and_sign "$APP_PATH/Frameworks/device_info_plus.framework"
           inject_and_sign "$APP_PATH/Frameworks/url_launcher_ios.framework"
