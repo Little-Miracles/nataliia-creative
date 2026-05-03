@@ -50,11 +50,13 @@ jobs:
         run: |
           flutter clean
           flutter pub get
+          # Силовое копирование манифеста в папку ресурсов, чтобы Xcode точно его включил
+          mkdir -p ios/Runner/Resources
+          cp ios/Runner/PrivacyInfo.xcprivacy ios/Runner/Resources/PrivacyInfo.xcprivacy
 
       - name: 7. Build Sealed IPA
         run: |
-          # Теперь Котик просто берет ваш исправленный файл проекта и ExportOptions
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-number=6
 
       - name: 8. Give Me the Sealed Box
         uses: actions/upload-artifact@v4
