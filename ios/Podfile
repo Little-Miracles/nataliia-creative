@@ -1,10 +1,16 @@
 platform :ios, '17.0'
 
+# Настройка путей Flutter
 generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+unless File.exist?(generated_xcode_build_settings_path)
+  raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+end
+
 File.foreach(generated_xcode_build_settings_path) do |line|
   matches = line.match(/FLUTTER_ROOT\=(.*)/)
   @flutter_root = matches[1].strip if matches
 end
+
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), @flutter_root)
 
 flutter_ios_podfile_setup
@@ -12,32 +18,44 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 end
 
 post_install do |installer|
+  # 1. Создаем бандл ОДИН РАЗ, чтобы избежать ошибки "Multiple commands produce"
+  privacy_bundle_name = 'PrivacyResources'
+  privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
+  
+  if File.exist?(privacy_path)
+    puts "Creating Global Privacy Resource Bundle..."
+    # Создаем новую цель для ресурсов в проекте Pods
+    resource_target = installer.pods_project.new_target(:bundle, privacy_bundle_name, :ios)
+    resource_target.build_configurations.each do |config|
+      config.build_settings['PRODUCT_NAME'] = privacy_bundle_name
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+    end
+    
+    # Добавляем файл манифеста в этот бандл
+    file_ref = installer.pods_project.new_file(privacy_path)
+    resource_target.add_resources([file_ref])
+  end
+
+  # 2. Проходим по всем целям сборки
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Решение для Flutter.framework и плагинов
-    if ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter'].include?(target.name)
-      privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
-      if File.exist?(privacy_path)
-        # Создаем ресурсную фазу, которую Xcode обязан подписать
-        bundle_target = installer.pods_project.new_target(:bundle, 'PrivacyResources', :ios)
-        bundle_target.build_configurations.each { |config| config.build_settings['PRODUCT_NAME'] = 'PrivacyResources' }
-        
-        file_ref = installer.pods_project.new_file(privacy_path)
-        bundle_target.add_resources([file_ref])
-        
-        # Связываем этот бандл с целью
-        target.add_dependency(bundle_target)
-      end
+    # Привязываем созданный бандл к Flutter и плагинам
+    needed_targets = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
+    if needed_targets.include?(target.name) && File.exist?(privacy_path)
+      puts "Linking Privacy Bundle to target: #{target.name}"
+      target.add_dependency(resource_target)
     end
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
 end
