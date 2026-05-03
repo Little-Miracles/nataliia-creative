@@ -1,6 +1,6 @@
 platform :ios, '17.0'
 
-# Убираем сложные поиски путей, используем стандартный метод Flutter
+# Стандартный метод Flutter для подтягивания настроек
 generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
 unless File.exist?(generated_xcode_build_settings_path)
   raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
@@ -26,32 +26,25 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # --- НАЧАЛО БЛОКА МАНИФЕСТОВ ---
-    # Список плагинов, на которые ругается Apple
+    # --- УПРОЩЕННЫЙ БЛОК МАНИФЕСТОВ ---
     privacy_targets = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
     
     if privacy_targets.include?(target.name)
-      puts "Adding Privacy Manifest to #{target.name}"
-      # Путь к манифесту (он лежит в Runner)
+      puts "Adding Privacy Manifest to target: #{target.name}"
+      # Берем манифест из папки Runner
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
       
-      # Добавляем файл в фазу ресурсов каждого конкретного плагина
       if File.exist?(privacy_path)
-        group = installer.pods_project.main_group.find_subgroup('Resources', true)
-        file_ref = group.find_file_by_path(privacy_path) || group.new_file(privacy_path)
+        # Напрямую создаем ссылку на файл в проекте Pods без поиска групп
+        file_ref = installer.pods_project.new_file(privacy_path)
         target.resources_build_phase.add_file_reference(file_ref, true)
       end
     end
     # --- КОНЕЦ БЛОКА МАНИФЕСТОВ ---
 
     target.build_configurations.each do |config|
-      # Устанавливаем 17.0 для соответствия требованиям 2026 года
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
-      
-      # Ваша настройка для обхода ошибки PhaseScriptExecution
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      
-      # Убираем лишние исключения архитектур
       config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
