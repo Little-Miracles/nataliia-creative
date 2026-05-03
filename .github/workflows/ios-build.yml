@@ -46,28 +46,32 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 7. Build and Finalize Manifests (Precision Signing)
+      - name: 7. Build and Finalize Manifests (Final Attempt)
         run: |
-          # 1. Собираем архив
+          # 1. Сборка архива
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          # 2. Находим путь к Flutter.framework
+          # 2. Поиск фреймворка
           FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
           
           if [ -n "$FLUTTER_FRAMEWORK" ]; then
             echo "Injecting manifest into: $FLUTTER_FRAMEWORK"
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
             
-            # Находим уникальный ID (хеш) вашего сертификата Distribution из документации
+            # Находим ID вашего сертификата Apple Distribution: Nataliia Kuzmenko
             CERT_ID=$(security find-identity -v -p codesigning signing_temp.keychain | grep "Distribution" | awk '{print $2}' | head -n 1)
             
             if [ -n "$CERT_ID" ]; then
               echo "Using Certificate ID: $CERT_ID"
-              # Переподписываем официальным ключом
-              /usr/bin/codesign --force --sign "$CERT_ID" --timestamp=none "$FLUTTER_FRAMEWORK"
-              echo "✅ Flutter.framework officially re-signed with your Certificate."
+              # Переподписываем СТРОГО с флагов --deep, чтобы зацепить все вложения
+              /usr/bin/codesign --force --sign "$CERT_ID" --deep --timestamp=none "$FLUTTER_FRAMEWORK"
+              
+              # Проверка подписи (для логов)
+              echo "Verifying signature..."
+              /usr/bin/codesign --verify --verbose "$FLUTTER_FRAMEWORK"
+              echo "✅ Flutter.framework officially re-signed."
             else
-              echo "❌ Distribution Certificate NOT FOUND in keychain!"
+              echo "❌ Distribution Certificate NOT FOUND!"
               exit 1
             fi
           fi
