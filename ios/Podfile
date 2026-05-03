@@ -24,27 +24,16 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    
-    # Список целей, куда раскладываем манифест
-    relevant_sdk = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
-    
-    if relevant_sdk.include?(target.name)
-      privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
-      if File.exist?(privacy_path)
-        # ПРОВЕРКА: имеет ли цель фазу ресурсов (чтобы не было ошибки undefined method)
-        if target.respond_to?(:resources_build_phase)
-          puts "Adding Privacy Manifest to target: #{target.name}"
-          file_ref = installer.pods_project.new_file(privacy_path)
-          target.resources_build_phase.add_file_reference(file_ref, true)
-        else
-          puts "Skipping #{target.name}: no resources build phase"
-        end
-      end
-    end
-
     target.build_configurations.each do |config|
+      # 1. Привязка к вашему сертификату и Team ID (из аудита)[cite: 7, 10]
+      config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
+      config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
+      
+      # 2. Технические настройки совместимости[cite: 5]
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      
+      # 3. Очистка архитектур для корректной сборки
       config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
