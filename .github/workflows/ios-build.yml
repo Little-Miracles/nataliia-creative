@@ -46,25 +46,25 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 7. Build and Finalize Manifests
+      - name: 7. Build and Finalize Manifests (High Precision)
         run: |
-          # 1. Собираем архив (Podfile уже обработает плагины)
+          # 1. Сборка архива
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          # 2. Находим Flutter.framework внутри собранного архива
+          # 2. Поиск фреймворка
           FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
           
           if [ -n "$FLUTTER_FRAMEWORK" ]; then
-            echo "Injecting manifest into Flutter.framework at: $FLUTTER_FRAMEWORK"
-            # Копируем манифест прямо в архив
+            echo "Injecting manifest into: $FLUTTER_FRAMEWORK"
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
             
-            # Переподписываем Flutter.framework, чтобы подпись была валидной для Apple 2026
-            /usr/bin/codesign --force --sign "-" --timestamp=none "$FLUTTER_FRAMEWORK"
-            echo "✅ Flutter.framework finalized and signed."
-          else
-            echo "❌ Flutter.framework not found in archive!"
-            exit 1
+            # Находим точное имя вашего сертификата в связке ключей
+            CERT_NAME=$(security find-identity -v -p codesigning signing_temp.keychain | grep "iPhone Distribution" | sed -E 's/.*"(.*)".*/\1/')
+            echo "Using Certificate: $CERT_NAME"
+            
+            # Переподписываем официальным сертификатом
+            /usr/bin/codesign --force --sign "$CERT_NAME" --timestamp=none "$FLUTTER_FRAMEWORK"
+            echo "✅ Flutter.framework officially re-signed."
           fi
           
       - name: 8. Give Me the Sealed Box
