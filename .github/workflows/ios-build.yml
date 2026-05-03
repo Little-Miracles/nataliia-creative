@@ -41,13 +41,13 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
           cp ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 6. Prepare Project
+      - name: 6. Prepare Project & Deep Fix for Flutter
         run: |
           flutter clean
           flutter pub get
-          # Подстраховка для Flutter.framework
-          mkdir -p ios/Flutter/Flutter.framework
-          cp ios/Runner/PrivacyInfo.xcprivacy ios/Flutter/Flutter.framework/PrivacyInfo.xcprivacy
+          # Ищем все папки Flutter.framework в проекте и копируем туда манифест
+          find . -name "Flutter.framework" -type d -exec cp ios/Runner/PrivacyInfo.xcprivacy {}/PrivacyInfo.xcprivacy \;
+          echo "Deep fix for Flutter.framework completed."
 
       - name: 7. Build Sealed IPA
         run: |
