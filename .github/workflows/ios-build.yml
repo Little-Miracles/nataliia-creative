@@ -1,66 +1,66 @@
-name: DEEP-DIAGNOSTIC-AUDIT
+name: SMART-BODY-LIFE-TOTAL-SUCCESS
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-15
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 2. Import Certs (Checking Keychain)
+      - name: 1.1 Force Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: 2. Setup Flutter 3.13.9
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.13.9'
+          architecture: arm64
+
+      - name: 3. Create .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 4. Import Certs
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 3. DATABASE AUDIT (The Inspector)
+      - name: 5. Install Provisioning Profile
         run: |
-          echo "=== ОТЧЕТ ДЛЯ НАТАЛЬИ: ПОИСК ОШИБОК ПОДПИСИ ==="
-          
-          echo -e "\n[1. СЕРТИФИКАТЫ]"
-          # Выводим все доступные сертификаты для подписи[cite: 7, 10]
-          security find-identity -v -p codesigning signing_temp.keychain
-          
-          echo -e "\n[2. ПРОФИЛЬ ПОДПИСИ]"
-          # Проверяем содержимое профиля, чтобы увидеть Bundle ID и Team ID[cite: 4, 6]
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          PROVISION_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision"
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > "$PROVISION_PATH"
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+
+      - name: 6. Fix Project Settings (Auto-filling Team ID)
+        run: |
+          # Исправляем пустые Team ID в проекте, которые нашел аудит
+          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' ios/Runner.xcodeproj/project.pbxproj
+          flutter clean
+          flutter pub get
+
+      - name: 7. Guaranteed Signature Build
+        run: |
+          # 1. Собираем архив
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          if [ -f "$PROVISION_PATH" ]; then
-            echo "Профиль успешно декодирован."
-            grep -aA 2 "application-identifier" "$PROVISION_PATH" | grep "string" || echo "App ID не найден в профиле"
-            grep -a "UUID" -A 1 "$PROVISION_PATH" | grep "string" || echo "UUID не найден в профиле"
-          else
-            echo "❌ Ошибка: Не удалось создать файл профиля."
+          # 2. Поиск и официальное клеймление Flutter.framework
+          FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
+          
+          if [ -n "$FLUTTER_FRAMEWORK" ]; then
+            echo "Injecting manifest and signing with Audited ID..."
+            cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
+            
+            # Используем SHA-1 хеш вашего сертификата из аудита
+            /usr/bin/codesign --force --sign "B66D675A50697F0A07762DEA2FD5436BCA702AA4" --deep --timestamp=none "$FLUTTER_FRAMEWORK"
+            
+            echo "Verification Check:"
+            /usr/bin/codesign --verify --verbose "$FLUTTER_FRAMEWORK"
           fi
-          
-          echo -e "\n[3. НАСТРОЙКИ ПРОЕКТА XCODE]"
-          # Ищем жестко прописанные настройки Team ID в проекте[cite: 4, 10]
-          grep -r "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj || echo "Team ID не прописан в проекте"
-          grep -r "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 5
-          
-          echo -e "\n[4. СТРУКТУРА МАНИФЕСТОВ]"
-          # Ищем физическое расположение всех PrivacyInfo файлов[cite: 3, 8]
-          find . -name "PrivacyInfo.xcprivacy"
-          
-          echo -e "\n[5. АНАЛИЗ PODFILE]"
-          # Проверяем текущее состояние Podfile[cite: 5]
-          if [ -f "ios/Podfile" ]; then
-            cat ios/Podfile | grep -A 30 "post_install"
-          else
-            echo "❌ Podfile не найден."
-          fi
-          
-          echo -e "\n[6. ПРОВЕРКА EXPORT OPTIONS]"
-          # Проверяем настройки экспорта IPA[cite: 6, 10]
-          if [ -f "ios/ExportOptions.plist" ]; then
-            cat ios/ExportOptions.plist
-          else
-            echo "❌ ExportOptions.plist не найден."
-          fi
-          
-          echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
+
+      - name: 8. Upload READY IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-READY-IPA
+          path: build/ios/ipa/*.ipa
