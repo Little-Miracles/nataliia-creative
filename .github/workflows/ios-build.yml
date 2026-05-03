@@ -7,21 +7,18 @@ jobs:
   build:
     runs-on: macos-15
     steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v4
+
       - name: 1.1 Switch to Xcode 26 (iOS 26 SDK)
         run: |
-          # Ищем, где именно спрятан Xcode 26 на этой машине
+          # Автоматический поиск Xcode 26 на macOS 15
           XCODE_PATH=$(ls -d /Applications/Xcode_26* 2>/dev/null | head -n 1)
-          
           if [ -z "$XCODE_PATH" ]; then
-            echo "⚠️ Xcode_26 не найден по спец-пути, пробую стандартный..."
-            # Если спец-имени нет, проверяем версию стандартного Xcode
-            CURRENT_VERSION=$(xcodebuild -version | grep "Xcode" | awk '{print $2}')
-            echo "Текущая версия: $CURRENT_VERSION"
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          else
-            echo "✅ Нашел Xcode 26 здесь: $XCODE_PATH"
-            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+            XCODE_PATH="/Applications/Xcode.app"
           fi
+          echo "✅ Использую Xcode здесь: $XCODE_PATH"
+          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           xcodebuild -version
 
       - name: 2. Setup Flutter 3.13.9
@@ -44,21 +41,25 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 6. Fix Project Settings (Auto-filling Team ID)
+      - name: 6. Fix Project Settings (Universal Search)
         run: |
-          # Исправляем пустые Team ID в проекте, которые нашел аудит
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' ios/Runner.xcodeproj/project.pbxproj
+          # Находим файл проекта, даже если пути изменились
+          PBXPROJ_PATH=$(find . -name "project.pbxproj" -print | head -n 1)
+          if [ -n "$PBXPROJ_PATH" ]; then
+            echo "✅ Нашел проект: $PBXPROJ_PATH"
+            sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' "$PBXPROJ_PATH"
+          fi
           flutter clean
           flutter pub get
 
       - name: 7. Guaranteed Signature Build (iOS 26 SDK)
         run: |
-          # Собираем IPA, явно указывая на использование нового SDK
+          # Сборка с использованием SDK 26, как требует Apple 2026
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --build-number=16
           
-          # Находим и подписываем Flutter.framework (как мы уже научились)
+          # Финальная подпись манифеста проверенным ID B66D675A
           FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
           if [ -n "$FLUTTER_FRAMEWORK" ]; then
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
