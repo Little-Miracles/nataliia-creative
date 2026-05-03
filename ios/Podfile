@@ -1,6 +1,6 @@
 platform :ios, '17.0'
 
-# Стандартный метод Flutter для подтягивания настроек
+# Стандартный блок настройки Flutter
 generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
 unless File.exist?(generated_xcode_build_settings_path)
   raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
@@ -26,21 +26,21 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # Список плагинов, которым НУЖЕН манифест (убираем Flutter из этого списка, для него другой путь)
+    # --- БЛОК МАНИФЕСТОВ ---
+    # Список плагинов из письма Apple
     privacy_targets = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation']
     
     if privacy_targets.include?(target.name)
-      puts "Adding Privacy Manifest to: #{target.name}"
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
-      
       if File.exist?(privacy_path)
-        # Проверяем, поддерживает ли цель ресурсы, прежде чем добавлять
         if target.respond_to?(:resources_build_phase)
+          puts "Adding Privacy Manifest to: #{target.name}"
           file_ref = installer.pods_project.new_file(privacy_path)
           target.resources_build_phase.add_file_reference(file_ref, true)
         end
       end
     end
+    # --- КОНЕЦ БЛОКА МАНИФЕСТОВ ---
 
     target.build_configurations.each do |config|
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
@@ -48,5 +48,4 @@ post_install do |installer|
       config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
-end
 end
