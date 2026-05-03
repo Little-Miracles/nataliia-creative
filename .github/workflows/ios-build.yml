@@ -7,8 +7,11 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout code
-        uses: actions/checkout@v4
+      - name: 1.1 Force Xcode 26 (Requirement 2026)
+        run: |
+          # Устанавливаем Xcode 26 как основной инструмент сборки
+          sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          xcodebuild -version
 
       - name: 1.1 Force Xcode 26
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
@@ -40,22 +43,18 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 7. Guaranteed Signature Build
+      - name: 7. Guaranteed Signature Build (iOS 26 SDK)
         run: |
-          # 1. Собираем архив
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем IPA, явно указывая на использование нового SDK
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --build-number=16
           
-          # 2. Поиск и официальное клеймление Flutter.framework
+          # Находим и подписываем Flutter.framework (как мы уже научились)
           FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
-          
           if [ -n "$FLUTTER_FRAMEWORK" ]; then
-            echo "Injecting manifest and signing with Audited ID..."
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
-            
-            # Используем SHA-1 хеш вашего сертификата из аудита
             /usr/bin/codesign --force --sign "B66D675A50697F0A07762DEA2FD5436BCA702AA4" --deep --timestamp=none "$FLUTTER_FRAMEWORK"
-            
-            echo "Verification Check:"
             /usr/bin/codesign --verify --verbose "$FLUTTER_FRAMEWORK"
           fi
 
