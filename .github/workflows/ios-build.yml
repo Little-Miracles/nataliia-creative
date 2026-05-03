@@ -48,28 +48,35 @@ jobs:
 
       - name: 7. Build, Inject and Re-sign Manifests
         run: |
-          # 1. Собираем архив
+          # 1. Собираем IPA и архив
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
           
-          # 2. Путь к приложению в архиве
+          # 2. Находим путь к приложению внутри собранного архива
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
           
-          # 3. Функция для внедрения и переподписи
+          # 3. Функция для внедрения манифеста и ПЕРЕПОДПИСКИ фреймворка
           inject_and_sign() {
-            local TARGET_PATH="$1"
-            if [ -d "$TARGET_PATH" ]; then
-              echo "Injecting into: $TARGET_PATH"
-              cp ios/Runner/PrivacyInfo.xcprivacy "$TARGET_PATH/PrivacyInfo.xcprivacy"
-              # ПЕРЕПОДПИСКА: используем сертификат из системы
-              /usr/bin/codesign --force --sign "${{ secrets.P12_PASSWORD }}" --timestamp=none "$TARGET_PATH"
+            local TARGET_FRAMEWORK="$1"
+            if [ -d "$TARGET_FRAMEWORK" ]; then
+              echo "Processing: $TARGET_FRAMEWORK"
+              # Копируем манифест внутрь фреймворка
+              cp ios/Runner/PrivacyInfo.xcprivacy "$TARGET_FRAMEWORK/PrivacyInfo.xcprivacy"
+              
+              # Переподписываем фреймворк, чтобы Apple не ругалась на изменение содержимого
+              # Используем имя сертификата, которое импортировали в шаге 4
+              /usr/bin/codesign --force --sign "iPhone Distribution" --timestamp=none "$TARGET_FRAMEWORK"
+            else
+              echo "Warning: $TARGET_FRAMEWORK not found."
             fi
           }
 
-          # 4. Внедряем во Flutter и плагины
+          # 4. Применяем ко всем проблемным SDK
           inject_and_sign "$APP_PATH/Frameworks/Flutter.framework"
           inject_and_sign "$APP_PATH/Frameworks/device_info_plus.framework"
           inject_and_sign "$APP_PATH/Frameworks/url_launcher_ios.framework"
           inject_and_sign "$APP_PATH/Frameworks/video_player_avfoundation.framework"
+          
+          echo "Surgical injection and re-signing completed."
           
       - name: 8. Give Me the Sealed Box
         uses: actions/upload-artifact@v4
