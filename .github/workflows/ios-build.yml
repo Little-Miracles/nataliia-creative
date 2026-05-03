@@ -52,20 +52,35 @@ jobs:
           flutter clean
           flutter pub get
 
-      - name: 7. Guaranteed Signature Build (iOS 26 SDK)
+      - name: 7. Total SDK Manifest Injection & Sign (Build 17)
         run: |
-          # Сборка с использованием SDK 26, как требует Apple 2026
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --build-number=16
+          # 1. Основная сборка
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-number=17
           
-          # Финальная подпись манифеста проверенным ID B66D675A
-          FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
-          if [ -n "$FLUTTER_FRAMEWORK" ]; then
-            cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
-            /usr/bin/codesign --force --sign "B66D675A50697F0A07762DEA2FD5436BCA702AA4" --deep --timestamp=none "$FLUTTER_FRAMEWORK"
-            /usr/bin/codesign --verify --verbose "$FLUTTER_FRAMEWORK"
-          fi
+          # 2. Путь к приложению внутри архива
+          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
+          echo "Processing App at: $APP_PATH"
+          
+          # 3. Список проблемных SDK из письма Apple
+          SDK_LIST=("Flutter.framework" "device_info_plus.framework" "url_launcher_ios.framework" "video_player_avfoundation.framework")
+          
+          # 4. Цикл инъекции манифеста в каждый SDK
+          for sdk in "${SDK_LIST[@]}"; do
+            SDK_FULL_PATH=$(find "$APP_PATH/Frameworks" -name "$sdk" -type d | head -n 1)
+            
+            if [ -n "$SDK_FULL_PATH" ]; then
+              echo "💉 Инъекция в $sdk..."
+              cp ios/Runner/PrivacyInfo.xcprivacy "$SDK_FULL_PATH/PrivacyInfo.xcprivacy"
+              
+              # Переподписываем каждый SDK вашим проверенным ID B66D675A
+              /usr/bin/codesign --force --sign "B66D675A50697F0A07762DEA2FD5436BCA702AA4" --deep --timestamp=none "$SDK_FULL_PATH"
+            else
+              echo "⚠️ SDK $sdk не найден в этой сборке, пропускаю."
+            fi
+          done
+          
+          # 5. Финальная проверка основной подписи приложения
+          /usr/bin/codesign --verify --verbose "$APP_PATH"
 
       - name: 8. Upload READY IPA
         uses: actions/upload-artifact@v4
