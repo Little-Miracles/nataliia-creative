@@ -1,110 +1,51 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: DEEP-DIAGNOSTIC-AUDIT
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: macos-15
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v4
 
-      - name: 1.1 Force Xcode 26 (Apple Requirement 2026)
-        run: |
-          AVAILABLE_XCODE=$(ls /Applications | grep "Xcode_26" | head -n 1)
-          if [ -z "$AVAILABLE_XCODE" ]; then
-            sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-          else
-            sudo xcode-select -s /Applications/$AVAILABLE_XCODE/Contents/Developer
-          fi
-          xcodebuild -version
-
-      - name: 2. Setup Flutter 3.13.9
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.13.9'
-          architecture: arm64
-
-      - name: 3. Create .env
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 4. Import Distribution Certificate
+      - name: 2. Import Certs (Checking Keychain)
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Install Provisioning Profile
+      - name: 3. DATABASE AUDIT (The Inspector)
         run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision
-          cp ~/Library/MobileDevice/Provisioning\ Profiles/SMART_DISTRIBUTION.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-
-      - name: 6. Prepare Project
-        run: |
-          flutter clean
-          flutter pub get
-
-      - name: 7. Build and Finalize Manifests (Final Attempt)
-        run: |
-          # 1. Сборка архива
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          echo "=== ОТЧЕТ ДЛЯ НАТАЛЬИ: ПОИСК ОШИБОК ПОДПИСИ ==="
           
-          # 2. Поиск фреймворка
-          FLUTTER_FRAMEWORK=$(find build/ios/archive -name "Flutter.framework" -type d | head -n 1)
+          echo -e "\n[1. СЕРТИФИКАТЫ]"
+          # Проверяем, какой Team ID и имя владельца видит система в ключах
+          security find-identity -v -p codesigning signing_temp.keychain
           
-          if [ -n "$FLUTTER_FRAMEWORK" ]; then
-            echo "Injecting manifest into: $FLUTTER_FRAMEWORK"
-            cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
-            
-            # Находим ID вашего сертификата Apple Distribution: Nataliia Kuzmenko
-            CERT_ID=$(security find-identity -v -p codesigning signing_temp.keychain | grep "Distribution" | awk '{print $2}' | head -n 1)
-            
-            if [ -n "$CERT_ID" ]; then
-              echo "Using Certificate ID: $CERT_ID"
-              # Переподписываем СТРОГО с флагов --deep, чтобы зацепить все вложения
-              /usr/bin/codesign --force --sign "$CERT_ID" --deep --timestamp=none "$FLUTTER_FRAMEWORK"
-              
-              # Проверка подписи (для логов)
-              echo "Verifying signature..."
-              /usr/bin/codesign --verify --verbose "$FLUTTER_FRAMEWORK"
-              echo "✅ Flutter.framework officially re-signed."
-            else
-              echo "❌ Distribution Certificate NOT FOUND!"
-              exit 1
-            fi
-          fi
+          echo -e "\n[2. ПРОФИЛЬ ПОДПИСИ]"
+          # Проверяем, совпадает ли Bundle ID приложения с тем, что в профиле[cite: 4, 6]
+          PROVISION_PATH=~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > $PROVISION_PATH
+          grep -aA 2 "application-identifier" $PROVISION_PATH | grep "string"
+          grep -a "UUID" -A 1 $PROVISION_PATH
           
-      - name: 8. Give Me the Sealed Box
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-READY-IPA
-          path: build/ios/ipa/*.ipa
-          retention-days: 10
-
-      - name: 9. Audit Privacy Manifests (Pre-flight Check)
-        run: |
-          echo "Checking if Privacy Manifests are included in the frameworks..."
-          # Поиск папки с приложением внутри архива
-          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
+          echo -e "\n[3. НАСТРОЙКИ ПРОЕКТА XCODE]"
+          # Ищем, где жестко прописаны старые Team ID или стили подписи[cite: 4, 10]
+          grep -r "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj
+          grep -r "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj
           
-          if [ -z "$APP_PATH" ]; then
-            echo "Error: App bundle not found for audit."
-            exit 1
-          fi
-
-          echo "Auditing: $APP_PATH"
+          echo -e "\n[4. СТРУКТУРА МАНИФЕСТОВ]"
+          # Показываем Котику, где физически лежат манифесты
+          find . -name "PrivacyInfo.xcprivacy"
           
-          echo "--- RESULT ---"
-          [ -f "$APP_PATH/PrivacyInfo.xcprivacy" ] && echo "✅ Main App Manifest: FOUND" || echo "❌ Main App Manifest: MISSING"
-          [ -f "$APP_PATH/Frameworks/Flutter.framework/PrivacyInfo.xcprivacy" ] && echo "✅ Flutter.framework Manifest: FOUND" || echo "❌ Flutter.framework Manifest: MISSING"
-
-          for plugin in device_info_plus url_launcher_ios video_player_avfoundation; do
-            if find "$APP_PATH/Frameworks" -name "${plugin}*" -exec test -e "{}/PrivacyInfo.xcprivacy" \; -print | grep -q "."; then
-               echo "✅ $plugin Manifest: FOUND"
-            else
-               echo "❌ $plugin Manifest: MISSING"
-            fi
-          done
-          echo "--------------"
+          echo -e "\n[5. АНАЛИЗ PODFILE]"
+          # Проверяем, есть ли в Podfile инструкции для переподписи плагинов[cite: 5]
+          cat ios/Podfile | grep -A 20 "post_install"
+          
+          echo -e "\n[6. ПРОВЕРКА EXPORT OPTIONS]"
+          # Проверяем, правильно ли указан метод экспорта[cite: 6, 10]
+          cat ios/ExportOptions.plist
+          
+          echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
