@@ -45,7 +45,7 @@ jobs:
         run: |
           flutter clean
           flutter pub get
-          # Ручная подстраховка для самого Flutter Framework
+          # Подстраховка для Flutter.framework
           mkdir -p ios/Flutter/Flutter.framework
           cp ios/Runner/PrivacyInfo.xcprivacy ios/Flutter/Flutter.framework/PrivacyInfo.xcprivacy
 
