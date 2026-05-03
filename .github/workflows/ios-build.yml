@@ -21,31 +21,46 @@ jobs:
           echo "=== ОТЧЕТ ДЛЯ НАТАЛЬИ: ПОИСК ОШИБОК ПОДПИСИ ==="
           
           echo -e "\n[1. СЕРТИФИКАТЫ]"
-          # Проверяем, какой Team ID и имя владельца видит система в ключах
+          # Выводим все доступные сертификаты для подписи[cite: 7, 10]
           security find-identity -v -p codesigning signing_temp.keychain
           
           echo -e "\n[2. ПРОФИЛЬ ПОДПИСИ]"
-          # Проверяем, совпадает ли Bundle ID приложения с тем, что в профиле[cite: 4, 6]
-          PROVISION_PATH=~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > $PROVISION_PATH
-          grep -aA 2 "application-identifier" $PROVISION_PATH | grep "string"
-          grep -a "UUID" -A 1 $PROVISION_PATH
+          # Проверяем содержимое профиля, чтобы увидеть Bundle ID и Team ID[cite: 4, 6]
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          PROVISION_PATH="$HOME/Library/MobileDevice/Provisioning Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision"
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > "$PROVISION_PATH"
+          
+          if [ -f "$PROVISION_PATH" ]; then
+            echo "Профиль успешно декодирован."
+            grep -aA 2 "application-identifier" "$PROVISION_PATH" | grep "string" || echo "App ID не найден в профиле"
+            grep -a "UUID" -A 1 "$PROVISION_PATH" | grep "string" || echo "UUID не найден в профиле"
+          else
+            echo "❌ Ошибка: Не удалось создать файл профиля."
+          fi
           
           echo -e "\n[3. НАСТРОЙКИ ПРОЕКТА XCODE]"
-          # Ищем, где жестко прописаны старые Team ID или стили подписи[cite: 4, 10]
-          grep -r "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj
-          grep -r "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj
+          # Ищем жестко прописанные настройки Team ID в проекте[cite: 4, 10]
+          grep -r "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj || echo "Team ID не прописан в проекте"
+          grep -r "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj | head -n 5
           
           echo -e "\n[4. СТРУКТУРА МАНИФЕСТОВ]"
-          # Показываем Котику, где физически лежат манифесты
+          # Ищем физическое расположение всех PrivacyInfo файлов[cite: 3, 8]
           find . -name "PrivacyInfo.xcprivacy"
           
           echo -e "\n[5. АНАЛИЗ PODFILE]"
-          # Проверяем, есть ли в Podfile инструкции для переподписи плагинов[cite: 5]
-          cat ios/Podfile | grep -A 20 "post_install"
+          # Проверяем текущее состояние Podfile[cite: 5]
+          if [ -f "ios/Podfile" ]; then
+            cat ios/Podfile | grep -A 30 "post_install"
+          else
+            echo "❌ Podfile не найден."
+          fi
           
           echo -e "\n[6. ПРОВЕРКА EXPORT OPTIONS]"
-          # Проверяем, правильно ли указан метод экспорта[cite: 6, 10]
-          cat ios/ExportOptions.plist
+          # Проверяем настройки экспорта IPA[cite: 6, 10]
+          if [ -f "ios/ExportOptions.plist" ]; then
+            cat ios/ExportOptions.plist
+          else
+            echo "❌ ExportOptions.plist не найден."
+          fi
           
           echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
