@@ -58,14 +58,14 @@ jobs:
             echo "Injecting manifest into: $FLUTTER_FRAMEWORK"
             cp ios/Runner/PrivacyInfo.xcprivacy "$FLUTTER_FRAMEWORK/PrivacyInfo.xcprivacy"
             
-            # Находим уникальный ID (хеш) сертификата Distribution
-            CERT_ID=$(security find-identity -v -p codesigning signing_temp.keychain | grep "iPhone Distribution" | awk '{print $2}' | head -n 1)
+            # Находим уникальный ID (хеш) вашего сертификата Distribution из документации
+            CERT_ID=$(security find-identity -v -p codesigning signing_temp.keychain | grep "Distribution" | awk '{print $2}' | head -n 1)
             
             if [ -n "$CERT_ID" ]; then
               echo "Using Certificate ID: $CERT_ID"
-              # Переподписываем, используя ID сертификата
+              # Переподписываем официальным ключом
               /usr/bin/codesign --force --sign "$CERT_ID" --timestamp=none "$FLUTTER_FRAMEWORK"
-              echo "✅ Flutter.framework officially re-signed with Certificate ID."
+              echo "✅ Flutter.framework officially re-signed with your Certificate."
             else
               echo "❌ Distribution Certificate NOT FOUND in keychain!"
               exit 1
