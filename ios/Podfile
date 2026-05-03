@@ -26,17 +26,18 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     
-    # --- ОБНОВЛЕННЫЙ БЛОК МАНИФЕСТОВ ---
-    # Список целей, куда принудительно вшиваем манифест (включая сам Flutter)
+    # --- СУПЕР-БЛОК МАНИФЕСТОВ (ВКЛЮЧАЯ FLUTTER) ---
+    # Список целей, куда мы принудительно вшиваем манифест
     privacy_targets = ['device_info_plus', 'url_launcher_ios', 'video_player_avfoundation', 'Flutter']
     
     if privacy_targets.include?(target.name)
+      # Путь к нашему манифесту в папке Runner
       privacy_path = File.expand_path('Runner/PrivacyInfo.xcprivacy')
       
       if File.exist?(privacy_path)
-        # Проверяем, может ли данная цель принимать файлы ресурсов
+        # Проверяем, поддерживает ли цель ресурсы (для Flutter это теперь сработает)
         if target.respond_to?(:resources_build_phase)
-          puts "Infecting #{target.name} with Privacy Manifest"
+          puts "Injecting Privacy Manifest into target: #{target.name}"
           file_ref = installer.pods_project.new_file(privacy_path)
           target.resources_build_phase.add_file_reference(file_ref, true)
         end
@@ -47,9 +48,8 @@ post_install do |installer|
     target.build_configurations.each do |config|
       # Устанавливаем 17.0 для соответствия требованиям 2026 года
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
-      # Отключаем песочницу для обхода ошибки PhaseScriptExecution
+      # Настройка для обхода ошибок в macOS 15
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-      # Очищаем исключенные архитектуры
       config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
     end
   end
