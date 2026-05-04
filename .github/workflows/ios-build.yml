@@ -18,10 +18,19 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. Подготовка пропуска (Дубликат профиля)
+      - name: 4. УСТАНОВКА ПРОФИЛЯ В СИСТЕМУ (ВМЕСТО ПЕРЕТАСКИВАНИЯ)
         run: |
+          # Создаем папку, которую требует Xcode
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
+          
+          # Копируем профиль под его системным именем UUID
+          # Это то же самое, что "перетащить в док" на вашем ноутбуке
+          cp "SMART_DISTRIBUTION_3.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          
+          # Прописываем в настройки проекта Manual и наш UUID принудительно
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
 
       - name: 5. Восстановление файла .env из секретов
         run: |
@@ -35,7 +44,9 @@ jobs:
           flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА ПОСЫЛКИ
+      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА
         run: |
-          # Сборка готового файла для Транспортера
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем архив и упаковываем IPA, используя ваш ExportOptions.plist
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env
