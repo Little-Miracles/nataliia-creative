@@ -26,16 +26,21 @@ jobs:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Создание системного "бардачок" (Profiles)
+      - name: 5. Настройка системной среды (Manual Signing)
         run: |
-          # Создаем папку в системе Котика
+          # 1. Создаем папку и кладем туда профиль под его UUID
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # Умный поиск файла по всему проекту и копирование под нужным UUID
           find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
+
+          # 2. МЯГКОЕ ПЕРЕКЛЮЧЕНИЕ: Говорим проекту использовать Ручной стиль и наш UUID
+          # Мы заменяем Automatic на Manual прямо в файле проекта
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           
-          echo "Проверка: заглядываем в бардачок..."
-          ls ~/Library/MobileDevice/Provisioning\ Profiles/
+          # Указываем, какой именно UUID использовать для сборки[cite: 7]
+          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" {} +
+          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" {} +
+          
+          echo "Стиль подписи переключен на Manual, профиль привязан."
 
       - name: 6. Обновление плагинов (pub upgrade)
         run: |
