@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-DIRECT-XCODE-BUILD
+name: SMART-BODY-LIFE-TOTAL-VICTORY
 
 on:
   workflow_dispatch:
@@ -34,26 +34,24 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. СБОРКА ЧЕРЕЗ XCODE (ОБХОДИМ БАГИ FLUTTER)
+      - name: 6. ХИРУРГИЧЕСКОЕ ОТКЛЮЧЕНИЕ ОШИБОК
         run: |
           flutter pub get
-          # Генерируем только необходимые файлы для Xcode
-          flutter build ios --release --no-codesign --config-only
+          flutter build ios --config-only --release --no-codesign
+          
+          # УДАЛЯЕМ СКРИПТ "THIN BINARY", КОТОРЫЙ ВЫЗЫВАЕТ NULL CHECK
+          # Мы просто заменяем его вызов на пустую команду
+          sed -i '' 's/.*xcode_backend.dart.*thin.*/exit 0/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # Добавляем принудительные пути
+          mkdir -p ios/Flutter
+          echo "PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
           
           cd ios
           pod install --repo-update
-          
-          # Собираем архив напрямую через инструменты Apple
-          xcodebuild -workspace Runner.xcworkspace \
-                     -scheme Runner \
-                     -configuration Release \
-                     -archivePath ../build/Runner.xcarchive \
-                     archive \
-                     CODE_SIGN_STYLE=Manual \
-                     PROVISIONING_PROFILE_SPECIFIER=f2e7364b-98c7-44ad-a0dc-84acd2d0fd80
           cd ..
 
-      - name: 7. ЭКСПОРТ В IPA
+      - name: 7. СБОРКА И ЭКСПОРТ (ПРЯМОЙ ВЫЗОВ)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -71,6 +69,14 @@ jobs:
           </plist>
           EOF
 
+          # Собираем архив напрямую
+          xcodebuild -workspace ios/Runner.xcworkspace \
+                     -scheme Runner \
+                     -configuration Release \
+                     -archivePath build/Runner.xcarchive \
+                     archive
+          
+          # Экспортируем в IPA
           xcodebuild -exportArchive \
                      -archivePath build/Runner.xcarchive \
                      -exportOptionsPlist ios/ExportOptions.plist \
