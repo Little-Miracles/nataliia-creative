@@ -20,27 +20,34 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. Импорт сертификатов (Manual Signing)
+      - name: 4. Импорт сертификатов (Обязательно для подписи)
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. ПОДГОТОВКА (pub upgrade)
+      - name: 5. РЕКОНСТРУКЦИЯ ПОДПИСИ (Manual Fix)
+        run: |
+          # Вписываем профиль и Team ID прямо в проект
+          find . -name "project.pbxproj" -exec sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' {} +
+          find . -name "project.pbxproj" -exec sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' {} +
+
+      - name: 6. ПОДГОТОВКА (Обновление оборудования)
         run: |
           flutter pub upgrade
           flutter pub get
 
-      - name: 6. СБОРКА (Тестовый билд)
+      - name: 7. СБОРКА (Чистая упаковка)
         run: |
-          # Собираем как есть, без смены версии в файлах проекта
           flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-      - name: 7. ГЛУБОКАЯ ДИАГНОСТИКА ПЕЧАТЕЙ
+      - name: 8. ГЛУБОКАЯ ДИАГНОСТИКА ПЕЧАТЕЙ
         run: |
+          # Ищем путь к архиву для проверки
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
           echo "=== ПРОВЕРКА ПОДПИСИ ==="
           codesign --verify --deep --verbose "$APP_PATH"
           
           echo -e "\n=== ПРОВЕРКА МАНИФЕСТОВ (Privacy Manifests) ==="
+          # Проверяем, появились ли манифесты в плагинах после обновления оборудования
           find "$APP_PATH/Frameworks" -name "PrivacyInfo.xcprivacy"
