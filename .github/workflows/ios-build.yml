@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-ENVIRONMENT-FIX
+name: SMART-BODY-LIFE-FINAL-TRIUMPH
 
 on:
   workflow_dispatch:
@@ -34,17 +34,19 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ПОЛНАЯ НАСТРОЙКА ОКРУЖЕНИЯ
+      - name: 6. ПОДГОТОВКА СЕРВЕРА (ЛЕЧИМ NULL CHECK)
         run: |
-          # Это лечит ошибку Null check в xcode_backend.dart
           flutter config --no-analytics
           flutter pub get
           
-          # Явно прописываем пути для Xcode
-          cd ios
-          echo "FLUTTER_ROOT=$FLUTTER_ROOT" > Flutter/Generated.xcconfig
-          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> Flutter/Generated.xcconfig
+          # СОЗДАЕМ КАРТУ ПУТЕЙ ДЛЯ XCODE
+          mkdir -p ios/Flutter
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT" > ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_TARGET=lib/main.dart" >> ios/Flutter/Generated.xcconfig
+          echo "ASSET_PREFIX=" >> ios/Flutter/Generated.xcconfig
           
+          cd ios
           rm -rf Pods
           rm -f Podfile.lock
           pod install --repo-update
@@ -68,7 +70,6 @@ jobs:
           </plist>
           EOF
 
-          # Добавляем флаг --verbose чтобы видеть детали, если упадет
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
