@@ -18,21 +18,34 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. ПОДГОТОВКА ПРОФИЛЯ ИЗ СЕКРЕТОВ
+      - name: 4. УСТАНОВКА СЕРТИФИКАТА И ПРОФИЛЯ
         run: |
+          # 1. Создаем временную связку ключей (Keychain)
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security set-keychain-settings -t 3600 -u build.keychain
+
+          # 2. Импортируем сертификат из секрета P12_BASE64
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+
+          # 3. Устанавливаем профиль
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Декодируем ваш PROVISIONING_PROFILE_BASE64 в правильный файл
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          
+          # 4. Создаем .env
           echo "${{ secrets.ENV_FILE }}" > .env
+          echo "Сертификат и профиль установлены."
 
       - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК
         run: |
           flutter pub upgrade
           flutter pub get
 
-      - name: 6. СОЗДАНИЕ ПРАВИЛЬНОГО PLIST (По справочнику)
+      - name: 6. СОЗДАНИЕ PLIST (По вашему справочнику)
         run: |
-          # Мы создаем файл ExportOptions.plist, на который ссылается справка Flutter
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -53,9 +66,9 @@ jobs:
           </plist>
           EOF
 
-      - name: 7. СБОРКА IPA (По официальной команде)
+      - name: 7. СБОРКА IPA
         run: |
-          # Используем флаги ТОЛЬКО из вашего справочника
+          # Официальная команда из справочника Flutter
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
