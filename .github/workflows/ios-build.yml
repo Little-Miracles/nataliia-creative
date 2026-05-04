@@ -7,31 +7,30 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Загрузка кода из репозитория
+      - name: 1. Загрузка кода
         uses: actions/checkout@v4
 
       - name: 2. Оборудование Xcode 26.3
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
-      - name: 3. Новый Flutter 3.29.0 (с защитой Apple)
+      - name: 3. Новый Flutter 3.29.0
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. Обновление библиотек (из письма Apple)
+      - name: 4. Точечное обновление библиотек из письма Apple
         run: |
-          # Обновляем device_info_plus, url_launcher и видео-плеер до версий с манифестами
-          flutter pub upgrade
+          # Обновляем только тех, кто в "черном списке" у Apple
+          flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 5. Сборка архива (без подписи для теста)
+      - name: 5. Сборка архива (без подписи)
         run: |
-          # Собираем архив, чтобы проверить наличие файлов PrivacyInfo
+          # Собираем архив, чтобы убедиться, что файлы конфиденциальности подтянулись
           flutter build ipa --release --no-codesign
 
-      - name: 6. ПРОВЕРКА МАНИФЕСТОВ (Ответ для Apple)
+      - name: 6. ПРОВЕРКА МАНИФЕСТОВ (Для вашего спокойствия)
         run: |
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
-          echo "=== Ищем файлы, которые требовал Apple в письме ==="
-          # Эта команда покажет список всех найденных манифестов в приложении
+          echo "=== Список файлов PrivacyInfo, которые теперь увидит Apple ==="
           find "$APP_PATH" -name "PrivacyInfo.xcprivacy"
