@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-INTERCEPTION
+name: SMART-BODY-LIFE-DIRECT-XCODE-BUILD
 
 on:
   workflow_dispatch:
@@ -34,16 +34,27 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. СБОРКА АРХИВА (ГОРЯЧИЙ ЦЕХ)
+      - name: 6. СБОРКА ЧЕРЕЗ XCODE (ОБХОДИМ БАГИ FLUTTER)
         run: |
-          flutter config --no-analytics
           flutter pub get
+          # Генерируем только необходимые файлы для Xcode
+          flutter build ios --release --no-codesign --config-only
           
-          # Мы НЕ запускаем flutter build ipa, потому что он ломается в конце.
-          # Мы запускаем сборку архива через Xcode напрямую через инструмент Flutter.
-          flutter build ios --release --no-codesign
+          cd ios
+          pod install --repo-update
           
-          # Создаем ExportOptions.plist
+          # Собираем архив напрямую через инструменты Apple
+          xcodebuild -workspace Runner.xcworkspace \
+                     -scheme Runner \
+                     -configuration Release \
+                     -archivePath ../build/Runner.xcarchive \
+                     archive \
+                     CODE_SIGN_STYLE=Manual \
+                     PROVISIONING_PROFILE_SPECIFIER=f2e7364b-98c7-44ad-a0dc-84acd2d0fd80
+          cd ..
+
+      - name: 7. ЭКСПОРТ В IPA
+        run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -60,22 +71,15 @@ jobs:
           </plist>
           EOF
 
-          # Собираем архив и экспортируем его вручную, обходя баг Flutter
-          xcodebuild -workspace ios/Runner.xcworkspace \
-                     -scheme Runner \
-                     -config Release \
-                     -archivePath build/ios/Runner.xcarchive \
-                     archive || true
-          
           xcodebuild -exportArchive \
-                     -archivePath build/ios/Runner.xcarchive \
+                     -archivePath build/Runner.xcarchive \
                      -exportOptionsPlist ios/ExportOptions.plist \
-                     -exportPath build/ios/ipa || true
+                     -exportPath build/ipa
 
-      - name: 7. ЗАБИРАЕМ АРТЕФАКТЫ (ИЗ ЛЮБОЙ ПАПКИ)
+      - name: 8. ЗАГРУЗКА РЕЗУЛЬТАТА
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
           path: |
-            build/ios/ipa/*.ipa
-            build/ios/Runner.xcarchive
+            build/ipa/*.ipa
+            build/Runner.xcarchive
