@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-STABILIZATION
+name: SMART-BODY-LIFE-AUTO-UPDATE
 
 on:
   workflow_dispatch:
@@ -18,12 +18,67 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. УСТАНОВКА СЕРТИФИКАТА И ПРОФИЛЯ
+      - name: 4. ОБНОВЛЕНИЕ ИНСТРУМЕНТОВ (Прямо в файле)
+        run: |
+          # Котик сам переписывает pubspec.yaml под новое оборудование
+          cat <<EOF > pubspec.yaml
+          name: smart_body_life
+          description: A new Flutter project.
+          publish_to: 'none'
+          version: 3.0.0+17
+
+          environment:
+            sdk: '>=3.0.0 <4.0.0'
+
+          dependencies:
+            flutter:
+              sdk: flutter
+            cupertino_icons: ^1.0.8
+            provider: ^6.1.2
+            intl: 0.19.0
+            image_picker: ^1.1.2
+            http_parser: 4.0.0
+            video_player: 2.8.1
+            health: ^10.1.0
+            fl_chart: 0.63.0
+            add_2_calendar: ^3.0.1
+            sqflite: ^2.3.0
+            collection: 1.19.0
+            flutter_local_notifications: ^18.0.1
+            flutter_dotenv: ^5.1.0
+            path_provider: ^2.1.3
+
+          dev_dependencies:
+            flutter_test:
+              sdk: flutter
+            flutter_lints: ^3.0.0
+            flutter_launcher_icons: ^0.14.4
+
+          flutter:
+            uses-material-design: true
+            assets:
+              - ui_images/
+              - res_gym/
+              - avatars/
+              - instructions/
+              - images/
+              - videos/
+              - item_male/icons/
+              - item_female/icons/
+              - item_male/layers/
+              - item_female/layers/
+              - assets/sounds/
+              - assets/images/soups/
+              - assets/images/salads/
+              - assets/images/mains/
+              - .env
+          EOF
+
+      - name: 5. УСТАНОВКА СЕРТИФИКАТОВ
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security set-keychain-settings -t 3600 -u build.keychain
 
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
@@ -34,43 +89,35 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 5. ПРИНУДИТЕЛЬНАЯ НАСТРОЙКА ПУТЕЙ FLUTTER
+      - name: 6. НАСТРОЙКА СВЯЗЕЙ ПРОЕКТА
         run: |
-          # Это лечит ошибку 'Null check operator'
-          # Мы берем текущий путь к Flutter и записываем его в настройки проекта
-          echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> ios/Flutter/Generated.xcconfig
+          # Убираем Null check ошибку
+          mkdir -p ios/Flutter
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT" > ios/Flutter/Generated.xcconfig
           echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
           
           flutter pub get
-          # Создаем базовую конфигурацию iOS
-          flutter build ios --config-only --release --no-codesign
           cd ios && pod install && cd ..
 
-      - name: 6. СОЗДАНИЕ PLIST (Строго по справочнику)
+      - name: 7. СБОРКА IPA (По вашему справочнику)
         run: |
+          # Создаем ExportOptions прямо здесь
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>PCSW3AKAPF</string>
+            <key>method</key>            <string>app-store</string>
+            <key>teamID</key>            <string>PCSW3AKAPF</string>
             <key>provisioningProfiles</key>
             <dict>
               <key>com.nataliia.smartbodylife</key>
               <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
             </dict>
-            <key>signingStyle</key>
-            <string>manual</string>
+            <key>signingStyle</key>      <string>manual</string>
           </dict>
           </plist>
           EOF
 
-      - name: 7. СБОРКА IPA
-        run: |
-          # Команда из вашего официального справочника
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
