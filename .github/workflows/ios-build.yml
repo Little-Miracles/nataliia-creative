@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-FIX
+name: SMART-BODY-LIFE-CODE-FIX
 
 on:
   workflow_dispatch:
@@ -18,7 +18,13 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. КЛЮЧИ И ENV
+      - name: 4. АВТО-ИСПРАВЛЕНИЕ КОДА ПОД НОВУЮ БИБЛИОТЕКУ
+        run: |
+          # Заменяем старое название HealthFactory на новое Health в файле экрана
+          sed -i '' 's/HealthFactory/Health/g' lib/screens/evolution_session_screen.dart
+          echo "Код исправлен под версию Health 10.x"
+
+      - name: 5. КЛЮЧИ И ENV
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -30,7 +36,7 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 5. УСТАНОВКА БИБЛИОТЕК
+      - name: 6. УСТАНОВКА БИБЛИОТЕК
         run: |
           flutter clean
           flutter pub get
@@ -40,7 +46,7 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: 6. СБОРКА IPA
+      - name: 7. СБОРКА IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
