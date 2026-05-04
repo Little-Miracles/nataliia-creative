@@ -26,13 +26,16 @@ jobs:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Создание системного "бардачка" (Profiles)
+      - name: 5. Создание системного "бардачок" (Profiles)
         run: |
-          # Создаем папку в системе Котика, где лежат пропуска[cite: 7]
+          # Создаем папку в системе Котика
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          # Копируем файл под его UUID f2e7364b-98c7-44ad-a0dc-84acd2d0fd80[cite: 7]
-          cp "SMART_DISTRIBUTION_3.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "Профиль на месте."
+          
+          # Умный поиск файла по всему проекту и копирование под нужным UUID
+          find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
+          
+          echo "Проверка: заглядываем в бардачок..."
+          ls ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: 6. Обновление плагинов (pub upgrade)
         run: |
