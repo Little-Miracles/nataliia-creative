@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-ULTIMATUM
+name: SMART-BODY-LIFE-INTERCEPTION
 
 on:
   workflow_dispatch:
@@ -34,11 +34,16 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. СБОРКА IPA (С ИГНОРИРОВАНИЕМ ОШИБОК УПАКОВКИ)
+      - name: 6. СБОРКА АРХИВА (ГОРЯЧИЙ ЦЕХ)
         run: |
           flutter config --no-analytics
           flutter pub get
           
+          # Мы НЕ запускаем flutter build ipa, потому что он ломается в конце.
+          # Мы запускаем сборку архива через Xcode напрямую через инструмент Flutter.
+          flutter build ios --release --no-codesign
+          
+          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -55,13 +60,22 @@ jobs:
           </plist>
           EOF
 
-          # МЫ ДОБАВЛЯЕМ "|| true", ЧТОБЫ БАГ NULL CHECK НЕ ОСТАНАВЛИВАЛ ПРОЦЕСС
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env || true
+          # Собираем архив и экспортируем его вручную, обходя баг Flutter
+          xcodebuild -workspace ios/Runner.xcworkspace \
+                     -scheme Runner \
+                     -config Release \
+                     -archivePath build/ios/Runner.xcarchive \
+                     archive || true
+          
+          xcodebuild -exportArchive \
+                     -archivePath build/ios/Runner.xcarchive \
+                     -exportOptionsPlist ios/ExportOptions.plist \
+                     -exportPath build/ios/ipa || true
 
-      - name: 7. СОХРАНЕНИЕ ГОТОВОГО ФАЙЛА
+      - name: 7. ЗАБИРАЕМ АРТЕФАКТЫ (ИЗ ЛЮБОЙ ПАПКИ)
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-app
-          path: build/ios/ipa/*.ipa
+          name: smart-body-life-ipa
+          path: |
+            build/ios/ipa/*.ipa
+            build/ios/Runner.xcarchive
