@@ -26,11 +26,21 @@ jobs:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. РЕКОНСТРУКЦИЯ ПОДПИСИ (Manual Fix)
+      - name: 5. РЕКОНСТРУКЦИЯ ПОДПИСИ (Manual UUID Fix)
         run: |
-          # Вписываем профиль и Team ID прямо в проект
-          find . -name "project.pbxproj" -exec sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = "";/PROVISIONING_PROFILE_SPECIFIER = "SMART_DISTRIBUTION";/g' {} +
-          find . -name "project.pbxproj" -exec sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' {} +
+          # 1. Задаем точные данные из вашего профиля
+          PROFILE_NAME="SMART_DISTRIBUTION"
+          PROFILE_UUID="f2e7364b-98c7-44ad-a0dc-84acd2d0fd80"
+          TEAM_ID="PCSW3AKAPF"
+
+          echo "Применяю профиль: $PROFILE_NAME с UUID: $PROFILE_UUID"
+
+          # 2. Вписываем эти данные во все настройки проекта принудительно
+          # Это заменяет ручную настройку в Xcode на вашем ноутбуке
+          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"$PROFILE_NAME\";/g" {} +
+          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"$PROFILE_UUID\";/g" {} +
+          find . -name "project.pbxproj" -exec sed -i '' "s/DEVELOPMENT_TEAM = \".*\";/DEVELOPMENT_TEAM = \"$TEAM_ID\";/g" {} +
+          find . -name "project.pbxproj" -exec sed -i '' "s/CODE_SIGN_STYLE = .*/CODE_SIGN_STYLE = Manual;/g" {} +
 
       - name: 6. ПОДГОТОВКА (Обновление оборудования)
         run: |
