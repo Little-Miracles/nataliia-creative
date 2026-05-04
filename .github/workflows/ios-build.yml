@@ -7,46 +7,61 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Загрузка кода
+      - name: 1. ЗАГРУЗКА КОДА ИЗ РЕПОЗИТОРИЯ
         uses: actions/checkout@v4
 
-      - name: 2. Оборудование Xcode 26.3
+      - name: 2. УСТАНОВКА ИНСТРУМЕНТОВ (Xcode 26.3)
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
-      - name: 3. Новый Flutter 3.29.0
+      - name: 3. УСТАНОВКА FLUTTER 3.29.0 (Для манифестов Apple)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. УСТАНОВКА ПРОФИЛЯ В СИСТЕМУ (ВМЕСТО ПЕРЕТАСКИВАНИЯ)
+      - name: 4. ВОССТАНОВЛЕНИЕ СЕКРЕТОВ (.env)
         run: |
-          # Создаем папку, которую требует Xcode
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # Копируем профиль под его системным именем UUID
-          # Это то же самое, что "перетащить в док" на вашем ноутбуке
-          cp "SMART_DISTRIBUTION_3.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
-          # Прописываем в настройки проекта Manual и наш UUID принудительно
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
-
-      - name: 5. Восстановление файла .env из секретов
-        run: |
-          # Мы берем содержимое из вашей "секретки" и записываем в файл .env
-          # Предположим, ваш секрет в GitHub называется ENV_FILE
+          # Берем ключи из вашей "секретки" GitHub и создаем файл .env
           echo "${{ secrets.ENV_FILE }}" > .env
-          echo "Файл .env успешно восстановлен из секретов."
+          echo "Файл .env успешно создан из секретов."
 
-      - name: 6. Обновление библиотек из письма Apple
+      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК (Решение из письма Apple)
         run: |
+          # Обновляем только те SDK, которые требовал Apple в письме
           flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА
+      - name: 6. РЕЖИМ РАЗВЕДКИ (Где лежат файлы?)
         run: |
-          # Собираем архив и упаковываем IPA, используя ваш ExportOptions.plist
+          echo "=== ПРОВЕРКА НАЛИЧИЯ ПРОФИЛЯ В ПРОЕКТЕ ==="
+          find . -name "*.mobileprovision"
+          
+          echo -e "\n=== ПРОВЕРКА ФАЙЛА .env ==="
+          ls -la .env || echo "Файл .env не найден!"
+
+      - name: 7. ПОДГОТОВКА ПРОФИЛЯ И ПРАВКА ПРОЕКТА
+        run: |
+          # Создаем системную папку, куда Xcode просит "перетянуть" профиль
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          
+          # Находим ваш профиль и кладем его в систему под именем-UUID
+          PROFILE_PATH=$(find . -name "SMART_DISTRIBUTION_3.mobileprovision" | head -n 1)
+          
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "ОШИБКА: Файл профиля не найден в репозитории. Проверьте, загружен ли он в Git."
+            exit 1
+          fi
+          
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          
+          # Отключаем "автоматику" в Xcode и принудительно ставим наш профиль
+          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
+          
+          echo "Проект переведен в ручной режим, профиль установлен."
+
+      - name: 8. ОКОНЧАТЕЛЬНАЯ СБОРКА (IPA ДЛЯ ТРАНСПОРТЕРА)
+        run: |
+          # Собираем финальный упакованный файл
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
