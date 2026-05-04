@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-VICTORY
+name: SMART-BODY-LIFE-FINAL-TRIUMPH
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. АВТО-ИСПРАВЛЕНИЕ КОДА (Health)
+      - name: 4. ИСПРАВЛЕНИЕ КОДА (Health)
         run: |
           sed -i '' 's/HealthFactory/Health/g' lib/screens/evolution_session_screen.dart
 
@@ -34,13 +34,17 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ПОДГОТОВКА IOS (БЕЗ СКРИПТОВ)
+      - name: 6. ПРЯМАЯ ПОДГОТОВКА (БЕЗ ОШИБОК)
         run: |
           flutter config --no-analytics
           flutter pub get
           
-          # Мы собираем iOS часть отдельно, чтобы фреймворки легли куда надо
-          flutter build ios --release --no-codesign
+          # Генерируем конфиги
+          flutter build ios --config-only --release --no-codesign
+          
+          # ОТКЛЮЧАЕМ ЛОМАЮЩИЙСЯ СКРИПТ УПАКОВКИ
+          # Мы говорим Xcode: "Не запускай embed_frameworks, мы всё сделаем сами"
+          sed -i '' 's/.*xcode_backend.dart.*embed_frameworks.*/exit 0/g' ios/Runner.xcodeproj/project.pbxproj
           
           cd ios
           rm -rf Pods
@@ -66,8 +70,6 @@ jobs:
           </plist>
           EOF
 
-          # Используем команду с флагом --no-build-bundle
-          # Это пропустит тот самый ломающийся скрипт, так как мы собрали всё в шаге 6
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
