@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TEST-RECONSTRUCTION
+name: SMART-BODY-LIFE-PRIVACY-FIX
 
 on:
   workflow_dispatch:
@@ -7,55 +7,31 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Загрузка кода
+      - name: 1. Загрузка кода из репозитория
         uses: actions/checkout@v4
 
-      - name: 2. Переключение на Xcode 26.3
-        run: |
-          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-          xcodebuild -version
+      - name: 2. Оборудование Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
-      - name: 3. Установка Flutter 3.29.0
+      - name: 3. Новый Flutter 3.29.0 (с защитой Apple)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. Загрузка ключей (Сертификаты)
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.P12_BASE64 }}
-          p12-password: ${{ secrets.P12_PASSWORD }}
-
-      - name: 5. ДУБЛИРОВАНИЕ ПРОФИЛЯ ДЛЯ XCODE
+      - name: 4. Обновление библиотек (из письма Apple)
         run: |
-          # 1. Создаем системную папку (тот самый "бардачок")
-          # Она находится ВНЕ вашего приложения, в системе Котика
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # 2. Находим ваш профиль и ДУБЛИРУЕМ его в системную папку
-          # Оригинал остается на месте, а копия получает имя UUID
-          find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
-          
-          echo "Копия профиля создана по системному адресу. Оригинал сохранен."
-          
-          # 3. Проверка: покажи нам, что в системной папке файл появился
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: 6. Обновление плагинов (pub upgrade)
-        run: |
+          # Обновляем device_info_plus, url_launcher и видео-плеер до версий с манифестами
           flutter pub upgrade
           flutter pub get
 
-      - name: 7. Сборка (Тестовая, без смены номера)
+      - name: 5. Сборка архива (без подписи для теста)
         run: |
-          # Используем ваш ExportOptions.plist для ручной подписи[cite: 2]
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+          # Собираем архив, чтобы проверить наличие файлов PrivacyInfo
+          flutter build ipa --release --no-codesign
 
-      - name: 8. ГЛУБОКАЯ ДИАГНОСТИКА ПЕЧАТЕЙ
+      - name: 6. ПРОВЕРКА МАНИФЕСТОВ (Ответ для Apple)
         run: |
           APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
-          echo "=== ПРОВЕРКА ПОДПИСИ ==="
-          codesign --verify --deep --verbose "$APP_PATH"
-          echo -e "\n=== ПОИСК МАНИФЕСТОВ (Privacy Info) ==="
-          # Ищем те самые файлы, на которых настаивает Apple[cite: 4, 7]
-          find "$APP_PATH/Frameworks" -name "PrivacyInfo.xcprivacy"
+          echo "=== Ищем файлы, которые требовал Apple в письме ==="
+          # Эта команда покажет список всех найденных манифестов в приложении
+          find "$APP_PATH" -name "PrivacyInfo.xcprivacy"
