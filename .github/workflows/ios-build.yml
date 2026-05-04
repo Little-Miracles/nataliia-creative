@@ -26,21 +26,20 @@ jobs:
           p12-file-base64: ${{ secrets.P12_BASE64 }}
           p12-password: ${{ secrets.P12_PASSWORD }}
 
-      - name: 5. Настройка системной среды (Manual Signing)
+      - name: 5. ДУБЛИРОВАНИЕ ПРОФИЛЯ ДЛЯ XCODE
         run: |
-          # 1. Создаем папку и кладем туда профиль под его цифровым именем UUID
+          # 1. Создаем системную папку (тот самый "бардачок")
+          # Она находится ВНЕ вашего приложения, в системе Котика
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          
+          # 2. Находим ваш профиль и ДУБЛИРУЕМ его в системную папку
+          # Оригинал остается на месте, а копия получает имя UUID
           find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
-
-          # 2. ПЕРЕКЛЮЧЕНИЕ: Запрещаем автоматическую подпись в файле проекта[cite: 7, 8]
-          # Находим настройки стиля и принудительно ставим Manual
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # 3. ПРИВЯЗКА: Указываем Xcode использовать именно наш UUID и имя профиля[cite: 7]
-          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" {} +
-          find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" {} +
+          echo "Копия профиля создана по системному адресу. Оригинал сохранен."
           
-          echo "Режим Manual активирован. Профиль SMART_DISTRIBUTION привязан к проекту."
+          # 3. Проверка: покажи нам, что в системной папке файл появился
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: 6. Обновление плагинов (pub upgrade)
         run: |
