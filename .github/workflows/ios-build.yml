@@ -28,37 +28,32 @@ jobs:
           flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 6. УСТАНОВКА ПРОФИЛЯ В СИСТЕМУ
+      - name: 6. УСТАНОВКА ПРОФИЛЯ И БЛОКИРОВКА АВТОМАТИКИ
         run: |
-          # Создаем системную папку
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # Ищем ваш загруженный файл (уже без .rtf)
           PROFILE_PATH=$(find . -name "SMART_DISTRIBUTION_3.mobileprovision" | head -n 1)
           
-          if [ -z "$PROFILE_PATH" ]; then
-            echo "ОШИБКА: Файл SMART_DISTRIBUTION_3.mobileprovision не найден в репозитории!"
-            exit 1
-          fi
-          
-          # Копируем его в систему под его настоящим "паспортным" именем
+          # Копируем профиль в системную папку
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           
-          # ПРИНУДИТЕЛЬНО ПРАВИМ НАСТРОЙКИ ПРОЕКТА
-          # 1. Отключаем автоматический стиль
+          # ПРИНУДИТЕЛЬНО ПЕРЕПИСЫВАЕМ ФАЙЛ ПРОЕКТА (удаляем любые следы автоматики)
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # 2. Прописываем имя профиля
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
-          
-          # 3. Добавляем UUID профиля (самое важное!)
           sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
-          
-          echo "Настройки Xcode обновлены, профиль установлен."
+          sed -i '' "s/DEVELOPMENT_TEAM = \".*\";/DEVELOPMENT_TEAM = \"PCSW3AKAPF\";/g" ios/Runner.xcodeproj/project.pbxproj
 
       - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА
         run: |
-          # Собираем IPA, используя .env и настройки экспорта
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env
+          # Собираем архив БЕЗ автоматического подписания на этапе Flutter
+          # Мы берем управление на себя через export-options-plist
+          flutter build ipa --release --no-codesign --dart-define-from-file=.env
+          
+          # Теперь запускаем упаковку (архивацию) через сам Xcode, где наши настройки уже применены
+          xcodebuild -workspace ios/Runner.xcworkspace \
+                     -scheme Runner \
+                     -sdk iphoneos \
+                     -configuration Release \
+                     -archivePath build/ios/archive/Runner.xcarchive \
+                     archive \
+                     PROVISIONING_PROFILE="f2e7364b-98c7-44ad-a0dc-84acd2d0fd80" \
+                     AD_HOC_CODE_SIGNING_ALLOWED=YES
