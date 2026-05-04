@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-TRIUMPH
+name: SMART-BODY-LIFE-TOTAL-VICTORY
 
 on:
   workflow_dispatch:
@@ -34,17 +34,23 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ПОДГОТОВКА СЕРВЕРА (ЛЕЧИМ NULL CHECK)
+      - name: 6. ЖЕСТКАЯ НАСТРОЙКА ПУТЕЙ (ЛЕЧИМ NULL CHECK)
         run: |
           flutter config --no-analytics
           flutter pub get
           
-          # СОЗДАЕМ КАРТУ ПУТЕЙ ДЛЯ XCODE
+          # ПРИНУДИТЕЛЬНО ПРОПИСЫВАЕМ ПУТИ ДЛЯ XCODE-BACKEND
           mkdir -p ios/Flutter
           echo "FLUTTER_ROOT=$FLUTTER_ROOT" > ios/Flutter/Generated.xcconfig
           echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
           echo "FLUTTER_TARGET=lib/main.dart" >> ios/Flutter/Generated.xcconfig
           echo "ASSET_PREFIX=" >> ios/Flutter/Generated.xcconfig
+          echo "TRACK_WIDGET_CREATION=false" >> ios/Flutter/Generated.xcconfig
+          echo "PACKAGE_CONFIG=.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
+          
+          # Синхронизируем это с основным проектом
+          cp ios/Flutter/Generated.xcconfig ios/Flutter/flutter_export_environment.sh
+          sed -i '' 's/=/: /g' ios/Flutter/flutter_export_environment.sh
           
           cd ios
           rm -rf Pods
