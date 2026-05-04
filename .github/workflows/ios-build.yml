@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-FIX-STABLE
+name: SMART-BODY-LIFE-FINAL-FIX
 
 on:
   workflow_dispatch:
@@ -34,25 +34,24 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ЖЕСТКАЯ ПОДГОТОВКА ПАПОК (УБИРАЕМ NULL CHECK)
+      - name: 6. ПОДГОТОВКА IOS И СВЯЗЕЙ
         run: |
           flutter config --no-analytics
           flutter pub get
           
-          # 1. Создаем структуру папок заранее
-          mkdir -p ios/Flutter
+          # Очищаем старые настройки, которые мешают Котику
+          cd ios
+          rm -rf Flutter/App.framework
+          rm -rf Flutter/Flutter.framework
           
-          # 2. Генерируем конфиги через официальный инструмент
+          # Генерируем новые конфиги
           flutter build ios --config-only --release --no-codesign
           
-          # 3. ПРИНУДИТЕЛЬНО ДОБАВЛЯЕМ ПЕРЕМЕННЫЕ, КОТОРЫЕ ВЫЗЫВАЮТ NULL CHECK
-          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_BUILD_DIR=build" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_ROOT/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
+          # Вписываем жесткие пути для Xcode
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> Flutter/Generated.xcconfig
+          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> Flutter/Generated.xcconfig
+          echo "PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json" >> Flutter/Generated.xcconfig
           
-          cd ios
-          rm -rf Pods
-          rm -f Podfile.lock
           pod install --repo-update
           cd ..
 
@@ -74,7 +73,7 @@ jobs:
           </plist>
           EOF
 
-          # Используем команду без лишних проверок, так как мы всё настроили
+          # Используем команду напрямую через flutter build ipa
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
