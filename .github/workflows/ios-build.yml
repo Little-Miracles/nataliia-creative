@@ -1,53 +1,46 @@
-name: DEEP-SYSTEM-SCAN-2026
+name: SMART-BODY-LIFE-RECONSTRUCTION-TEST
 
 on:
   workflow_dispatch:
 
 jobs:
-  system_audit:
+  build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout Code
+      - name: 1. Checkout (Загрузка кода)
         uses: actions/checkout@v4
 
-      - name: 2. SCANNING ENVIRONMENT (Оборудование и SDK)
+      - name: 2. Смена оборудования (Xcode 26.3)
         run: |
-          echo "=== ОТЧЕТ ПО ОБОРУДОВАНИЮ И СИСТЕМНЫМ ТРЕБОВАНИЯМ ==="
-          
-          echo -e "\n[1. ДОСТУПНЫЕ ВЕРСИИ XCODE И SDK]"
-          ls /Applications/ | grep Xcode
-          xcodebuild -showsdks
-          
-          echo -e "\n[2. ТЕКУЩИЙ СТАТУС FLUTTER И DART]"
-          # Проверяем, что именно сейчас стоит в системе по умолчанию
-          flutter --version
-          
-          echo -e "\n[3. АНАЛИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ]"
-          # Проверяем, не перебивает ли что-то наш SDK
-          echo "FLUTTER_ROOT: $FLUTTER_ROOT"
-          echo "PATH: $PATH"
+          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+          xcodebuild -version
 
-      - name: 3. PROJECT DIAGNOSTICS (Файлы конфигурации)
+      - name: 3. Активация Flutter 3.29.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+
+      - name: 4. Импорт сертификатов (Manual Signing)
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.P12_BASE64 }}
+          p12-password: ${{ secrets.P12_PASSWORD }}
+
+      - name: 5. ПОДГОТОВКА (pub upgrade)
         run: |
-          echo -e "\n[4. ПРОВЕРКА МИНИМАЛЬНЫХ ТРЕБОВАНИЙ В ПРОЕКТЕ]"
-          # Ищем все упоминания версий iOS в проекте
-          grep -rn "IPHONEOS_DEPLOYMENT_TARGET" . --include="*.pbxproj"
-          
-          echo -e "\n[5. АНАЛИЗ КОНФЛИКТОВ В PODFILE]"
-          # Проверяем, какие системные требования зашиты в Podfile
-          grep "platform :ios" ios/Podfile
-          
-          echo -e "\n[6. ПРОВЕРКА ПОДПИСИ И ПРОФИЛЕЙ (MANUAL MODE)]"
-          # Проверяем, как прописан Manual Signing в коде проекта
-          grep -rn "CODE_SIGN_STYLE" . --include="*.pbxproj"
-          grep -rn "ProvisioningStyle" . --include="*.pbxproj"
+          flutter pub upgrade
+          flutter pub get
 
-      - name: 4. SDK COMPATIBILITY CHECK
+      - name: 6. СБОРКА (Тестовый билд)
         run: |
-          echo -e "\n[7. ПРОВЕРКА ВЕРСИЙ ПЛАГИНОВ]"
-          # Выводим версии плагинов, чтобы понять, какой SDK им нужен для работы
-          cat pubspec.lock | grep -A 1 "device_info_plus:"
-          cat pubspec.lock | grep -A 1 "url_launcher:"
-          cat pubspec.lock | grep -A 1 "video_player:"
+          # Собираем как есть, без смены версии в файлах проекта
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-          echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
+      - name: 7. ГЛУБОКАЯ ДИАГНОСТИКА ПЕЧАТЕЙ
+        run: |
+          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
+          echo "=== ПРОВЕРКА ПОДПИСИ ==="
+          codesign --verify --deep --verbose "$APP_PATH"
+          
+          echo -e "\n=== ПРОВЕРКА МАНИФЕСТОВ (Privacy Manifests) ==="
+          find "$APP_PATH/Frameworks" -name "PrivacyInfo.xcprivacy"
