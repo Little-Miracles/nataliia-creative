@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-PRIVACY-FIX
+name: SMART-BODY-LIFE-FINAL-PACKAGE
 
 on:
   workflow_dispatch:
@@ -18,19 +18,24 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. Точечное обновление библиотек из письма Apple
+      - name: 4. Подготовка пропуска (Дубликат профиля)
         run: |
-          # Обновляем только тех, кто в "черном списке" у Apple
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
+
+      - name: 5. Восстановление файла .env из секретов
+        run: |
+          # Мы берем содержимое из вашей "секретки" и записываем в файл .env
+          # Предположим, ваш секрет в GitHub называется ENV_FILE
+          echo "${{ secrets.ENV_FILE }}" > .env
+          echo "Файл .env успешно восстановлен из секретов."
+
+      - name: 6. Обновление библиотек из письма Apple
+        run: |
           flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 5. Сборка архива (без подписи)
+      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА ПОСЫЛКИ
         run: |
-          # Собираем архив, чтобы убедиться, что файлы конфиденциальности подтянулись
-          flutter build ipa --release --no-codesign
-
-      - name: 6. ПРОВЕРКА МАНИФЕСТОВ (Для вашего спокойствия)
-        run: |
-          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
-          echo "=== Список файлов PrivacyInfo, которые теперь увидит Apple ==="
-          find "$APP_PATH" -name "PrivacyInfo.xcprivacy"
+          # Сборка готового файла для Транспортера
+          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
