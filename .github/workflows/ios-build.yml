@@ -1,90 +1,39 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: UPGRADE-COMPATIBILITY-AUDIT
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout code
+      - name: 1. Checkout (Загрузка проекта)
         uses: actions/checkout@v4
 
-      - name: 1.1 Switch to Xcode 26 (iOS 26 SDK)
+      - name: 2. АУДИТ ФАЙЛОВ ДЛЯ ОБНОВЛЕНИЯ
         run: |
-          # Автоматический поиск Xcode 26 на macOS 15
-          XCODE_PATH=$(ls -d /Applications/Xcode_26* 2>/dev/null | head -n 1)
-          if [ -z "$XCODE_PATH" ]; then
-            XCODE_PATH="/Applications/Xcode.app"
+          echo "=== ОТЧЕТ: ЧТО НУЖНО ОТРЕДАКТИРОВАТЬ ДЛЯ НОВОЙ СБОРКИ ==="
+          
+          echo -e "\n[1. ФАЙЛЫ КОНФИГУРАЦИИ (iOS)]"
+          # Проверяем наличие устаревших параметров в файлах проекта
+          grep -rn "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+          
+          echo -e "\n[2. ПРОВЕРКА ВЕРСИЙ ПЛАГИНОВ В PUBSPEC]"
+          # Показываем текущие версии, чтобы понять, насколько сильно их нужно "подтягивать"
+          cat pubspec.yaml | grep -E "device_info_plus|url_launcher|video_player"
+          
+          echo -e "\n[3. АНАЛИЗ PODFILE (Сценарии сборки)]"
+          # Ищем старые скрипты, которые могут помешать автоматике новой сборки
+          if [ -f "ios/Podfile" ]; then
+            cat ios/Podfile
           fi
-          echo "✅ Использую Xcode здесь: $XCODE_PATH"
-          sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-          xcodebuild -version
-
-      - name: 2. Setup Flutter 3.13.9
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.13.9'
-          architecture: arm64
-
-      - name: 3. Create .env
-        run: echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 4. Import Certs
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.P12_BASE64 }}
-          p12-password: ${{ secrets.P12_PASSWORD }}
-
-      - name: 5. Install Provisioning Profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-
-      - name: 6. Fix Project Settings (Universal Search)
-        run: |
-          # Находим файл проекта, даже если пути изменились
-          PBXPROJ_PATH=$(find . -name "project.pbxproj" -print | head -n 1)
-          if [ -n "$PBXPROJ_PATH" ]; then
-            echo "✅ Нашел проект: $PBXPROJ_PATH"
-            sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = PCSW3AKAPF;/g' "$PBXPROJ_PATH"
-          fi
-          flutter clean
-          flutter pub get
-
-      - name: 7. Total SDK Manifest Injection & Final Seal (Build 17)
-        run: |
-          # 1. Основная сборка
-          flutter build ipa --release --export-options-plist=ios/ExportOptions.plist --build-number=18
           
-          # 2. Пути
-          APP_PATH=$(find build/ios/archive -name "*.app" | head -n 1)
-          CERT_ID="B66D675A50697F0A07762DEA2FD5436BCA702AA4"
-          echo "Processing App at: $APP_PATH"
+          echo -e "\n[4. ПРОВЕРКА INFO.PLIST (Требования Apple 2026)]"
+          # Смотрим, какие ключи уже есть, а каких не хватает для новой версии
+          cat ios/Runner/Info.plist
           
-          # 3. Инъекция в фреймворки (как в прошлый раз)
-          SDK_LIST=("Flutter.framework" "device_info_plus.framework" "url_launcher_ios.framework" "video_player_avfoundation.framework")
+          echo -e "\n[5. СКРЫТЫЕ НАСТРОЙКИ FLUTTER]"
+          # Проверяем файлы, которые управляют версией SDK при сборке
+          find ios/Flutter -name "*.xcconfig" -exec echo "--- {} ---" \; -exec cat {} \;
           
-          for sdk in "${SDK_LIST[@]}"; do
-            SDK_FULL_PATH=$(find "$APP_PATH/Frameworks" -name "$sdk" -type d | head -n 1)
-            if [ -n "$SDK_FULL_PATH" ]; then
-              echo "💉 Инъекция в $sdk..."
-              cp ios/Runner/PrivacyInfo.xcprivacy "$SDK_FULL_PATH/PrivacyInfo.xcprivacy"
-              /usr/bin/codesign --force --sign "$CERT_ID" --deep --timestamp=none "$SDK_FULL_PATH"
-            fi
-          done
-          
-          # 4. !!! КРИТИЧЕСКИЙ ШАГ: Переподпись всего приложения Runner !!!
-          # Это восстановит целостность всего пакета после правок в Frameworks
-          echo "🔐 Финальная переподпись всего приложения..."
-          /usr/bin/codesign --force --sign "$CERT_ID" --deep --timestamp=none "$APP_PATH"
-          
-          # 5. Проверка
-          echo "🧐 Итоговая проверка подписи:"
-          /usr/bin/codesign --verify --verbose "$APP_PATH"
-
-      - name: 8. Upload READY IPA
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-READY-IPA
-          path: build/ios/ipa/*.ipa
+          echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
