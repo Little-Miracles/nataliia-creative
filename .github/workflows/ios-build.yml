@@ -34,27 +34,13 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ПОДГОТОВКА СЕРВЕРА (УБИРАЕМ NULL CHECK)
+      - name: 6. ПОДГОТОВКА IOS (БЕЗ СКРИПТОВ)
         run: |
           flutter config --no-analytics
           flutter pub get
           
-          # СОЗДАЕМ КАРТУ ПУТЕЙ ДЛЯ XCODE ВРУЧНУЮ
-          mkdir -p ios/Flutter
-          cat <<EOF > ios/Flutter/Generated.xcconfig
-          FLUTTER_ROOT=$FLUTTER_ROOT
-          FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE
-          FLUTTER_TARGET=lib/main.dart
-          ASSET_PREFIX=
-          FLUTTER_BUILD_NAME=2.0.0
-          FLUTTER_BUILD_NUMBER=2
-          EXCLUDED_ARCHS[sdk=iphonesimulator*]=arm64
-          SERVICE_DEFINITIONS_PACKAGE=
-          PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json
-          EOF
-          
-          # Копируем для экспорта
-          cp ios/Flutter/Generated.xcconfig ios/Flutter/flutter_export_environment.sh
+          # Мы собираем iOS часть отдельно, чтобы фреймворки легли куда надо
+          flutter build ios --release --no-codesign
           
           cd ios
           rm -rf Pods
@@ -80,7 +66,8 @@ jobs:
           </plist>
           EOF
 
-          # Используем команду без повторной проверки конфигов
+          # Используем команду с флагом --no-build-bundle
+          # Это пропустит тот самый ломающийся скрипт, так как мы собрали всё в шаге 6
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
