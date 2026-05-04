@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-TRIUMPH
+name: SMART-BODY-LIFE-TOTAL-STABILIZATION
 
 on:
   workflow_dispatch:
@@ -34,16 +34,19 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 5. ВОССТАНОВЛЕНИЕ СВЯЗЕЙ ПРОЕКТА
+      - name: 5. ПРИНУДИТЕЛЬНАЯ НАСТРОЙКА ПУТЕЙ FLUTTER
         run: |
-          # Сначала стандартная загрузка
+          # Это лечит ошибку 'Null check operator'
+          # Мы берем текущий путь к Flutter и записываем его в настройки проекта
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
+          
           flutter pub get
-          # Генерируем необходимые файлы для iOS, чтобы избежать "Null check operator"
+          # Создаем базовую конфигурацию iOS
           flutter build ios --config-only --release --no-codesign
-          # Обновляем поды
           cd ios && pod install && cd ..
 
-      - name: 6. СОЗДАНИЕ PLIST (По вашему справочнику)
+      - name: 6. СОЗДАНИЕ PLIST (Строго по справочнику)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -67,6 +70,7 @@ jobs:
 
       - name: 7. СБОРКА IPA
         run: |
+          # Команда из вашего официального справочника
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
