@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-PUSH
+name: SMART-BODY-LIFE-FINAL-FIX-STABLE
 
 on:
   workflow_dispatch:
@@ -34,17 +34,21 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ПОДГОТОВКА IOS (БЕЗ ОШИБОК NULL CHECK)
+      - name: 6. ЖЕСТКАЯ ПОДГОТОВКА ПАПОК (УБИРАЕМ NULL CHECK)
         run: |
           flutter config --no-analytics
           flutter pub get
           
-          # Генерируем официальные конфиги Flutter
-          flutter precache --ios
+          # 1. Создаем структуру папок заранее
+          mkdir -p ios/Flutter
+          
+          # 2. Генерируем конфиги через официальный инструмент
           flutter build ios --config-only --release --no-codesign
           
-          # ДОПОЛНИТЕЛЬНАЯ СТРАХОВКА ДЛЯ ПУТЕЙ
-          echo "PACKAGE_CONFIG=.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
+          # 3. ПРИНУДИТЕЛЬНО ДОБАВЛЯЕМ ПЕРЕМЕННЫЕ, КОТОРЫЕ ВЫЗЫВАЮТ NULL CHECK
+          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_BUILD_DIR=build" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_ROOT/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
           
           cd ios
           rm -rf Pods
@@ -70,6 +74,7 @@ jobs:
           </plist>
           EOF
 
+          # Используем команду без лишних проверок, так как мы всё настроили
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
