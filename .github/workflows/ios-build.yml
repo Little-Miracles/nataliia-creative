@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-AUTO-UPDATE
+name: SMART-BODY-LIFE-SYNC-VERSION
 
 on:
   workflow_dispatch:
@@ -18,9 +18,8 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. ОБНОВЛЕНИЕ ИНСТРУМЕНТОВ (Прямо в файле)
+      - name: 4. ОБНОВЛЕНИЕ РЕЦЕПТА (По подсказке Котика)
         run: |
-          # Котик сам переписывает pubspec.yaml под новое оборудование
           cat <<EOF > pubspec.yaml
           name: smart_body_life
           description: A new Flutter project.
@@ -43,7 +42,7 @@ jobs:
             fl_chart: 0.63.0
             add_2_calendar: ^3.0.1
             sqflite: ^2.3.0
-            collection: 1.19.0
+            collection: 1.19.1
             flutter_local_notifications: ^18.0.1
             flutter_dotenv: ^5.1.0
             path_provider: ^2.1.3
@@ -74,7 +73,7 @@ jobs:
               - .env
           EOF
 
-      - name: 5. УСТАНОВКА СЕРТИФИКАТОВ
+      - name: 5. УСТАНОВКА КЛЮЧЕЙ
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -89,9 +88,8 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. НАСТРОЙКА СВЯЗЕЙ ПРОЕКТА
+      - name: 6. СИНХРОНИЗАЦИЯ (flutter pub get)
         run: |
-          # Убираем Null check ошибку
           mkdir -p ios/Flutter
           echo "FLUTTER_ROOT=$FLUTTER_ROOT" > ios/Flutter/Generated.xcconfig
           echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
@@ -99,9 +97,8 @@ jobs:
           flutter pub get
           cd ios && pod install && cd ..
 
-      - name: 7. СБОРКА IPA (По вашему справочнику)
+      - name: 7. СБОРКА IPA
         run: |
-          # Создаем ExportOptions прямо здесь
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
