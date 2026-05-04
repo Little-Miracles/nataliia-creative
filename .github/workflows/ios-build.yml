@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-CODE-FIX
+name: SMART-BODY-LIFE-FINAL-ENVIRONMENT-FIX
 
 on:
   workflow_dispatch:
@@ -18,11 +18,9 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. АВТО-ИСПРАВЛЕНИЕ КОДА ПОД НОВУЮ БИБЛИОТЕКУ
+      - name: 4. АВТО-ИСПРАВЛЕНИЕ КОДА (Health)
         run: |
-          # Заменяем старое название HealthFactory на новое Health в файле экрана
           sed -i '' 's/HealthFactory/Health/g' lib/screens/evolution_session_screen.dart
-          echo "Код исправлен под версию Health 10.x"
 
       - name: 5. КЛЮЧИ И ENV
         run: |
@@ -36,11 +34,17 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. УСТАНОВКА БИБЛИОТЕК
+      - name: 6. ПОЛНАЯ НАСТРОЙКА ОКРУЖЕНИЯ
         run: |
-          flutter clean
+          # Это лечит ошибку Null check в xcode_backend.dart
+          flutter config --no-analytics
           flutter pub get
+          
+          # Явно прописываем пути для Xcode
           cd ios
+          echo "FLUTTER_ROOT=$FLUTTER_ROOT" > Flutter/Generated.xcconfig
+          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> Flutter/Generated.xcconfig
+          
           rm -rf Pods
           rm -f Podfile.lock
           pod install --repo-update
@@ -64,6 +68,7 @@ jobs:
           </plist>
           EOF
 
+          # Добавляем флаг --verbose чтобы видеть детали, если упадет
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
