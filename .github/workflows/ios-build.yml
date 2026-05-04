@@ -18,36 +18,44 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. СОЗДАНИЕ КОНФИГУРАЦИЙ ИЗ ВАШИХ СЕКРЕТОВ
+      - name: 4. ПОДГОТОВКА ПРОФИЛЯ ИЗ СЕКРЕТОВ
         run: |
-          # 1. Создаем папку для профиля
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          
-          # 2. Берем профиль из вашего секрета PROVISIONING_PROFILE_BASE64
-          # и превращаем его в правильный файл f2e7364b...
+          # Декодируем ваш PROVISIONING_PROFILE_BASE64 в правильный файл
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
-          # 3. Создаем .env из вашего секрета ENV_FILE
           echo "${{ secrets.ENV_FILE }}" > .env
-          
-          echo "Все файлы успешно извлечены из вашей секретки."
 
       - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК
         run: |
           flutter pub upgrade
           flutter pub get
 
-      - name: 6. НАСТРОЙКА Xcode (РУЧНОЙ РЕЖИМ)
+      - name: 6. СОЗДАНИЕ ПРАВИЛЬНОГО PLIST (По справочнику)
         run: |
-          # Принудительно отключаем автоматику и прописываем ваш UUID
-          sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' "s/DEVELOPMENT_TEAM = \".*\";/DEVELOPMENT_TEAM = \"PCSW3AKAPF\";/g" ios/Runner.xcodeproj/project.pbxproj
+          # Мы создаем файл ExportOptions.plist, на который ссылается справка Flutter
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key>
+            <string>manual</string>
+          </dict>
+          </plist>
+          EOF
 
-      - name: 7. СБОРКА IPA ДЛЯ ТРАНСПОРТЕРА
+      - name: 7. СБОРКА IPA (По официальной команде)
         run: |
+          # Используем флаги ТОЛЬКО из вашего справочника
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --provisioning-profile=f2e7364b-98c7-44ad-a0dc-84acd2d0fd80
+            --dart-define-from-file=.env
