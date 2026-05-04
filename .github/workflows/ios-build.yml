@@ -20,29 +20,28 @@ jobs:
 
       - name: 4. УСТАНОВКА СЕРТИФИКАТА И ПРОФИЛЯ
         run: |
-          # 1. Создаем временную связку ключей (Keychain)
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security set-keychain-settings -t 3600 -u build.keychain
 
-          # 2. Импортируем сертификат из секрета P12_BASE64
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
 
-          # 3. Устанавливаем профиль
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           
-          # 4. Создаем .env
           echo "${{ secrets.ENV_FILE }}" > .env
-          echo "Сертификат и профиль установлены."
 
-      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК
+      - name: 5. ГЛУБОКАЯ ОЧИСТКА ОТ WINDOWS-БИБЛИОТЕК
         run: |
-          flutter pub upgrade
+          # Удаляем мусор, который мешает iOS-сборке
+          flutter clean
+          # Принудительно загружаем только то, что нужно для проекта
           flutter pub get
+          # Генерируем файлы для iOS заново, чтобы выкинуть win32
+          cd ios && pod install --repo-update && cd ..
 
       - name: 6. СОЗДАНИЕ PLIST (По вашему справочнику)
         run: |
@@ -68,7 +67,6 @@ jobs:
 
       - name: 7. СБОРКА IPA
         run: |
-          # Официальная команда из справочника Flutter
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
