@@ -1,39 +1,53 @@
-name: UPGRADE-COMPATIBILITY-AUDIT
+name: DEEP-SYSTEM-SCAN-2026
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  system_audit:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout (Загрузка проекта)
+      - name: 1. Checkout Code
         uses: actions/checkout@v4
 
-      - name: 2. АУДИТ ФАЙЛОВ ДЛЯ ОБНОВЛЕНИЯ
+      - name: 2. SCANNING ENVIRONMENT (Оборудование и SDK)
         run: |
-          echo "=== ОТЧЕТ: ЧТО НУЖНО ОТРЕДАКТИРОВАТЬ ДЛЯ НОВОЙ СБОРКИ ==="
+          echo "=== ОТЧЕТ ПО ОБОРУДОВАНИЮ И СИСТЕМНЫМ ТРЕБОВАНИЯМ ==="
           
-          echo -e "\n[1. ФАЙЛЫ КОНФИГУРАЦИИ (iOS)]"
-          # Проверяем наличие устаревших параметров в файлах проекта
-          grep -rn "IPHONEOS_DEPLOYMENT_TARGET" ios/Runner.xcodeproj/project.pbxproj
+          echo -e "\n[1. ДОСТУПНЫЕ ВЕРСИИ XCODE И SDK]"
+          ls /Applications/ | grep Xcode
+          xcodebuild -showsdks
           
-          echo -e "\n[2. ПРОВЕРКА ВЕРСИЙ ПЛАГИНОВ В PUBSPEC]"
-          # Показываем текущие версии, чтобы понять, насколько сильно их нужно "подтягивать"
-          cat pubspec.yaml | grep -E "device_info_plus|url_launcher|video_player"
+          echo -e "\n[2. ТЕКУЩИЙ СТАТУС FLUTTER И DART]"
+          # Проверяем, что именно сейчас стоит в системе по умолчанию
+          flutter --version
           
-          echo -e "\n[3. АНАЛИЗ PODFILE (Сценарии сборки)]"
-          # Ищем старые скрипты, которые могут помешать автоматике новой сборки
-          if [ -f "ios/Podfile" ]; then
-            cat ios/Podfile
-          fi
+          echo -e "\n[3. АНАЛИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ]"
+          # Проверяем, не перебивает ли что-то наш SDK
+          echo "FLUTTER_ROOT: $FLUTTER_ROOT"
+          echo "PATH: $PATH"
+
+      - name: 3. PROJECT DIAGNOSTICS (Файлы конфигурации)
+        run: |
+          echo -e "\n[4. ПРОВЕРКА МИНИМАЛЬНЫХ ТРЕБОВАНИЙ В ПРОЕКТЕ]"
+          # Ищем все упоминания версий iOS в проекте
+          grep -rn "IPHONEOS_DEPLOYMENT_TARGET" . --include="*.pbxproj"
           
-          echo -e "\n[4. ПРОВЕРКА INFO.PLIST (Требования Apple 2026)]"
-          # Смотрим, какие ключи уже есть, а каких не хватает для новой версии
-          cat ios/Runner/Info.plist
+          echo -e "\n[5. АНАЛИЗ КОНФЛИКТОВ В PODFILE]"
+          # Проверяем, какие системные требования зашиты в Podfile
+          grep "platform :ios" ios/Podfile
           
-          echo -e "\n[5. СКРЫТЫЕ НАСТРОЙКИ FLUTTER]"
-          # Проверяем файлы, которые управляют версией SDK при сборке
-          find ios/Flutter -name "*.xcconfig" -exec echo "--- {} ---" \; -exec cat {} \;
-          
+          echo -e "\n[6. ПРОВЕРКА ПОДПИСИ И ПРОФИЛЕЙ (MANUAL MODE)]"
+          # Проверяем, как прописан Manual Signing в коде проекта
+          grep -rn "CODE_SIGN_STYLE" . --include="*.pbxproj"
+          grep -rn "ProvisioningStyle" . --include="*.pbxproj"
+
+      - name: 4. SDK COMPATIBILITY CHECK
+        run: |
+          echo -e "\n[7. ПРОВЕРКА ВЕРСИЙ ПЛАГИНОВ]"
+          # Выводим версии плагинов, чтобы понять, какой SDK им нужен для работы
+          cat pubspec.lock | grep -A 1 "device_info_plus:"
+          cat pubspec.lock | grep -A 1 "url_launcher:"
+          cat pubspec.lock | grep -A 1 "video_player:"
+
           echo -e "\n=== АУДИТ ЗАВЕРШЕН ==="
