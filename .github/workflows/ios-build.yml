@@ -31,14 +31,21 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
 
-      - name: 5. УСТАНОВКА БИБЛИОТЕК
+      - name: 5. УСТАНОВКА БИБЛИОТЕК (ОЧИСТКА И ОБНОВЛЕНИЕ)
         run: |
+          # Полная очистка, чтобы выкинуть остатки win32
+          flutter clean
           flutter pub get
-          cd ios && pod install && cd ..
+          
+          # Пересобираем зависимости для iOS
+          cd ios
+          rm -rf Pods
+          rm -f Podfile.lock
+          pod install --repo-update
+          cd ..
 
       - name: 6. СБОРКА IPA
         run: |
-          # Создаем ExportOptions.plist для Apple
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
