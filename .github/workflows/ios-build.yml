@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-VICTORY
+name: SMART-BODY-LIFE-FLOW-BUILD
 
 on:
   workflow_dispatch:
@@ -7,22 +7,15 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. ЗАГРУЗКА КОДА
+      - name: 1. ПОДГОТОВКА ИСХОДНИКОВ
         uses: actions/checkout@v4
 
-      - name: 2. Xcode 26.3
-        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-
-      - name: 3. FLUTTER 3.29.0
+      - name: 2. НАСТРОЙКА ИНСТРУМЕНТОВ
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. ИСПРАВЛЕНИЕ КОДА (Health)
-        run: |
-          sed -i '' 's/HealthFactory/Health/g' lib/screens/evolution_session_screen.dart
-
-      - name: 5. КЛЮЧИ И ENV
+      - name: 3. ПОДГОТОВКА СЕРТИФИКАТОВ И ENV
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -34,25 +27,23 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 6. ХИРУРГИЧЕСКОЕ ОТКЛЮЧЕНИЕ ОШИБОК
+      - name: 4. СОЗДАНИЕ "ТЕЛЕГРАММЫ" С АДРЕСОМ (Устраняем разрыв)
         run: |
           flutter pub get
+          # Генерируем базовые настройки
           flutter build ios --config-only --release --no-codesign
           
-          # УДАЛЯЕМ СКРИПТ "THIN BINARY", КОТОРЫЙ ВЫЗЫВАЕТ NULL CHECK
-          # Мы просто заменяем его вызов на пустую команду
-          sed -i '' 's/.*xcode_backend.dart.*thin.*/exit 0/g' ios/Runner.xcodeproj/project.pbxproj
-          
-          # Добавляем принудительные пути
-          mkdir -p ios/Flutter
+          # Явно прописываем адрес папки с библиотеками в "записную книжку"
+          # Это то самое извещение, которое Flutter теряет в облаке
           echo "PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
           
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 7. СБОРКА И ЭКСПОРТ (ПРЯМОЙ ВЫЗОВ)
+      - name: 5. ЕСТЕСТВЕННАЯ СБОРКА IPA
         run: |
+          # Создаем инструкции для упаковки
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -69,23 +60,14 @@ jobs:
           </plist>
           EOF
 
-          # Собираем архив напрямую
-          xcodebuild -workspace ios/Runner.xcworkspace \
-                     -scheme Runner \
-                     -configuration Release \
-                     -archivePath build/Runner.xcarchive \
-                     archive
-          
-          # Экспортируем в IPA
-          xcodebuild -exportArchive \
-                     -archivePath build/Runner.xcarchive \
-                     -exportOptionsPlist ios/ExportOptions.plist \
-                     -exportPath build/ipa
+          # Собираем приложение стандартным путем
+          # Теперь оно пройдет гладко, так как адрес папки известен
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env
 
-      - name: 8. ЗАГРУЗКА РЕЗУЛЬТАТА
+      - name: 6. ПОЛУЧЕНИЕ ГОТОВОГО ФАЙЛА
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
-          path: |
-            build/ipa/*.ipa
-            build/Runner.xcarchive
+          path: build/ios/ipa/*.ipa
