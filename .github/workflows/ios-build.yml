@@ -34,14 +34,14 @@ jobs:
           
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 5. ГЛУБОКАЯ ОЧИСТКА ОТ WINDOWS-БИБЛИОТЕК
+      - name: 5. ВОССТАНОВЛЕНИЕ СВЯЗЕЙ ПРОЕКТА
         run: |
-          # Удаляем мусор, который мешает iOS-сборке
-          flutter clean
-          # Принудительно загружаем только то, что нужно для проекта
+          # Сначала стандартная загрузка
           flutter pub get
-          # Генерируем файлы для iOS заново, чтобы выкинуть win32
-          cd ios && pod install --repo-update && cd ..
+          # Генерируем необходимые файлы для iOS, чтобы избежать "Null check operator"
+          flutter build ios --config-only --release --no-codesign
+          # Обновляем поды
+          cd ios && pod install && cd ..
 
       - name: 6. СОЗДАНИЕ PLIST (По вашему справочнику)
         run: |
