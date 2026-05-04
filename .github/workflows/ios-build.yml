@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-DIRECT-BUILD
+name: SMART-BODY-LIFE-FINAL-STABLE-BUILD
 
 on:
   workflow_dispatch:
@@ -10,17 +10,15 @@ jobs:
       - name: 1. ЗАГРУЗКА КОДА
         uses: actions/checkout@v4
 
-      - name: 2. ПОДГОТОВКА СРЕДЫ (Xcode & Flutter)
-        run: |
-          sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
-          echo "${{ secrets.ENV_FILE }}" > .env
+      - name: 2. ПОДГОТОВКА Xcode 26.3
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
-      - name: 3. УСТАНОВКА FLUTTER
+      - name: 3. УСТАНОВКА FLUTTER 3.29.0
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. КЛЮЧИ И СЕРТИФИКАТЫ
+      - name: 4. УСТАНОВКА КЛЮЧЕЙ И ENV
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -30,14 +28,16 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 5. УСТАНОВКА БИБЛИОТЕК (ОЧИСТКА И ОБНОВЛЕНИЕ)
+      - name: 5. АВТОПОДБОР И УСТАНОВКА БИБЛИОТЕК
         run: |
-          # Полная очистка, чтобы выкинуть остатки win32
+          # Котик сам чистит мусор и ищет совместимые версии
           flutter clean
+          flutter pub upgrade
           flutter pub get
           
-          # Пересобираем зависимости для iOS
+          # Настройка iOS части
           cd ios
           rm -rf Pods
           rm -f Podfile.lock
@@ -46,6 +46,7 @@ jobs:
 
       - name: 6. СБОРКА IPA
         run: |
+          # Создаем файл настроек экспорта для Apple
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -62,6 +63,7 @@ jobs:
           </plist>
           EOF
 
+          # Финальная команда сборки
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
