@@ -28,19 +28,19 @@ jobs:
 
       - name: 5. Настройка системной среды (Manual Signing)
         run: |
-          # 1. Создаем папку и кладем туда профиль под его UUID
+          # 1. Создаем папку и кладем туда профиль под его цифровым именем UUID
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           find . -name "SMART_DISTRIBUTION_3.mobileprovision" -exec cp {} ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision \;
 
-          # 2. МЯГКОЕ ПЕРЕКЛЮЧЕНИЕ: Говорим проекту использовать Ручной стиль и наш UUID
-          # Мы заменяем Automatic на Manual прямо в файле проекта
+          # 2. ПЕРЕКЛЮЧЕНИЕ: Запрещаем автоматическую подпись в файле проекта[cite: 7, 8]
+          # Находим настройки стиля и принудительно ставим Manual
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           
-          # Указываем, какой именно UUID использовать для сборки[cite: 7]
+          # 3. ПРИВЯЗКА: Указываем Xcode использовать именно наш UUID и имя профиля[cite: 7]
           find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" {} +
           find . -name "project.pbxproj" -exec sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" {} +
           
-          echo "Стиль подписи переключен на Manual, профиль привязан."
+          echo "Режим Manual активирован. Профиль SMART_DISTRIBUTION привязан к проекту."
 
       - name: 6. Обновление плагинов (pub upgrade)
         run: |
