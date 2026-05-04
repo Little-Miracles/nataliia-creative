@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-PACKAGE
+name: SMART-BODY-LIFE-FINAL-TRIUMPH
 
 on:
   workflow_dispatch:
@@ -18,42 +18,36 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. ВОССТАНОВЛЕНИЕ .env ИЗ СЕКРЕТОВ
+      - name: 4. СОЗДАНИЕ КОНФИГУРАЦИЙ ИЗ ВАШИХ СЕКРЕТОВ
         run: |
+          # 1. Создаем папку для профиля
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          
+          # 2. Берем профиль из вашего секрета PROVISIONING_PROFILE_BASE64
+          # и превращаем его в правильный файл f2e7364b...
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          
+          # 3. Создаем .env из вашего секрета ENV_FILE
           echo "${{ secrets.ENV_FILE }}" > .env
-          echo "Файл .env готов."
+          
+          echo "Все файлы успешно извлечены из вашей секретки."
 
-      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК (Для Apple)
+      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК
         run: |
-          flutter pub upgrade device_info_plus url_launcher video_player
+          flutter pub upgrade
           flutter pub get
 
-      - name: 6. УСТАНОВКА ПРОФИЛЯ И БЛОКИРОВКА АВТОМАТИКИ
+      - name: 6. НАСТРОЙКА Xcode (РУЧНОЙ РЕЖИМ)
         run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          PROFILE_PATH=$(find . -name "SMART_DISTRIBUTION_3.mobileprovision" | head -n 1)
-          
-          # Копируем профиль в системную папку
-          cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
-          # ПРИНУДИТЕЛЬНО ПЕРЕПИСЫВАЕМ ФАЙЛ ПРОЕКТА (удаляем любые следы автоматики)
+          # Принудительно отключаем автоматику и прописываем ваш UUID
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
           sed -i '' "s/DEVELOPMENT_TEAM = \".*\";/DEVELOPMENT_TEAM = \"PCSW3AKAPF\";/g" ios/Runner.xcodeproj/project.pbxproj
 
-      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА
+      - name: 7. СБОРКА IPA ДЛЯ ТРАНСПОРТЕРА
         run: |
-          # Собираем архив БЕЗ автоматического подписания на этапе Flutter
-          # Мы берем управление на себя через export-options-plist
-          flutter build ipa --release --no-codesign --dart-define-from-file=.env
-          
-          # Теперь запускаем упаковку (архивацию) через сам Xcode, где наши настройки уже применены
-          xcodebuild -workspace ios/Runner.xcworkspace \
-                     -scheme Runner \
-                     -sdk iphoneos \
-                     -configuration Release \
-                     -archivePath build/ios/archive/Runner.xcarchive \
-                     archive \
-                     PROVISIONING_PROFILE="f2e7364b-98c7-44ad-a0dc-84acd2d0fd80" \
-                     AD_HOC_CODE_SIGNING_ALLOWED=YES
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --provisioning-profile=f2e7364b-98c7-44ad-a0dc-84acd2d0fd80
