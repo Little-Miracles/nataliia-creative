@@ -7,61 +7,58 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. ЗАГРУЗКА КОДА ИЗ РЕПОЗИТОРИЯ
+      - name: 1. ЗАГРУЗКА КОДА
         uses: actions/checkout@v4
 
-      - name: 2. УСТАНОВКА ИНСТРУМЕНТОВ (Xcode 26.3)
+      - name: 2. УСТАНОВКА Xcode 26.3
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
 
-      - name: 3. УСТАНОВКА FLUTTER 3.29.0 (Для манифестов Apple)
+      - name: 3. УСТАНОВКА FLUTTER 3.29.0
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 4. ВОССТАНОВЛЕНИЕ СЕКРЕТОВ (.env)
+      - name: 4. ВОССТАНОВЛЕНИЕ .env ИЗ СЕКРЕТОВ
         run: |
-          # Берем ключи из вашей "секретки" GitHub и создаем файл .env
           echo "${{ secrets.ENV_FILE }}" > .env
-          echo "Файл .env успешно создан из секретов."
+          echo "Файл .env готов."
 
-      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК (Решение из письма Apple)
+      - name: 5. ОБНОВЛЕНИЕ БИБЛИОТЕК (Для Apple)
         run: |
-          # Обновляем только те SDK, которые требовал Apple в письме
           flutter pub upgrade device_info_plus url_launcher video_player
           flutter pub get
 
-      - name: 6. РЕЖИМ РАЗВЕДКИ (Где лежат файлы?)
+      - name: 6. УСТАНОВКА ПРОФИЛЯ В СИСТЕМУ
         run: |
-          echo "=== ПРОВЕРКА НАЛИЧИЯ ПРОФИЛЯ В ПРОЕКТЕ ==="
-          find . -name "*.mobileprovision"
-          
-          echo -e "\n=== ПРОВЕРКА ФАЙЛА .env ==="
-          ls -la .env || echo "Файл .env не найден!"
-
-      - name: 7. ПОДГОТОВКА ПРОФИЛЯ И ПРАВКА ПРОЕКТА
-        run: |
-          # Создаем системную папку, куда Xcode просит "перетянуть" профиль
+          # Создаем системную папку
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           
-          # Находим ваш профиль и кладем его в систему под именем-UUID
+          # Ищем ваш загруженный файл (уже без .rtf)
           PROFILE_PATH=$(find . -name "SMART_DISTRIBUTION_3.mobileprovision" | head -n 1)
           
           if [ -z "$PROFILE_PATH" ]; then
-            echo "ОШИБКА: Файл профиля не найден в репозитории. Проверьте, загружен ли он в Git."
+            echo "ОШИБКА: Файл SMART_DISTRIBUTION_3.mobileprovision не найден в репозитории!"
             exit 1
           fi
           
+          # Копируем его в систему под его настоящим "паспортным" именем
           cp "$PROFILE_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           
-          # Отключаем "автоматику" в Xcode и принудительно ставим наш профиль
+          # ПРИНУДИТЕЛЬНО ПРАВИМ НАСТРОЙКИ ПРОЕКТА
+          # 1. Отключаем автоматический стиль
           sed -i '' 's/ProvisioningStyle = Automatic;/ProvisioningStyle = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          
+          # 2. Прописываем имя профиля
           sed -i '' "s/PROVISIONING_PROFILE_SPECIFIER = \".*\";/PROVISIONING_PROFILE_SPECIFIER = \"SMART_DISTRIBUTION\";/g" ios/Runner.xcodeproj/project.pbxproj
           
-          echo "Проект переведен в ручной режим, профиль установлен."
+          # 3. Добавляем UUID профиля (самое важное!)
+          sed -i '' "s/PROVISIONING_PROFILE = \".*\";/PROVISIONING_PROFILE = \"f2e7364b-98c7-44ad-a0dc-84acd2d0fd80\";/g" ios/Runner.xcodeproj/project.pbxproj
+          
+          echo "Настройки Xcode обновлены, профиль установлен."
 
-      - name: 8. ОКОНЧАТЕЛЬНАЯ СБОРКА (IPA ДЛЯ ТРАНСПОРТЕРА)
+      - name: 7. ОКОНЧАТЕЛЬНАЯ СБОРКА
         run: |
-          # Собираем финальный упакованный файл
+          # Собираем IPA, используя .env и настройки экспорта
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
