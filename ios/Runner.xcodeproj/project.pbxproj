@@ -432,6 +432,8 @@
 			baseConfigurationReference = F8EDCE94D119C79FBA54E105 /* Pods-Runner.profile.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+                FLUTTER_FRAMEWORK_DIR = "$(inherited)";
+				FLUTTER_ROOT = "..";
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
@@ -630,6 +632,8 @@
 			baseConfigurationReference = B2AF6D71968E85AF79984694 /* Pods-Runner.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+                FLUTTER_FRAMEWORK_DIR = "$(inherited)";
+				FLUTTER_ROOT = "..";
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CURRENT_PROJECT_VERSION = 18;
@@ -660,6 +664,8 @@
 			baseConfigurationReference = 65D428FDE1C6F856C04293A5 /* Pods-Runner.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+                FLUTTER_FRAMEWORK_DIR = "$(inherited)";
+				FLUTTER_ROOT = "..";
 				CLANG_ENABLE_MODULES = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
