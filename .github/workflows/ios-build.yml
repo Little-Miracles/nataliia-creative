@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-STABILITY
+name: SMART-BODY-LIFE-TOTAL-TRIUMPH
 
 on:
   workflow_dispatch:
@@ -7,15 +7,15 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. ПОДГОТОВКА ИСХОДНИКОВ
+      - name: 1. Получение исправленного чертежа
         uses: actions/checkout@v4
 
-      - name: 2. НАСТРОЙКА FLUTTER (3.29.0)
+      - name: 2. Подготовка инструментов (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. СЕРТИФИКАТЫ
+      - name: 3. Установка сертификатов и секретов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,26 +27,14 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ЛЕЧЕНИЕ "ПУСТОТЫ" (Sed Injection)
+      - name: 4. Установка библиотек (Связывание реальности)
         run: |
           flutter pub get
-          
-          # Генерируем базовый конфиг
-          flutter build ios --config-only --release --no-codesign
-          
-          # ПРИНУДИТЕЛЬНО прописываем пути в Generated.xcconfig
-          echo "FLUTTER_FRAMEWORK_DIR=$GITHUB_WORKSPACE/ios/Flutter" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
-          
-          # Магия: исправляем проект Xcode, чтобы он знал, где лежат инструменты Flutter
-          # Это удаляет ту самую причину Null Check
-          sed -i '' 's|$(inherited)|$GITHUB_WORKSPACE/ios/Flutter $(inherited)|g' ios/Runner.xcodeproj/project.pbxproj
-          
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA
+      - name: 5. Бесшовная сборка IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -64,11 +52,12 @@ jobs:
           </plist>
           EOF
 
+          # Теперь Flutter увидит ваши правки в project.pbxproj и пойдет по верному пути
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
 
-      - name: 6. ЗАГРУЗКА
+      - name: 6. Получение результата (Свобода)
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
