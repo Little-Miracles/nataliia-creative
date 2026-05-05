@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FLOW-BUILD
+name: SMART-BODY-LIFE-TOTAL-STABILITY
 
 on:
   workflow_dispatch:
@@ -27,27 +27,29 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ФИНАЛЬНАЯ НАСТРОЙКА "ОСТРОВКА"
+      - name: 4. СОЗДАНИЕ ОСТРОВКА СТАБИЛЬНОСТИ (Устранение Null Check)
         run: |
           flutter pub get
           
-          # Генерируем базовые настройки
+          # Генерируем конфиги
           flutter build ios --config-only --release --no-codesign
           
-          # Усиленная "телеграмма": прописываем все пути к библиотекам и фреймворку
-          echo "PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_FRAMEWORK_DIR=$GITHUB_WORKSPACE/ios/Flutter" >> ios/Flutter/Generated.xcconfig
+          # ПРИНУДИТЕЛЬНОЕ ЗАПОЛНЕНИЕ ПУСТОТЫ
+          # Создаем папки, которые ищет скрипт xcode_backend
+          mkdir -p ios/Flutter/App.framework
           
-          # Исправляем путь в самом проекте Xcode, чтобы он не искал в пустоте
-          sed -i '' "s|FLUTTER_APPLICATION_PATH = .*|FLUTTER_APPLICATION_PATH = $GITHUB_WORKSPACE|g" ios/Runner.xcodeproj/project.pbxproj
+          # Явно прописываем адреса в "записную книжку"
+          echo "PACKAGE_CONFIG=$GITHUB_WORKSPACE/.dart_tool/package_config.json" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_TARGET=lib/main.dart" >> ios/Flutter/Generated.xcconfig
+          echo "ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon" >> ios/Flutter/Generated.xcconfig
           
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 5. ЕСТЕСТВЕННАЯ СБОРКА IPA
+      - name: 5. СБОРКА IPA
         run: |
-          # Создаем инструкции для упаковки
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -64,13 +66,11 @@ jobs:
           </plist>
           EOF
 
-          # Собираем приложение стандартным путем
-          # Теперь оно пройдет гладко, так как адрес папки известен
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
 
-      - name: 6. ПОЛУЧЕНИЕ ГОТОВОГО ФАЙЛА
+      - name: 6. ПОЛУЧЕНИЕ IPA
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
