@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-TRIUMPH
+name: SMART-BODY-LIFE-TOTAL-OVERRIDE
 
 on:
   workflow_dispatch:
@@ -7,15 +7,15 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. ПОДГОТОВКА (Чистый лист)
+      - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. НАСТРОЙКА FLUTTER (3.29.0)
+      - name: 2. Настройка Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. СЕРТИФИКАТЫ И СЕКРЕТЫ
+      - name: 3. Подготовка сертификатов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,15 +27,16 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. СВЯЗКА ПУТЕЙ (Generated.xcconfig)
+      - name: 4. Очистка и подготовка зависимостей
         run: |
           flutter pub get
-          # Мы заставляем Flutter ПЕРЕСОЗДАТЬ файлы конфигурации под текущий сервер
-          flutter build ios --config-only --release --no-codesign
-          cd ios && pod install --repo-update && cd ..
+          cd ios
+          pod install --repo-update
+          cd ..
 
-      - name: 5. СБОРКА IPA (С принудительным FLUTTER_ROOT)
+      - name: 5. Сборка с игнорированием ошибок файла (The Override)
         run: |
+          # Создаем файл настроек экспорта
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -52,16 +53,18 @@ jobs:
           </plist>
           EOF
 
-          # СЕКРЕТНЫЙ ИНГРЕДИЕНТ: 
-          # Мы берем путь к flutter из системы и СИЛОЙ передаем его в Xcode.
-          # Это гарантирует, что $FLUTTER_ROOT внутри Xcode не будет NULL.
-          export FLUTTER_ROOT=$(which flutter | sed 's|/bin/flutter||')
+          # ВОТ ОНО: Прямое указание путей, чтобы Xcode не смотрел в project.pbxproj
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          export FLUTTER_APPLICATION_PATH=$GITHUB_WORKSPACE
+          export FLUTTER_TARGET=lib/main.dart
           
+          # Запускаем сборку, принудительно пробрасывая переменные внутрь Xcode
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env
+            --dart-define-from-file=.env \
+            --build-number=$GITHUB_RUN_NUMBER
 
-      - name: 6. ЗАГРУЗКА РЕЗУЛЬТАТА
+      - name: 6. Выгрузка готового IPA
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
