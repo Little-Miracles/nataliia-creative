@@ -59,7 +59,7 @@ class _EvolutionSessionScreenState extends State<EvolutionSessionScreen> {
     final types = [HealthDataType.STEPS];
     
     // Обновляем название доступа на актуальное
-    final permissions = [HealthDataAccess.READ_ONLY];
+    final permissions = [HealthDataAccess.READ];
     try {
       bool requested = await health.requestAuthorization(types, permissions: permissions);
       if (requested) {
