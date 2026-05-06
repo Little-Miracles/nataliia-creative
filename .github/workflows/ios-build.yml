@@ -3,11 +3,6 @@ name: SMART-BODY-LIFE-TOTAL-SUCCESS
 on:
   workflow_dispatch:
 
-# МЫ ПРОПИСЫВАЕМ ЭТИ ПУТИ ЗДЕСЬ, ЧТОБЫ СКРИПТЫ FLUTTER ИХ ВИДЕЛИ ВСЕГДА
-env:
-  FLUTTER_ROOT: /Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64
-  FLUTTER_BUILD_MODE: release
-
 jobs:
   build:
     runs-on: macos-15
@@ -32,16 +27,29 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка зависимостей
+      - name: 4. Прямая настройка окружения
         run: |
+          # Мы берем реальный путь из системы, а не из головы
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          
+          # Заставляем Flutter пересоздать технические файлы под текущую систему
+          flutter precache --ios
           flutter pub get
+          
+          # Явно прописываем переменные, которые теряет Xcode
+          echo "FLUTTER_ROOT=$FLUTTER_HOME" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
+          echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
+          
+          # Создаем файл режима сборки
+          echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
+
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 5. Сборка IPA
+      - name: 5. Сборка IPA (с принудительными параметрами)
         run: |
-          # Создаем ExportOptions.plist
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -58,12 +66,13 @@ jobs:
           </plist>
           EOF
 
-          # Запуск сборки с явным указанием версии
+          # Собираем, передавая билд-номер прямо в команду
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
-            --build-number=18
+            --build-number=18 \
+            --vv
 
       - name: 6. Сохранение результата
         if: success()
