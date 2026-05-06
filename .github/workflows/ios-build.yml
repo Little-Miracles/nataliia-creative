@@ -1,21 +1,26 @@
-name: SMART-BODY-LIFE-FINAL-STEP
+name: SMART-BODY-LIFE-TOTAL-SUCCESS
 
 on:
   workflow_dispatch:
+
+# МЫ ПРОПИСЫВАЕМ ЭТИ ПУТИ ЗДЕСЬ, ЧТОБЫ СКРИПТЫ FLUTTER ИХ ВИДЕЛИ ВСЕГДА
+env:
+  FLUTTER_ROOT: /Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64
+  FLUTTER_BUILD_MODE: release
 
 jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout
+      - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Setup Flutter
+      - name: 2. Настройка Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Certificates & Secrets
+      - name: 3. Подготовка сертификатов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,18 +32,17 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Dependencies
+      - name: 4. Подготовка зависимостей
         run: |
-          # Убираем создание файлов здесь, так как они уже есть в папке ios/Flutter
           flutter pub get
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 5. Build IPA
+      - name: 5. Сборка IPA
         run: |
-          # Создаем только ExportOptions, так как это секретный файл сборки
-          cat <<EOF> ios/ExportOptions.plist
+          # Создаем ExportOptions.plist
+          cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
           <dict>
@@ -54,11 +58,14 @@ jobs:
           </plist>
           EOF
 
+          # Запуск сборки с явным указанием версии
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18
 
-      - name: 6. Upload IPA
+      - name: 6. Сохранение результата
         if: success()
         uses: actions/upload-artifact@v4
         with:
