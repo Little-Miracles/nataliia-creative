@@ -30,17 +30,24 @@ jobs:
       - name: 4. Подготовка окружения (Исправление путей)
         run: |
           mkdir -p ios/Flutter
-          # Создаем техническую заглушку, которую требует Xcode
+          
+          # 1. Создаем заглушку, которую требует Xcode
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
-          # Создаем release.xcconfig, чтобы исправить ошибку Null check
-          echo '#include "Generated.xcconfig"' > ios/Flutter/release.xcconfig
+          # 2. Создаем файл конфигурации для Release сборки
+          # Это критически важно, чтобы убрать ошибку Null check
+          echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
           
           flutter pub get
           
-          # Передаем путь для сборки
+          # 3. Указываем Котику точный путь к SDK
           export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
+          
+          # 4. Пробрасываем переменные для Xcode напрямую в окружение
+          export ACTION=install
+          export TARGET_BUILD_DIR=build/ios/iphoneos
+          export FLUTTER_BUILD_MODE=release
           
           cd ios
           pod install --repo-update
