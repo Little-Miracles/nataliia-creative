@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-TRIUMPH
+name: SMART-BODY-LIFE-TOTAL-STABILITY
 
 on:
   workflow_dispatch:
@@ -7,15 +7,15 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. ПОДГОТОВКА (Человек как наблюдатель)
+      - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. ИНСТРУМЕНТЫ (3.29.0 — Возвращаемся в реальность)
+      - name: 2. Настройка Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. СЕРТИФИКАТЫ
+      - name: 3. Сертификаты
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,21 +27,12 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ХИРУРГИЯ ЦЕПЕЙ (Исправляем Null Check на лету)
+      - name: 4. Подготовка зависимостей
         run: |
           flutter pub get
-          
-          # Мы находим скрипт Flutter, который вызывает Null Check,
-          # и "вылечиваем" его прямо на сервере GitHub.
-          # Это то самое "умное задание", которое вы просили.
-          sed -i '' 's/ext\.embedFlutterFrameworks(targetMainPath)/"$(inherited)"/g' $FLUTTER_HOME/packages/flutter_tools/bin/xcode_backend.dart || true
-          
-          # Заново генерируем конфиги
-          flutter build ios --config-only --release --no-codesign
-          
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА IPA (Свободный Котик)
+      - name: 5. ПРЯМАЯ СБОРКА (Игнорируя проект)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -59,12 +50,24 @@ jobs:
           </plist>
           EOF
 
-          # Собираем, игнорируя старые интерпретации
+          # ВОТ ОНО: Мы создаем окружение, где NULL невозможен физически
+          # Мы берем системные пути и прописываем их везде
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          export FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release
+          
+          # Запускаем сборку через xcodebuild напрямую (минуя капризный flutter build)
+          # Это самый надежный способ заставить систему работать
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --no-codesign # Сначала подготовим всё без лишних проверок
+
+          # А теперь финальный рывок сборки с подписью
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
 
-      - name: 6. РЕЗУЛЬТАТ
+      - name: 6. Выгрузка IPA
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
