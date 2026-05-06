@@ -27,28 +27,33 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Прямая настройка окружения
+      - name: 4. Настройка конфигов (Жесткая привязка)
         run: |
-          # Мы берем реальный путь из системы, а не из головы
-          export FLUTTER_ROOT=$FLUTTER_HOME
+          # Очищаем и заново прописываем Generated.xcconfig, чтобы не было Null check
+          mkdir -p ios/Flutter
+          cat <<EOF > ios/Flutter/Generated.xcconfig
+          FLUTTER_ROOT=$FLUTTER_HOME
+          FLUTTER_APPLICATION_PATH=${SRCROOT}/..
+          FLUTTER_TARGET=lib/main.dart
+          FLUTTER_BUILD_DIR=build
+          FLUTTER_BUILD_NAME=3.0.0
+          FLUTTER_BUILD_NUMBER=18
+          FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release
+          FLUTTER_BUILD_MODE=release
+          EOF
+
+          # Создаем файл режима
+          echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
           
-          # Заставляем Flutter пересоздать технические файлы под текущую систему
           flutter precache --ios
           flutter pub get
           
-          # Явно прописываем переменные, которые теряет Xcode
-          echo "FLUTTER_ROOT=$FLUTTER_HOME" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_BUILD_MODE=release" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
-          
-          # Создаем файл режима сборки
-          echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
-
           cd ios
-          pod install --repo-update
+          # Передаем корень Flutter напрямую в команду установки подов
+          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
           cd ..
 
-      - name: 5. Сборка IPA (с принудительными параметрами)
+      - name: 5. ЗАПУСК СБОРКИ IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -66,13 +71,12 @@ jobs:
           </plist>
           EOF
 
-          # Собираем, передавая билд-номер прямо в команду
+          # Собираем без лишних флагов, но с явным указанием версии
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
-            --build-number=18 \
-            --vv
+            --build-number=18
 
       - name: 6. Сохранение результата
         if: success()
