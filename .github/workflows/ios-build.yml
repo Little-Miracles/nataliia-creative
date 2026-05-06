@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка сертификатов (Ваша подпись)
+      - name: 3. Подготовка сертификатов (Ваша подпись активна)
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -31,13 +31,28 @@ jobs:
         run: |
           flutter pub get
           cd ios
-          export FLUTTER_ROOT=$FLUTTER_HOME
-          pod install --repo-update
+          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA (Метод прямого инжектирования путей)
+      - name: 5. ПРЯМАЯ СБОРКА ARCHIVE (Решение ошибки 220)
         run: |
-          # 1. Создаем файл настроек экспорта
+          # Сначала компилируем Dart-часть
+          flutter build ios --release --no-codesign --dart-define-from-file=.env
+
+          # Теперь Xcode собирает архив. Мы ЯВНО передаем переменные в команду.
+          # Это ГАРАНТИРУЕТ отсутствие Null check error.
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_BUILD_MODE=release \
+            CONFIGURATION=Release \
+            archive
+
+      - name: 6. ЭКСПОРТ ПОДПИСАННОГО IPA
+        run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -54,29 +69,14 @@ jobs:
           </plist>
           EOF
 
-          # 2. Подготавливаем IOS проект (компилируем Dart код)
-          flutter build ios --release --no-codesign --dart-define-from-file=.env
-
-          # 3. Собираем АРХИВ через Xcode напрямую. 
-          # Мы ВРУЧНУЮ передаем переменные, на которых падал скрипт (строка 220)
           cd ios
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT=$FLUTTER_HOME \
-            FLUTTER_BUILD_MODE=release \
-            CONFIGURATION=Release \
-            archive
-
-          # 4. Экспортируем готовый подписанный IPA
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
             -exportPath ../build/ios/ipa
           cd ..
 
-      - name: 6. Сохранение результата
+      - name: 7. Сохранение ГОТОВОГО ФАЙЛА
         if: success()
         uses: actions/upload-artifact@v4
         with:
