@@ -27,20 +27,26 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка окружения (Прямое указание пути)
+      - name: 4. Подготовка окружения (Решение для Podfile)
         run: |
-          # Создаем папку и пустой скрипт-заглушку
+          # 1. Создаем необходимые папки
           mkdir -p ios/Flutter
+          
+          # 2. Создаем временный скрипт-заглушку (он нужен Xcode 2026 года)
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
+          # 3. Установка зависимостей Flutter
           flutter pub get
           
-          # Мы не трогаем ваш файл! 
-          # Мы просто говорим системе: "Вот где лежит Flutter", 
-          # чтобы Podfile увидел это напрямую.
+          # 4. ПОДСКАЗКА ДЛЯ PODFILE (Самое важное):
+          # Мы не меняем ваш файл Generated.xcconfig!
+          # Мы просто объявляем системную переменную FLUTTER_ROOT прямо в консоли.
+          # Когда Podfile начнет работать, он сначала посмотрит в эту переменную,
+          # увидит правильный путь и спокойно пропустит нас дальше.
           export FLUTTER_ROOT=$FLUTTER_HOME
           
+          # 5. Установка iOS-библиотек
           cd ios
           pod install --repo-update
           cd ..
