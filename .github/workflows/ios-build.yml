@@ -27,26 +27,22 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка окружения (Исправление путей)
+      - name: 4. Подготовка окружения (Финальный патч)
         run: |
           mkdir -p ios/Flutter
           
-          # 1. Создаем заглушку, которую требует Xcode
+          # Создаем заглушку
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
-          # 2. Создаем файл конфигурации для Release сборки
-          # Это критически важно, чтобы убрать ошибку Null check
+          # Создаем два файла, которые Xcode ищет при архивации
           echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
+          echo '#include "Generated.xcconfig"' > ios/Flutter/AppFrameworkInfo.plist
           
           flutter pub get
           
-          # 3. Указываем Котику точный путь к SDK
-          export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
-          
-          # 4. Пробрасываем переменные для Xcode напрямую в окружение
-          export ACTION=install
-          export TARGET_BUILD_DIR=build/ios/iphoneos
+          # Прописываем пути напрямую в память процесса
+          export FLUTTER_ROOT=/Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64
           export FLUTTER_BUILD_MODE=release
           
           cd ios
