@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-ATEMPT
+name: SMART-BODY-LIFE-TOTAL-SUCCESS
 
 on:
   workflow_dispatch:
@@ -27,14 +27,16 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка зависимостей
+      - name: 4. Исправление окружения
         run: |
           flutter pub get
           cd ios
-          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
+          # Мы берем путь к Flutter SDK прямо из системы
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA (Принудительная передача CONFIGURATION)
+      - name: 5. ПРЯМАЯ СБОРКА С ПЕРЕДАЧЕЙ ПУТЕЙ (Решение ошибки 220)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -52,15 +54,25 @@ jobs:
           </plist>
           EOF
 
-          # ВОТ ЭТИ ДВЕ СТРОЧКИ ДОЛЖНЫ УБРАТЬ ОШИБКУ NULL CHECK:
-          export CONFIGURATION=Release
-          export FLUTTER_BUILD_MODE=release
+          # Сначала готовим файлы через flutter build ios
+          flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18
+          # ГЛАВНОЕ: Мы передаем FLUTTER_ROOT прямо в xcodebuild
+          # Это лечит ошибку "Null check operator" на строке 220
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_APPLICATION_PATH=${PWD}/.. \
+            archive
+          
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath ../build/ios/ipa
+          cd ..
 
       - name: 6. Сохранение результата
         if: success()
