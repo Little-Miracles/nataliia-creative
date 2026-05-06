@@ -1,84 +1,27 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: DIAGNOSTIC-MODE-FOR-KOTIK
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  diagnose:
     runs-on: macos-15
     steps:
-      - name: 1. Получение кода
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter (3.29.0)
+      - name: 2. Настройка Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка сертификатов
-        run: |
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "${{ secrets.ENV_FILE }}" > .env
+      - name: 3. ПРЯМОЙ ОТЧЕТ КОТИКА (Doctor)
+        run: flutter doctor -v
 
-      - name: 4. Исправление скриптов Flutter
+      - name: 4. ЗАПУСК ДИАГНОСТИКИ СБОРКИ (Генерация ответа системы)
         run: |
-          mkdir -p ios/Flutter
-          # Заменяем проблемный скрипт на пустышку, чтобы он вообще не запускался
-          # Это предотвратит ошибку Null check operator
-          echo "exit 0" > ios/Flutter/xcode_backend.sh
-          chmod +x ios/Flutter/xcode_backend.sh
-          
           flutter pub get
           cd ios
-          # Явно просим поды использовать путь из переменной FLUTTER_HOME
-          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
-          cd ..
-
-      - name: 5. СБОРКА АРХИВА (Прямой метод Xcode)
-        run: |
-          cat <<EOF > ios/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>PCSW3AKAPF</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
-            </dict>
-            <key>signingStyle</key><string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
-          # Используем команду ios без внутреннего скрипта упаковки фреймворков
-          flutter build ios --release --no-codesign --dart-define-from-file=.env
-
-          # Сами создаем IPA через xcodebuild (это надежнее в облаке)
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            archive
-          
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath ../build/ios/ipa
-          cd ..
-
-      - name: 6. Сохранение результата
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-ipa
-          path: build/ios/ipa/*.ipa
+          # Мы запускаемverbose режим. Котик напишет сотни строк лога,
+          # где в самом конце будет точный ответ от внутреннего скрипта xcode_backend.dart
+          flutter build ios --release --no-codesign --verbose
