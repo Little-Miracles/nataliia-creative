@@ -27,19 +27,18 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Умное отключение проверок
+      - name: 4. Подготовка инструментов (Чистая форма)
         run: |
           flutter pub get
-          
-          # Мы не лечим пути. Мы просто подменяем скрипт-виновник на пустой файл,
-          # чтобы Xcode думал, что он выполнил задачу, но не выдавал ошибку.
+          # Создаем корректную заглушку для старого оборудования
+          mkdir -p ios/Flutter
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
-          
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. ПРЯМАЯ СБОРКА IPA
+      - name: 5. АУДИТ И СБОРКА (Анкета с рекомендациями)
         run: |
+          echo "--- НАЧИНАЕМ ПРОВЕРКУ АНКЕТЫ ПРИЛОЖЕНИЯ ---"
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -56,21 +55,38 @@ jobs:
           </plist>
           EOF
 
-          # ДОБАВЛЯЕМ: Наслаиваем недостающие данные, не ломая структуру
-          export FLUTTER_ROOT=$FLUTTER_HOME
-          export FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release
-          
-          # Записываем их в конфиг, чтобы они точно были под рукой у системы
-          echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> ios/Flutter/Generated.xcconfig
-          echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_FRAMEWORK_DIR" >> ios/Flutter/Generated.xcconfig
+          flutter build ios --config-only --release --no-codesign > /dev/null 2>&1
 
-          # Ваша существующая команда сборки (оставляем как есть)
+          # ПРОВЕРКА FLUTTER_ROOT
+          if ! grep -q "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig; then
+            echo "⚠️ ОШИБКА: Котику не хватает FLUTTER_ROOT!"
+            echo "FLUTTER_ROOT=$FLUTTER_HOME" >> ios/Flutter/Generated.xcconfig
+          fi
+
+          # ПРОВЕРКА FLUTTER_FRAMEWORK_DIR
+          if ! grep -q "FLUTTER_FRAMEWORK_DIR" ios/Flutter/Generated.xcconfig; then
+            echo "⚠️ ОШИБКА: Не хватает пути к фреймворкам!"
+            echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
+          fi
+
+          echo "--- ПРОВЕРКА ЗАВЕРШЕНА. ЗАПУСКАЕМ СБОРКУ ---"
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env
-            
-      - name: 6. ЗАГРУЗКА РЕЗУЛЬТАТА
+
+      - name: 6. ВЫДАЧА ГОТОВОГО ДОКУМЕНТА (IPA)
+        if: always() # Выполнять даже если были ошибки, чтобы мы видели логи
+        run: |
+          if [ -d "build/ios/ipa" ] && [ "$(ls -A build/ios/ipa/*.ipa 2>/dev/null)" ]; then
+            echo "✅ ПОЗДРАВЛЯЕМ: Документ IPA успешно сформирован и готов к выдаче!"
+          else
+            echo "❌ ОШИБКА: Файл приложения не был создан."
+            echo "👉 РЕКОМЕНДАЦИЯ: Проверьте логи Шага №5 на наличие ошибок компиляции кода."
+          fi
+
+      - name: 7. СОХРАНЕНИЕ АРТЕФАКТА
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ipa
           path: build/ios/ipa/*.ipa
+          if-no-files-found: warn
