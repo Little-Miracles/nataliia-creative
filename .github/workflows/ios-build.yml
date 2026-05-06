@@ -27,34 +27,26 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка окружения (Решение для Podfile)
+      - name: 4. Подготовка окружения (Связь с Podfile)
         run: |
-          # 1. Создаем необходимые папки
+          # Создаем техническую папку и заглушку
           mkdir -p ios/Flutter
-          
-          # 2. Создаем техническую заглушку для Xcode
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
-          # 3. Скачиваем общие пакеты Flutter
           flutter pub get
           
-          # 4. СЕКРЕТНЫЙ ШАГ: Объявляем путь для Podfile.
-          # Мы не меняем ваши файлы! Мы просто говорим системе вслух:
-          # "Считай, что переменная FLUTTER_ROOT — это путь к Flutter в облаке".
+          # ПРЯМАЯ ПОМОЩЬ PODFILE:
+          # Мы берем путь, где Котик держит Flutter, и передаем его напрямую в процесс установки подов.
+          # Теперь ваш Podfile с новой строчкой поиска (/\s*FLUTTER_ROOT\s*=\s*(.*)/) точно его увидит.
           export FLUTTER_ROOT=$FLUTTER_HOME
           
-          # 5. Установка iOS-библиотек (теперь он найдет podhelper)
           cd ios
           pod install --repo-update
           cd ..
 
-      - name: 5. ЗАПУСК ФИНАЛЬНОЙ СБОРКИ
-        id: build_step
+      - name: 5. ЗАПУСК ФИНАЛЬНОЙ СБОРКИ (Версия 3.0.0, Билд 18)
         run: |
-          echo "--- ЗАПУСК СБОРКИ ВЕРСИИ 3.0.0 (СБОРКА 18) ---"
-          
-          # Настраиваем параметры экспорта
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -78,26 +70,17 @@ jobs:
       - name: 6. РЕЖИМ НАСТАВНИКА (АНАЛИЗ ОШИБОК)
         if: failure()
         run: |
-          echo "--- 🛑 СБОРКА УПАЛА. КОТИК ИЩЕТ ПРИЧИНУ ---"
+          echo "--- 🛑 СБОРКА УПАЛА. ПРОВЕРЯЕМ ФАЙЛЫ ---"
+          echo "🔎 Проверка FLUTTER_ROOT в Generated.xcconfig:"
+          grep "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig || echo "Строка не найдена!"
           
-          echo "🔎 ПРОВЕРКА ФАЙЛА Generated.xcconfig:"
-          if [ -f "ios/Flutter/Generated.xcconfig" ]; then
-            grep -E "FLUTTER_ROOT|FLUTTER_FRAMEWORK_DIR|FLUTTER_BUILD_NAME" ios/Flutter/Generated.xcconfig || echo "⚠️ В файле отсутствуют ключевые строки!"
-          else
-            echo "❌ Файл Generated.xcconfig НЕ НАЙДЕН в папке ios/Flutter!"
-          fi
-
-          echo "🔎 ПРОВЕРКА ФАЙЛА project.pbxproj (DEVELOPMENT_TEAM):"
-          grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | grep -v "PCSW3AKAPF" && echo "⚠️ Внимание! Найдены строки с неверным Team ID!" || echo "✅ С Team ID всё в порядке."
-
-          echo "🔎 ПРОВЕРКА ВЕРСИЙ В ПРОЕКТЕ:"
-          grep "MARKETING_VERSION" ios/Runner.xcodeproj/project.pbxproj
-          grep "CURRENT_PROJECT_VERSION" ios/Runner.xcodeproj/project.pbxproj
+          echo "🔎 Проверка Team ID в project.pbxproj:"
+          grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 5
           
-          echo "---"
-          echo "👉 РЕКОМЕНДАЦИЯ: Если вы видите несовпадение данных выше, исправьте их в соответствующих файлах и запустите сборку снова."
+          echo "🔎 Проверка версии:"
+          grep "MARKETING_VERSION" ios/Runner.xcodeproj/project.pbxproj | head -n 1
 
-      - name: 7. СОХРАНЕНИЕ РЕЗУЛЬТАТА
+      - name: 7. СОХРАНЕНИЕ IPA
         if: success()
         uses: actions/upload-artifact@v4
         with:
