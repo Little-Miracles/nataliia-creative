@@ -27,16 +27,21 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка окружения (Автоматический поиск)
+      - name: 4. Подготовка окружения (Исправление путей)
         run: |
           mkdir -p ios/Flutter
+          # Создаем техническую заглушку, которую требует Xcode
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
+          # Создаем release.xcconfig, чтобы исправить ошибку Null check
+          echo '#include "Generated.xcconfig"' > ios/Flutter/release.xcconfig
+          
           flutter pub get
           
-          # Переходим в ios и запускаем установку. 
-          # Наш новый Podfile сам найдет путь через 'which flutter'
+          # Передаем путь для сборки
+          export FLUTTER_ROOT=$(dirname $(dirname $(which flutter)))
+          
           cd ios
           pod install --repo-update
           cd ..
