@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-RECOVERY-BUILD
+name: SMART-BODY-LIFE-FINAL-FIX
 
 on:
   workflow_dispatch:
@@ -27,22 +27,34 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ЛЕЧЕНИЕ И ПЕРЕСОЗДАНИЕ СХЕМ (Решение ошибки Scheme)
+      - name: 4. Подготовка проекта
         run: |
           flutter pub get
-          # Эта команда заставит Flutter найти ваш код и ПРАВИЛЬНО обновить проект iOS
-          # Она восстановит потерянную схему 'Runner'
+          # Обновляем проект под новую версию
           flutter create . --platforms=ios
-          
           cd ios
-          # Очищаем старые артефакты CocoaPods
-          rm -rf Pods
-          rm -rf Podfile.lock
-          # Устанавливаем зависимости заново
+          # Передаем корень Flutter напрямую для установки подов
+          export FLUTTER_ROOT=$FLUTTER_HOME
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA
+      - name: 5. СБОРКА АРХИВА (Обход ошибки 220)
+        run: |
+          # 1. Сначала компилируем только код (это не вызывает ошибку 220)
+          flutter build ios --release --no-codesign --dart-define-from-file=.env
+
+          # 2. Собираем АРХИВ через Xcode напрямую. 
+          # Мы ЯВНО вписываем переменные, которые Flutter "теряет"
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_APPLICATION_PATH=${PWD}/.. \
+            archive
+
+      - name: 6. ЭКСПОРТ ПОДПИСАННОГО IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -60,14 +72,14 @@ jobs:
           </plist>
           EOF
 
-          # Теперь, когда схема 'Runner' восстановлена, билд должен пройти успешно
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18
+          cd ios
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath ../build/ios/ipa
+          cd ..
 
-      - name: 6. Сохранение результата
+      - name: 7. Сохранение результата
         if: success()
         uses: actions/upload-artifact@v4
         with:
