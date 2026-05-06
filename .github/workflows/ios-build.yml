@@ -1,88 +1,46 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: DIAGNOSTIC-MODE-FOR-KOTIK
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  diagnose:
     runs-on: macos-15
     steps:
-      - name: 1. Получение кода
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter (3.29.0)
+      - name: 2. Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка безопасности
+      - name: 3. ДОПРОС КОТИКА (ДИАГНОСТИКА)
         run: |
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 4. Подготовка окружения (Связь с Podfile)
-        run: |
-          # Создаем техническую папку и заглушку
-          mkdir -p ios/Flutter
-          echo "exit 0" > ios/Flutter/xcode_backend.sh
-          chmod +x ios/Flutter/xcode_backend.sh
+          echo "--- 🛠 ОТЧЕТ ДИАГНОСТИКИ ДЛЯ НАТАЛЬИ ---"
           
+          echo "📍 ГДЕ Я НАХОЖУСЬ (PWD):"
+          pwd
+          
+          echo "📍 ПУТЬ К FLUTTER В СИСТЕМЕ (FLUTTER_HOME):"
+          echo $FLUTTER_HOME
+          
+          echo "🔎 ПРОВЕРКА ФАЙЛА Generated.xcconfig (ЧТО ТАМ НАПИСАНО):"
+          if [ -f "ios/Flutter/Generated.xcconfig" ]; then
+            cat ios/Flutter/Generated.xcconfig
+          else
+            echo "❌ ФАЙЛ Generated.xcconfig НЕ НАЙДЕН ПО ПУТИ ios/Flutter/"
+          fi
+          
+          echo "🔎 ПРОВЕРКА ФАЙЛА Podfile (НАЧАЛЬНЫЕ СТРОКИ):"
+          head -n 20 ios/Podfile
+          
+          echo "🔎 ПОИСК ФАЙЛА podhelper.rb (ГДЕ ОН ПРЯЧЕТСЯ):"
+          find $FLUTTER_HOME -name "podhelper" || echo "Не могу найти podhelper даже в папке Flutter"
+
+      - name: 4. ПОПЫТКА СБОРКИ (ДЛЯ ПРОВЕРКИ ОШИБКИ)
+        run: |
           flutter pub get
-          
-          # ПРЯМАЯ ПОМОЩЬ PODFILE:
-          # Мы берем путь, где Котик держит Flutter, и передаем его напрямую в процесс установки подов.
-          # Теперь ваш Podfile с новой строчкой поиска (/\s*FLUTTER_ROOT\s*=\s*(.*)/) точно его увидит.
           export FLUTTER_ROOT=$FLUTTER_HOME
-          
           cd ios
-          pod install --repo-update
-          cd ..
-
-      - name: 5. ЗАПУСК ФИНАЛЬНОЙ СБОРКИ (Версия 3.0.0, Билд 18)
-        run: |
-          cat <<EOF > ios/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>PCSW3AKAPF</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
-            </dict>
-            <key>signingStyle</key><string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env
-
-      - name: 6. РЕЖИМ НАСТАВНИКА (АНАЛИЗ ОШИБОК)
-        if: failure()
-        run: |
-          echo "--- 🛑 СБОРКА УПАЛА. ПРОВЕРЯЕМ ФАЙЛЫ ---"
-          echo "🔎 Проверка FLUTTER_ROOT в Generated.xcconfig:"
-          grep "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig || echo "Строка не найдена!"
-          
-          echo "🔎 Проверка Team ID в project.pbxproj:"
-          grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -n 5
-          
-          echo "🔎 Проверка версии:"
-          grep "MARKETING_VERSION" ios/Runner.xcodeproj/project.pbxproj | head -n 1
-
-      - name: 7. СОХРАНЕНИЕ IPA
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-ipa
-          path: build/ios/ipa/*.ipa
+          pod install --repo-update || echo "❌ СБОРКА УПАЛА, КАК И ОЖИДАЛОСЬ. СМОТРИ ОТЧЕТ ВЫШЕ."
