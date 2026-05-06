@@ -1,46 +1,73 @@
-name: DIAGNOSTIC-MODE-FOR-KOTIK
+name: SMART-BODY-LIFE-TOTAL-SUCCESS
 
 on:
   workflow_dispatch:
 
 jobs:
-  diagnose:
+  build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout
+      - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Setup Flutter
+      - name: 2. Настройка Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. ДОПРОС КОТИКА (ДИАГНОСТИКА)
+      - name: 3. Подготовка сертификатов
         run: |
-          echo "--- 🛠 ОТЧЕТ ДИАГНОСТИКИ ДЛЯ НАТАЛЬИ ---"
-          
-          echo "📍 ГДЕ Я НАХОЖУСЬ (PWD):"
-          pwd
-          
-          echo "📍 ПУТЬ К FLUTTER В СИСТЕМЕ (FLUTTER_HOME):"
-          echo $FLUTTER_HOME
-          
-          echo "🔎 ПРОВЕРКА ФАЙЛА Generated.xcconfig (ЧТО ТАМ НАПИСАНО):"
-          if [ -f "ios/Flutter/Generated.xcconfig" ]; then
-            cat ios/Flutter/Generated.xcconfig
-          else
-            echo "❌ ФАЙЛ Generated.xcconfig НЕ НАЙДЕН ПО ПУТИ ios/Flutter/"
-          fi
-          
-          echo "🔎 ПРОВЕРКА ФАЙЛА Podfile (НАЧАЛЬНЫЕ СТРОКИ):"
-          head -n 20 ios/Podfile
-          
-          echo "🔎 ПОИСК ФАЙЛА podhelper.rb (ГДЕ ОН ПРЯЧЕТСЯ):"
-          find $FLUTTER_HOME -name "podhelper" || echo "Не могу найти podhelper даже в папке Flutter"
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ПОПЫТКА СБОРКИ (ДЛЯ ПРОВЕРКИ ОШИБКИ)
+      - name: 4. Подготовка окружения (Прямой адрес)
         run: |
+          # Создаем технические файлы
+          mkdir -p ios/Flutter
+          echo "exit 0" > ios/Flutter/xcode_backend.sh
+          chmod +x ios/Flutter/xcode_backend.sh
+          
+          # Указываем точный путь, который мы узнали из диагностики
+          export FLUTTER_ROOT=/Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64
+          
           flutter pub get
-          export FLUTTER_ROOT=$FLUTTER_HOME
           cd ios
-          pod install --repo-update || echo "❌ СБОРКА УПАЛА, КАК И ОЖИДАЛОСЬ. СМОТРИ ОТЧЕТ ВЫШЕ."
+          # Передаем путь прямо в команду установки подов
+          FLUTTER_ROOT=/Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64 pod install --repo-update
+          cd ..
+
+      - name: 5. ЗАПУСК СБОРКИ IPA (Версия 3.0.0, Билд 18)
+        run: |
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key><string>manual</string>
+          </dict>
+          </plist>
+          EOF
+
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env
+
+      - name: 6. СОХРАНЕНИЕ ГОТОВОГО ФАЙЛА
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-ipa
+          path: build/ios/ipa/*.ipa
