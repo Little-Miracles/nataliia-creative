@@ -1,20 +1,20 @@
 platform :ios, '17.0'
 
-generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-unless File.exist?(generated_xcode_build_settings_path)
-  raise "#{generated_xcode_build_settings_path} must exist. If you're running pod install manually, make sure flutter pub get is executed first"
+# Котик сам найдет, где лежит Flutter, через команду 'which flutter'
+def find_flutter_sdk
+  flutter_bin = `which flutter`.strip
+  if flutter_bin.empty?
+    raise "Котик не видит команду flutter. Проверьте установку в YAML."
+  end
+  # Вычисляем путь к корню SDK из пути к исполняемому файлу
+  File.expand_path(File.join(File.dirname(flutter_bin), '..'))
 end
 
-File.foreach(generated_xcode_build_settings_path) do |line|
-  # Эта строка теперь найдет путь, даже если там есть пробелы до или после '='
-  matches = line.match(/\s*FLUTTER_ROOT\s*=\s*(.*)/)
-  @flutter_root = matches[1].strip if matches
-end
+@flutter_root = find_flutter_sdk
 
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), @flutter_root)
 
 flutter_ios_podfile_setup
-
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
