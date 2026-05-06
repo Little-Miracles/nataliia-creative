@@ -6,7 +6,8 @@ unless File.exist?(generated_xcode_build_settings_path)
 end
 
 File.foreach(generated_xcode_build_settings_path) do |line|
-  matches = line.match(/FLUTTER_ROOT\=(.*)/)
+  # Эта строка теперь найдет путь, даже если там есть пробелы до или после '='
+  matches = line.match(/\s*FLUTTER_ROOT\s*=\s*(.*)/)
   @flutter_root = matches[1].strip if matches
 end
 
