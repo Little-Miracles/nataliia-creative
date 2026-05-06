@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка сертификатов (С подписью)
+      - name: 3. Подготовка сертификатов (Ваша подпись)
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,21 +27,56 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. СБОРКА IPA
+      - name: 4. Установка зависимостей
         run: |
           flutter pub get
-          
-          # Мы берем системный путь к Flutter и делаем его доступным для Xcode
+          cd ios
           export FLUTTER_ROOT=$FLUTTER_HOME
-          
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18 \
-            --dart-define=FLUTTER_ROOT=$FLUTTER_HOME
+          pod install --repo-update
+          cd ..
 
-      - name: 5. Сохранение результата
+      - name: 5. СБОРКА IPA (Метод прямого инжектирования путей)
+        run: |
+          # 1. Создаем файл настроек экспорта
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key><string>manual</string>
+          </dict>
+          </plist>
+          EOF
+
+          # 2. Подготавливаем IOS проект (компилируем Dart код)
+          flutter build ios --release --no-codesign --dart-define-from-file=.env
+
+          # 3. Собираем АРХИВ через Xcode напрямую. 
+          # Мы ВРУЧНУЮ передаем переменные, на которых падал скрипт (строка 220)
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -archivePath build/Runner.xcarchive \
+            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_BUILD_MODE=release \
+            CONFIGURATION=Release \
+            archive
+
+          # 4. Экспортируем готовый подписанный IPA
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath ../build/ios/ipa
+          cd ..
+
+      - name: 6. Сохранение результата
         if: success()
         uses: actions/upload-artifact@v4
         with:
