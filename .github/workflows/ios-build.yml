@@ -1,27 +1,70 @@
-name: DIAGNOSTIC-MODE-FOR-KOTIK
+name: SMART-BODY-LIFE-FINAL-ATEMPT
 
 on:
   workflow_dispatch:
 
 jobs:
-  diagnose:
+  build:
     runs-on: macos-15
     steps:
-      - name: 1. Checkout
+      - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter
+      - name: 2. Настройка Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. ПРЯМОЙ ОТЧЕТ КОТИКА (Doctor)
-        run: flutter doctor -v
+      - name: 3. Подготовка сертификатов
+        run: |
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ЗАПУСК ДИАГНОСТИКИ СБОРКИ (Генерация ответа системы)
+      - name: 4. Установка зависимостей
         run: |
           flutter pub get
           cd ios
-          # Мы запускаемverbose режим. Котик напишет сотни строк лога,
-          # где в самом конце будет точный ответ от внутреннего скрипта xcode_backend.dart
-          flutter build ios --release --no-codesign --verbose
+          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
+          cd ..
+
+      - name: 5. СБОРКА IPA (Принудительная передача CONFIGURATION)
+        run: |
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key><string>manual</string>
+          </dict>
+          </plist>
+          EOF
+
+          # ВОТ ЭТИ ДВЕ СТРОЧКИ ДОЛЖНЫ УБРАТЬ ОШИБКУ NULL CHECK:
+          export CONFIGURATION=Release
+          export FLUTTER_BUILD_MODE=release
+
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18
+
+      - name: 6. Сохранение результата
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-ipa
+          path: build/ios/ipa/*.ipa
