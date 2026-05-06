@@ -28,8 +28,12 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. УСТАНОВКА ЗАВИСИМОСТЕЙ
+      - name: 4. УСТАНОВКА С ПРЕОДОЛЕНИЕМ КОНФЛИКТОВ
         run: |
+          # Мы заставляем систему принять версию collection 1.19.0, 
+          # чтобы она соответствовала SDK Flutter 3.27.0
+          flutter pub add collection:1.19.0
+          
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
