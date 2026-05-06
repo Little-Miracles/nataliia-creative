@@ -1,92 +1,60 @@
-name: SMART-BODY-LIFE-FINAL-TRIUMPH
+name: SMART-BODY-LIFE-AUDIT-ONLY
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  audit:
     runs-on: macos-15
     steps:
-      - name: 1. Получение кода
+      - name: 1. Загрузка проекта
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter (3.29.0)
+      - name: 2. Настройка среды Flutter (3.29.0)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Сертификаты и секреты
-        run: |
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "${{ secrets.ENV_FILE }}" > .env
+      - name: 3. Подготовка (pub get)
+        run: flutter pub get
 
-      - name: 4. Подготовка инструментов (Чистая форма)
-        run: |
-          flutter pub get
-          # Создаем корректную заглушку для старого оборудования
-          mkdir -p ios/Flutter
-          echo "exit 0" > ios/Flutter/xcode_backend.sh
-          chmod +x ios/Flutter/xcode_backend.sh
-          cd ios && pod install --repo-update && cd ..
-
-      - name: 5. АУДИТ И СБОРКА (Анкета с рекомендациями)
+      - name: 4. ЧЕСТНЫЙ АУДИТ И ИНСТРУКЦИИ
         run: |
           echo "--- НАЧИНАЕМ ПРОВЕРКУ АНКЕТЫ ПРИЛОЖЕНИЯ ---"
-          cat <<EOF > ios/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>PCSW3AKAPF</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
-            </dict>
-            <key>signingStyle</key><string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
+          
+          # Генерируем временные настройки, чтобы увидеть, что создаст сам Flutter
           flutter build ios --config-only --release --no-codesign > /dev/null 2>&1
+          
+          echo "--- РЕЗУЛЬТАТЫ ПРОВЕРКИ ---"
 
-          # ПРОВЕРКА FLUTTER_ROOT
+          # Проверка FLUTTER_ROOT
           if ! grep -q "FLUTTER_ROOT" ios/Flutter/Generated.xcconfig; then
-            echo "⚠️ ОШИБКА: Котику не хватает FLUTTER_ROOT!"
-            echo "FLUTTER_ROOT=$FLUTTER_HOME" >> ios/Flutter/Generated.xcconfig
-          fi
-
-          # ПРОВЕРКА FLUTTER_FRAMEWORK_DIR
-          if ! grep -q "FLUTTER_FRAMEWORK_DIR" ios/Flutter/Generated.xcconfig; then
-            echo "⚠️ ОШИБКА: Не хватает пути к фреймворкам!"
-            echo "FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release" >> ios/Flutter/Generated.xcconfig
-          fi
-
-          echo "--- ПРОВЕРКА ЗАВЕРШЕНА. ЗАПУСКАЕМ СБОРКУ ---"
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env
-
-      - name: 6. ВЫДАЧА ГОТОВОГО ДОКУМЕНТА (IPA)
-        if: always() # Выполнять даже если были ошибки, чтобы мы видели логи
-        run: |
-          if [ -d "build/ios/ipa" ] && [ "$(ls -A build/ios/ipa/*.ipa 2>/dev/null)" ]; then
-            echo "✅ ПОЗДРАВЛЯЕМ: Документ IPA успешно сформирован и готов к выдаче!"
+            echo "❌ ОШИБКА: Поле 'FLUTTER_ROOT' не заполнено."
+            echo "👉 ЧТО СДЕЛАТЬ: Откройте файл 'ios/Flutter/Generated.xcconfig' и добавьте туда строку:"
+            echo "   FLUTTER_ROOT=$FLUTTER_HOME"
           else
-            echo "❌ ОШИБКА: Файл приложения не был создан."
-            echo "👉 РЕКОМЕНДАЦИЯ: Проверьте логи Шага №5 на наличие ошибок компиляции кода."
+            echo "✅ FLUTTER_ROOT на месте."
           fi
 
-      - name: 7. СОХРАНЕНИЕ АРТЕФАКТА
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-ipa
-          path: build/ios/ipa/*.ipa
-          if-no-files-found: warn
+          # Проверка FLUTTER_FRAMEWORK_DIR
+          if ! grep -q "FLUTTER_FRAMEWORK_DIR" ios/Flutter/Generated.xcconfig; then
+            echo "❌ ОШИБКА: Поле 'FLUTTER_FRAMEWORK_DIR' (путь к фреймворкам) отсутствует."
+            echo "👉 ЧТО СДЕЛАТЬ: Добавьте в файл 'ios/Flutter/Generated.xcconfig' следующую строку:"
+            echo "   FLUTTER_FRAMEWORK_DIR=$FLUTTER_HOME/bin/cache/artifacts/engine/ios-release"
+          else
+            echo "✅ FLUTTER_FRAMEWORK_DIR на месте."
+          fi
+
+          # Проверка основного файла проекта на DEVELOPMENT_TEAM
+          TEAM_ID=$(grep "DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj | head -1 | cut -d'=' -f2 | tr -d ' ;')
+          if [ "$TEAM_ID" != "PCSW3AKAPF" ]; then
+            echo "❌ ОШИБКА: Указана неверная Команда (DEVELOPMENT_TEAM)."
+            echo "👉 ЧТО СДЕЛАТЬ: В файле 'ios/Runner.xcodeproj/project.pbxproj' замените старый ID на: PCSW3AKAPF"
+          else
+            echo "✅ DEVELOPMENT_TEAM указан верно (PCSW3AKAPF)."
+          fi
+
+          echo "---"
+          echo "Наталья, Котик закончил проверку. Если выше есть пункты с '❌', значит, "
+          echo "причина остановки именно в них. Внесите эти данные в файлы вашего проекта,"
+          echo "и тогда 'дверь' для сборки откроется сама собой."
