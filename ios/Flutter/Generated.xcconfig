@@ -14,3 +14,4 @@ TREE_SHAKE_ICONS=false
 PACKAGE_CONFIG=.dart_tool/package_config.json
 FLUTTER_FRAMEWORK_DIR=${FLUTTER_ROOT}/bin/cache/artifacts/engine/ios-release
 FLUTTER_BUILD_MODE=release
+CONFIGURATION=Release
