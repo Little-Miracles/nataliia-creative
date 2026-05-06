@@ -27,21 +27,45 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Подготовка окружения (Финальный патч)
+      - name: 4. Подготовка окружения (Исправление PropertyList)
         run: |
           mkdir -p ios/Flutter
           
-          # Создаем заглушку
+          # 1. Заглушка для скриптов
           echo "exit 0" > ios/Flutter/xcode_backend.sh
           chmod +x ios/Flutter/xcode_backend.sh
           
-          # Создаем два файла, которые Xcode ищет при архивации
+          # 2. Файл конфигурации
           echo '#include "Generated.xcconfig"' > ios/Flutter/Release.xcconfig
-          echo '#include "Generated.xcconfig"' > ios/Flutter/AppFrameworkInfo.plist
+          
+          # 3. ПРАВИЛЬНЫЙ AppFrameworkInfo.plist (XML формат)
+          cat <<EOF > ios/Flutter/AppFrameworkInfo.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleDevelopmentRegion</key>
+            <string>en</string>
+            <key>CFBundleExecutable</key>
+            <string>App</string>
+            <key>CFBundleIdentifier</key>
+            <string>io.flutter.flutter.app</string>
+            <key>CFBundleInfoDictionaryVersion</key>
+            <string>6.0</string>
+            <key>CFBundleName</key>
+            <string>App</string>
+            <key>CFBundlePackageType</key>
+            <string>FMWK</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0</string>
+            <key>CFBundleVersion</key>
+            <string>1.0</string>
+          </dict>
+          </plist>
+          EOF
           
           flutter pub get
           
-          # Прописываем пути напрямую в память процесса
           export FLUTTER_ROOT=/Users/runner/hostedtoolcache/Flutter/3.29.0-stable/arm64
           export FLUTTER_BUILD_MODE=release
           
