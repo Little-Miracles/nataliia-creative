@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка сертификатов
+      - name: 3. Подготовка сертификатов (ПОДПИСЬ ВКЛЮЧЕНА)
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,16 +27,15 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Исправление окружения
+      - name: 4. Установка зависимостей
         run: |
           flutter pub get
           cd ios
-          # Мы берем путь к Flutter SDK прямо из системы
-          export FLUTTER_ROOT=$FLUTTER_HOME
-          pod install --repo-update
+          # Передаем корень Flutter напрямую для CocoaPods
+          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
           cd ..
 
-      - name: 5. ПРЯМАЯ СБОРКА С ПЕРЕДАЧЕЙ ПУТЕЙ (Решение ошибки 220)
+      - name: 5. СБОРКА IPA С ПОДПИСЬЮ (Решение ошибки 220)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -54,27 +53,15 @@ jobs:
           </plist>
           EOF
 
-          # Сначала готовим файлы через flutter build ios
-          flutter build ios --release --no-codesign --dart-define-from-file=.env
+          # ГЛАВНОЕ: Мы собираем с вашей подписью и передаем FLUTTER_ROOT прямо в процесс
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18 \
+            --dart-define=FLUTTER_ROOT=$FLUTTER_HOME
 
-          # ГЛАВНОЕ: Мы передаем FLUTTER_ROOT прямо в xcodebuild
-          # Это лечит ошибку "Null check operator" на строке 220
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT=$FLUTTER_HOME \
-            FLUTTER_APPLICATION_PATH=${PWD}/.. \
-            archive
-          
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath ../build/ios/ipa
-          cd ..
-
-      - name: 6. Сохранение результата
+      - name: 6. Сохранение ГОТОВОГО ПОДПИСАННОГО ФАЙЛА
         if: success()
         uses: actions/upload-artifact@v4
         with:
