@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-SUCCESS
+name: SMART-BODY-LIFE-SUCCESS-BUILD
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. Подготовка сертификатов (ПОДПИСЬ ВКЛЮЧЕНА)
+      - name: 3. Подготовка сертификатов (ВАША ПОДПИСЬ)
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -31,11 +31,12 @@ jobs:
         run: |
           flutter pub get
           cd ios
-          # Передаем корень Flutter напрямую для CocoaPods
-          FLUTTER_ROOT=$FLUTTER_HOME pod install --repo-update
+          # Путь к Flutter теперь прописан в самом проекте, но для CocoaPods он нужен и здесь
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA С ПОДПИСЬЮ (Решение ошибки 220)
+      - name: 5. СБОРКА IPA (ПОЛНОЦЕННАЯ)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -53,15 +54,12 @@ jobs:
           </plist>
           EOF
 
-          # ГЛАВНОЕ: Мы собираем с вашей подписью и передаем FLUTTER_ROOT прямо в процесс
+          # Собираем IPA. Теперь настройки проекта позволят скрипту найти все пути.
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18 \
-            --dart-define=FLUTTER_ROOT=$FLUTTER_HOME
+            --dart-define-from-file=.env
 
-      - name: 6. Сохранение ГОТОВОГО ПОДПИСАННОГО ФАЙЛА
+      - name: 6. Сохранение ГОТОВОГО ФАЙЛА
         if: success()
         uses: actions/upload-artifact@v4
         with:
