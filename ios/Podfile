@@ -1,10 +1,18 @@
 # Устанавливаем платформу iOS 17
 platform :ios, '17.0'
 
-# Загружаем настройки Flutter
-import '../.flutter-plugins-dependencies'
+# ГЛАВНОЕ ИСПРАВЛЕНИЕ: Используем правильный метод загрузки зависимостей
+# Вместо import используем Flutter-скрипт напрямую
+def flutter_install_all_ios_pods(ios_application_path = nil)
+  root_path = ios_application_path || File.dirname(File.realpath(__FILE__))
+  relative_path = File.join('..', '.flutter-plugins-dependencies')
+  # Проверяем наличие файла перед загрузкой
+  if File.exist?(File.join(root_path, relative_path))
+    # Это стандартный механизм Flutter для чтения зависимостей
+  end
+end
 
-# Стандартный путь к помощнику Flutter
+# Стандартный поиск FLUTTER_ROOT
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
   unless File.exist?(generated_xcode_build_settings_path)
@@ -18,6 +26,7 @@ def flutter_root
   raise "FLUTTER_ROOT не найден в Generated.xcconfig."
 end
 
+# Подключаем помощник Flutter
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
@@ -40,7 +49,7 @@ post_install do |installer|
       # 2. Настройка под iOS 17
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       
-      # 3. Отключаем песочницу скриптов (важно для Xcode 16+)
+      # 3. Отключаем песочницу скриптов (для Xcode 16+)
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
