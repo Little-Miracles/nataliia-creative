@@ -22,16 +22,20 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  installer.generated_projects.each do |project|
+    project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Вот эта строчка — ЛЕКАРСТВО. Она принудительно ставит 17.0 
+        # для КАЖДОЙ маленькой библиотеки (включая health)
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
+        
+        config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
+  end
+  
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
-    target.build_configurations.each do |config|
-      # Ваша подпись и настройки iOS 17
-      config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
-      config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
-      
-      # Исправление для Xcode 16+
-      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
-    end
   end
 end
