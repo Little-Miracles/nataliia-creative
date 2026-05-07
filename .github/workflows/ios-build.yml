@@ -1,10 +1,10 @@
-name: SMART-BODY-PROJECT-AUDIT
+name: SMART-BODY-CLEAN-SYNC-BUILD
 
 on:
   workflow_dispatch:
 
 jobs:
-  audit:
+  build:
     runs-on: macos-15
     steps:
       - name: 1. Получение кода
@@ -15,36 +15,68 @@ jobs:
         with:
           flutter-version: '3.29.0'
 
-      - name: 3. АУДИТ КОДА (Котик ищет ошибки в Dart)
+      - name: 3. ПРИНУДИТЕЛЬНАЯ ЧИСТКА ДУБЛЕЙ
         run: |
-          echo "=== СТАРТ АНАЛИЗА КОДА ==="
-          flutter pub get
-          flutter analyze || true
-
-      - name: 4. АУДИТ КОНФИГУРАЦИЙ IOS (Поиск несовместимых файлов)
-        run: |
-          echo "=== ПРОВЕРКА СОСТОЯНИЯ ПРОЕКТА IOS ==="
-          # Просим Flutter проверить валидность проекта
-          flutter doctor -v
+          echo "Проверяю, какой pubspec видит система..."
+          cat pubspec.yaml | grep -E "add_2_calendar|audioplayers" || echo "Чисто! Лишних библиотек нет."
           
-          echo "=== АНАЛИЗ СТРУКТУРЫ ПОДОВ ==="
+          # Удаляем все старые кэши и временные папки, которые могут путать Котика
+          flutter clean
+          rm -rf ios/Pods
+          rm -rf ios/Podfile.lock
+          rm -rf pubspec.lock
+
+      - name: 4. Подготовка сертификатов (Подпись!)
+        run: |
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 5. Синхронизация оборудования (iOS 17)
+        run: |
+          flutter pub get
+          # Обновляем раму (ios) под новую версию 3.29.0
+          flutter create . --platforms=ios
+          
           cd ios
-          # Проверка совместимости Podfile с iOS 17 и Flutter 3.29.0
-          pod lib lint --allow-warnings || echo "Котик нашел проблемы в зависимостях"
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          pod install --repo-update
           cd ..
 
-      - name: 5. СРАВНЕНИЕ С ЭТАЛОНОМ (Что нужно заменить?)
+      - name: 6. СБОРКА ПОДПИСАННОГО IPA
         run: |
-          echo "=== ПОИСК УСТАРЕВШИХ ФАЙЛОВ ==="
-          # Создаем временный чистый проект рядом для сравнения
-          flutter create --platforms=ios temp_audit_project
-          
-          echo "Сравниваю ваш проект с эталоном 3.29.0..."
-          diff -r ios/Runner.xcodeproj/project.pbxproj temp_audit_project/ios/Runner.xcodeproj/project.pbxproj || echo "Файл project.pbxproj требует обновлений"
-          diff ios/Runner/Info.plist temp_audit_project/ios/Runner/Info.plist || echo "Файл Info.plist имеет расхождения"
-          diff ios/Podfile temp_audit_project/ios/Podfile || echo "Podfile отличается от стандартного для 3.29.0"
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key><string>manual</string>
+          </dict>
+          </plist>
+          EOF
 
-      - name: 6. ИТОГОВЫЙ ОТЧЕТ КОТИКА
-        run: |
-          echo "=== ОТЧЕТ ЗАВЕРШЕН ==="
-          echo "Наталья, скопируйте весь лог этого шага сюда."
+          # Финальный бросок. Передаем FLUTTER_ROOT явно для обхода багов.
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18 \
+            --dart-define=FLUTTER_ROOT=$FLUTTER_HOME
+
+      - name: 7. Сохранение ГОТОВОГО IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-signed
+          path: build/ios/ipa/*.ipa
