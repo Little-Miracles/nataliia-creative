@@ -1,11 +1,11 @@
-name: SMART-BODY-LIFE-FINAL-ULTRA
+name: SMART-BODY-LIFE-FINAL-SUCCESS
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    # МЫ ОБНОВИЛИ ЭТУ СТРОКУ: теперь здесь новейший Xcode для SDK 26
+    # Используем macos-latest для доступа к новым версиям инструментов
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
@@ -16,32 +16,31 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка Ключей (Именно Distribution)
+      - name: 3. ПЕРЕКЛЮЧЕНИЕ НА НОВЫЙ СТАНОК (Xcode 16.2 / SDK 26)
+        # Это самое важное исправление. Оно заставляет Котика взять нужный Apple молоток.
         run: |
-          # Создаем временную связку ключей
+          sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          xcodebuild -version
+
+      - name: 4. Подготовка Ключей (Distribution)
+        run: |
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "build_pass" build.keychain
-          
-          # Декодируем и импортируем сертификат Distribution
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > release.p12
           security import release.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build_pass" build.keychain
-          
-          # Декодируем профиль SMART_DISTRIBUTION
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка зависимостей
+      - name: 5. Установка зависимостей
         run: |
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА IPA (Ваш проверенный метод + Исправление пути)
+      - name: 6. СБОРКА IPA (Ваш Золотой Ключик с исправленным путем)
         run: |
-          # Создаем файл настроек экспорта
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,9 +59,7 @@ jobs:
           </plist>
           EOF
 
-          # ВАЖНО: Мы берем ваш код, но жестко прописываем переменную пути,
-          # чтобы она не была пустой в логах.
-          
+          # Вставляем путь к Flutter прямо в команду, чтобы не было пустой переменной
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -sdk iphoneos \
@@ -71,13 +68,12 @@ jobs:
             FLUTTER_ROOT="$FLUTTER_ROOT" \
             ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
 
-          # Экспортируем IPA (Тот самый файл для Транспортера)
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
             -exportPath build/ipa
 
-      - name: 6. ЗАБИРАЕМ IPA ДЛЯ APPLE
+      - name: 7. ЗАБИРАЕМ IPA ДЛЯ APPLE
         if: always()
         uses: actions/upload-artifact@v4
         with:
