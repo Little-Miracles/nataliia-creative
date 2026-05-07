@@ -1,11 +1,12 @@
-name: SMART-BODY-LIFE-FINAL-SUCCESS
+name: SMART-BODY-LIFE-IOS26-FIX
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-15
+    # МЫ МЕНЯЕМ СИСТЕМУ НА САМУЮ НОВУЮ (iOS 26 SDK+)
+    runs-on: macos-latest
     steps:
       - name: 1. Checkout
         uses: actions/checkout@v4
@@ -15,35 +16,27 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка Ключей (Именно Distribution)
+      - name: 3. Ключи и Профиль (Distribution)
         run: |
-          # Создаем временную связку ключей
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "build_pass" build.keychain
-          
-          # Декодируем и импортируем сертификат Distribution
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > release.p12
           security import release.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build_pass" build.keychain
-          
-          # Декодируем профиль SMART_DISTRIBUTION
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка зависимостей
+      - name: 4. Подготовка кода
         run: |
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА IPA (Xcode Direct)
+      - name: 5. СБОРКА IPA (Требование Apple SDK 26+)
         run: |
-          # Создаем файл настроек экспорта
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
             <key>method</key><string>app-store</string>
@@ -59,25 +52,16 @@ jobs:
           </plist>
           EOF
 
-          # 1. Собираем архив (.xcarchive)
-          # Добавляем переменные путей Flutter напрямую в Xcode
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -sdk iphoneos \
-            -configuration Release \
-            archive -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT=$FLUTTER_HOME \
-            ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
+          # Собираем с использованием новейшего SDK
+          flutter build ipa --release \
+            --export-options-plist=ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18
 
-          # 2. Экспортируем IPA из архива
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build/ipa
-
-      - name: 6. ЗАБИРАЕМ IPA ДЛЯ APPLE
+      - name: 6. ЗАБИРАЕМ ГОТОВЫЙ ФАЙЛ
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-IPA
-          path: build/ipa/*.ipa
+          name: SMART-BODY-LIFE-SDK26-READY
+          path: build/ios/ipa/*.ipa
