@@ -1,82 +1,25 @@
-name: SMART-BODY-LIFE-SDK26-FINAL
+name: AUDIT-FOR-KOTIK
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    # Оставляем новейший сервер
+  audit:
     runs-on: macos-latest
     steps:
-      - name: 1. Checkout
-        uses: actions/checkout@v4
-
-      - name: 2. Настройка Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.27.4'
-
-      # ВОТ ЭТО ТО, ЧЕГО НАМ НЕ ХВАТАЛО:
-      - name: 3. Принудительный выбор Xcode 16.2 (SDK 26)
+      - name: 1. Допрос системы (Узнаем правду у Котика)
         run: |
-          sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          echo "=== ПРОВЕРКА ВЕРСИИ СИСТЕМЫ ==="
+          sw_vers
+          
+          echo "=== КАКОЙ XCODE СТОИТ ПО УМОЛЧАНИЮ? ==="
           xcodebuild -version
-
-      - name: 4. Подготовка Ключей (Distribution)
-        run: |
-          security create-keychain -p "build_pass" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "build_pass" build.keychain
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > release.p12
-          security import release.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build_pass" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 5. Установка зависимостей
-        run: |
-          flutter pub get
-          cd ios && pod install --repo-update && cd ..
-
-      - name: 6. СБОРКА IPA (Ваш Золотой Ключик)
-        run: |
-          cat <<EOF > ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>PCSW3AKAPF</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
-            </dict>
-            <key>signingStyle</key><string>manual</string>
-            <key>signingCertificate</key><string>Apple Distribution</string>
-          </dict>
-          </plist>
-          EOF
-
-          # Используем вашу рабочую команду сборки
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -sdk iphoneos \
-            -configuration Release \
-            archive -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT="$FLUTTER_ROOT" \
-            ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
-
-          # Используем вашу рабочую команду экспорта
-          xcodebuild -exportArchive \
-            -archivePath build/Runner.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath build/ipa
-
-      - name: 7. ЗАБИРАЕМ IPA ДЛЯ APPLE
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: SMART-BODY-LIFE-SDK26-IPA
-          path: build/ipa/*.ipa
+          
+          echo "=== КАКИЕ SDK ДОСТУПНЫ КОТИКУ? ==="
+          xcodebuild -showsdks
+          
+          echo "=== ГДЕ ПРЯЧЕТСЯ НОВЫЙ XCODE 16.2 (SDK 26)? ==="
+          ls /Applications | grep Xcode
+          
+          echo "=== ПРОВЕРКА ПУТЕЙ FLUTTER ==="
+          flutter doctor -v
