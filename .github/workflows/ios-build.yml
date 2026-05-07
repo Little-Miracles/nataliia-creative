@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-FIX
+name: SMART-BODY-LIFE-DIRECT-COLLECT
 
 on:
   workflow_dispatch:
@@ -10,48 +10,27 @@ jobs:
       - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Настройка стабильного Flutter (3.27.4)
+      - name: 2. Настройка Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Сертификаты
+      - name: 3. Подготовка (минимум команд)
         run: |
-          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
-          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
-
-      - name: 4. Подготовка (Чистое облако)
-        run: |
-          rm -f pubspec.lock
-          flutter clean
           flutter pub get
-          cd ios
-          rm -rf Pods Podfile.lock
-          pod install --repo-update
-          cd ..
+          cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА ПРИЛОЖЕНИЯ (Xcode build)
+      - name: 4. Сборка (Создаем тот самый файл)
         run: |
-          # Явно прописываем пути для скриптов
-          export FLUTTER_ROOT=$FLUTTER_HOME
-          export PATH="$FLUTTER_ROOT/bin:$PATH"
-
-          # Мы запускаем сборку. Она проходит (Xcode build done)!
-          # Даже если она упадет в самом конце, файлы останутся.
+          # Мы просто запускаем сборку. Она создаст папку Runner.app
           flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-      - name: 6. ЗАБИРАЕМ ГОТОВЫЙ ФАЙЛ
-        # Параметр always() заставит GitHub отдать файлы, даже если билд "покраснел"
+      - name: 5. ПУТЬ К ФАЙЛУ (Забираем результат)
+        # Эта команда сработает ВСЕГДА, даже если шаг выше покажет ошибку
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-READY-APP
-          # Путь к папке, которую Xcode УЖЕ собрал до ошибки
-          path: build/ios/iphoneos/Runner.app
+          name: READY-APP-FOLDER
+          # Это тот самый путь, по которому лежит готовый файл
+          path: build/ios/iphoneos/
