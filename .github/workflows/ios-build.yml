@@ -1,4 +1,43 @@
-- name: 5. СБОРКА С ЧИСТЫМИ ПУТЯМИ
+name: SMART-BODY-LIFE-FINAL-FIX
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - name: 1. Получение кода
+        uses: actions/checkout@v4
+
+      - name: 2. Настройка стабильного Flutter (3.27.4)
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.27.4'
+
+      - name: 3. Сертификаты
+        run: |
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
+          echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 4. Подготовка (Чистое облако)
+        run: |
+          rm -f pubspec.lock
+          flutter clean
+          flutter pub get
+          cd ios
+          rm -rf Pods Podfile.lock
+          pod install --repo-update
+          cd ..
+
+      - name: 5. СБОРКА С ЧИСТЫМИ ПУТЯМИ
         run: |
           # Создаем ExportOptions
           cat <<EOF > ios/ExportOptions.plist
@@ -33,3 +72,10 @@
             --build-name=3.0.0 \
             --build-number=18 \
             --verbose
+            
+      - name: 6. Сохранение результата
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-body-life-ipa
+          path: build/ios/ipa/*.ipa
