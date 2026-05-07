@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-MANUAL-LOCK-BUILD
+name: SMART-BODY-LIFE-AUTO-FIX-BUILD
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов и окружения
+      - name: 3. Подготовка сертификатов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,12 +27,18 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Сборка с вашим исправленным lock-файлом
+      - name: 4. Автоматическое исправление оборудования
         run: |
-          # Мы НЕ удаляем pubspec.lock, а используем тот, что вы вставили вручную
+          # Удаляем сломанный lock-файл, чтобы Flutter создал его сам без ошибок
+          rm -f pubspec.lock
+          
+          # Заставляем Flutter собрать правильный список зависимостей
           flutter pub get
           
-          # Очистка папки iOS для свежей сборки
+          # Убираем win32, чтобы он не мешал сборке под iOS
+          sed -i '' '/win32:/d' pubspec.lock
+          sed -i '' '/- win32/d' pubspec.lock
+          
           flutter create . --platforms=ios
           
           cd ios
@@ -40,7 +46,7 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: 5. Финальная упаковка IPA
+      - name: 5. Сборка IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -64,7 +70,7 @@ jobs:
             --build-name=3.0.0 \
             --build-number=18
 
-      - name: 6. Выдача готового файла
+      - name: 6. Сохранение файла
         if: success()
         uses: actions/upload-artifact@v4
         with:
