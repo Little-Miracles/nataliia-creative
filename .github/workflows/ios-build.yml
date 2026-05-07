@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FIXED-PATH-BUILD
+name: SMART-BODY-LIFE-CLEAN-REPAIR-BUILD
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов и окружения
+      - name: 3. Подготовка сертификатов и секретов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,14 +27,24 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка зависимостей (Ваш идеальный lock-файл)
+      - name: 4. УДАЛЕНИЕ ЗАВАЛА И ЧИСТАЯ СБОРКА
         run: |
+          # 1. Удаляем тот 29-тысячный файл, который мешает Котику
+          rm -f pubspec.lock
+          
+          # 2. Чистим проект от старых следов
+          flutter clean
+          
+          # 3. Создаем НОВЫЙ, легкий lock-файл прямо в облаке
           flutter pub get
+          
           cd ios
+          # 4. Полная пересборка подов
+          rm -rf Pods Podfile.lock
           pod install --repo-update
           cd ..
 
-      - name: 5. Сборка и Упаковка IPA (Победа над Null Check)
+      - name: 5. СБОРКА IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -52,19 +62,16 @@ jobs:
           </plist>
           EOF
 
-          # Подготовка почвы для упаковщика
+          # Прописываем путь к SDK явно, чтобы не было ошибки Null check
           export FLUTTER_ROOT=$FLUTTER_HOME
-          export PATH="$FLUTTER_ROOT/bin:$PATH"
-
-          # Исправленная команда: --verbose вместо --vv
+          
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
-            --build-number=18 \
-            --verbose
+            --build-number=18
 
-      - name: 6. Сохранение IPA
+      - name: 6. Сохранение файла
         if: success()
         uses: actions/upload-artifact@v4
         with:
