@@ -1,11 +1,11 @@
-name: SMART-BODY-LIFE-FINAL-SUCCESS
+name: SMART-BODY-LIFE-GOLDEN-KEY-SDK26
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    # МЕНЯЕМ ТОЛЬКО ЭТУ СТРОКУ для соответствия требованиям Apple (SDK 26)
+    # Здесь мы берем новейший сервер, чтобы Apple не ругался на SDK
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
@@ -18,20 +18,14 @@ jobs:
 
       - name: 3. Подготовка Ключей (Именно Distribution)
         run: |
-          # Создаем временную связку ключей
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "build_pass" build.keychain
-          
-          # Декодируем и импортируем сертификат Distribution
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > release.p12
           security import release.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "build_pass" build.keychain
-          
-          # Декодируем профиль SMART_DISTRIBUTION
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
-          
           echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: 4. Установка зависимостей
@@ -39,9 +33,9 @@ jobs:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА IPA (Xcode Direct)
+      - name: 5. СБОРКА IPA (Ваш Золотой Ключик)
         run: |
-          # Создаем файл настроек экспорта
+          # Ваш сохраненный метод создания ExportOptions
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,8 +54,7 @@ jobs:
           </plist>
           EOF
 
-          # 1. Собираем архив (.xcarchive)
-          # Добавляем переменные путей Flutter напрямую в Xcode
+          # Ваша рабочая команда сборки
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -sdk iphoneos \
@@ -70,7 +63,7 @@ jobs:
             FLUTTER_ROOT=$FLUTTER_HOME \
             ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
 
-          # 2. Экспортируем IPA из архива
+          # Ваша рабочая команда экспорта
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
@@ -80,5 +73,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-IPA
+          name: SMART-BODY-LIFE-SDK26-IPA
           path: build/ipa/*.ipa
