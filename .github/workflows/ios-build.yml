@@ -1,11 +1,12 @@
-name: SMART-BODY-LIFE-FINAL-SUCCESS
+name: SMART-BODY-LIFE-SDK26-FINAL
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-15
+    # Оставляем новейший сервер
+    runs-on: macos-latest
     steps:
       - name: 1. Checkout
         uses: actions/checkout@v4
@@ -15,13 +16,13 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      # ЭТО НОВЫЙ ШАГ-ПЕРЕКЛЮЧАТЕЛЬ. Он просто выбирает версию Xcode на сервере.
-      - name: 3. Переключение на Xcode 16.2 (SDK 26)
+      # ВОТ ЭТО ТО, ЧЕГО НАМ НЕ ХВАТАЛО:
+      - name: 3. Принудительный выбор Xcode 16.2 (SDK 26)
         run: |
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
 
-      - name: 4. Подготовка Ключей (Именно Distribution)
+      - name: 4. Подготовка Ключей (Distribution)
         run: |
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
@@ -38,8 +39,7 @@ jobs:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      # ЗДЕСЬ ВАШ ПЕРВИЧНЫЙ КОД БЕЗ ИЗМЕНЕНИЙ ПУТЕЙ
-      - name: 6. СБОРКА IPA (Xcode Direct)
+      - name: 6. СБОРКА IPA (Ваш Золотой Ключик)
         run: |
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -59,14 +59,16 @@ jobs:
           </plist>
           EOF
 
+          # Используем вашу рабочую команду сборки
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -sdk iphoneos \
             -configuration Release \
             archive -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_ROOT="$FLUTTER_ROOT" \
             ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
 
+          # Используем вашу рабочую команду экспорта
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
@@ -76,5 +78,5 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-IPA
+          name: SMART-BODY-LIFE-SDK26-IPA
           path: build/ipa/*.ipa
