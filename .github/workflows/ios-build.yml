@@ -5,7 +5,6 @@ on:
 
 jobs:
   build:
-    # Оставляем новейшую систему
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
@@ -18,7 +17,6 @@ jobs:
 
       - name: 3. ПРИНУДИТЕЛЬНОЕ ВКЛЮЧЕНИЕ SDK 26 (Xcode 16.2)
         run: |
-          # Эта строка — секретный ингредиент, чтобы Apple принял файл
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
 
@@ -39,9 +37,8 @@ jobs:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 6. СБОРКА IPA (Ваш Золотой Ключик)
+      - name: 6. СБОРКА IPA (Ваш Ключик с исправленным путем)
         run: |
-          # Создаем ExportOptions.plist
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,7 +57,7 @@ jobs:
           </plist>
           EOF
 
-          # Ваша рабочая команда сборки
+          # МЫ ИСПРАВИЛИ ТУТ: передаем реальный путь к Flutter
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -sdk iphoneos \
@@ -69,7 +66,6 @@ jobs:
             FLUTTER_ROOT=$FLUTTER_HOME \
             ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
 
-          # Ваша рабочая команда экспорта
           xcodebuild -exportArchive \
             -archivePath build/Runner.xcarchive \
             -exportOptionsPlist ExportOptions.plist \
