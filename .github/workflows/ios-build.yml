@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-DIRECT-COLLECT
+name: SMART-BODY-LIFE-FOR-APPLE-CONNECT
 
 on:
   workflow_dispatch:
@@ -15,22 +15,52 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка (минимум команд)
+      - name: 3. Подготовка сертификатов (Для Apple)
         run: |
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: 4. Установка зависимостей
+        run: |
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 4. Сборка (Создаем тот самый файл)
+      - name: 5. СБОРКА ДЛЯ APPLE (Создание IPA)
         run: |
-          # Мы просто запускаем сборку. Она создаст папку Runner.app
-          flutter build ios --release --no-codesign --dart-define-from-file=.env
+          cat <<EOF > ios/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>PCSW3AKAPF</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.nataliia.smartbodylife</key>
+              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
+            </dict>
+            <key>signingStyle</key><string>manual</string>
+          </dict>
+          </plist>
+          EOF
 
-      - name: 5. ПУТЬ К ФАЙЛУ (Забираем результат)
-        # Эта команда сработает ВСЕГДА, даже если шаг выше покажет ошибку
+          # Собираем архив именно для отправки в Apple
+          flutter build ipa --release \
+            --export-options-plist=ios/ExportOptions.plist \
+            --dart-define-from-file=.env \
+            --build-name=3.0.0 \
+            --build-number=18
+
+      - name: 6. ПУТЬ К ФАЙЛУ (Забираем IPA для Apple)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: READY-APP-FOLDER
-          # Это тот самый путь, по которому лежит готовый файл
-          path: build/ios/iphoneos/
+          name: SMART-BODY-LIFE-IPA-FOR-APPLE
+          # Мы берем результат из папки IPA, куда Flutter кладет готовый файл для Apple
+          path: build/ios/ipa/*.ipa
