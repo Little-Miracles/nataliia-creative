@@ -39,18 +39,18 @@ jobs:
 
       - name: 5. СБОРКА ПРИЛОЖЕНИЯ (Xcode build)
         run: |
-          # Явно задаем пути, чтобы Xcode знал, где лежат инструменты Flutter
+          # Явно прописываем пути, чтобы Xcode не терялся
           export FLUTTER_ROOT=$FLUTTER_HOME
           export PATH="$FLUTTER_ROOT/bin:$PATH"
 
-          # Мы запускаем сборку iOS. Она проходит успешно (Xcode build done)!
+          # Собираем только файлы iOS. Билд УЖЕ проходит (Xcode build done)!
           flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-      - name: 6. ЗАХВАТ ГОТОВОГО ПРИЛОЖЕНИЯ
-        # Мы используем always(), чтобы забрать файлы, даже если скрипт в конце "споткнулся"
+      - name: 6. ЗАХВАТ ГОТОВОГО АРКАНА
+        # Команда always() заберет файлы, даже если в конце скрипт "капризничал"
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: SMART-BODY-LIFE-READY-APP
-          # Забираем само приложение, которое Xcode уже успел положить в эту папку
+          # Забираем папку с приложением, которую Xcode успешно создал
           path: build/ios/iphoneos/Runner.app
