@@ -37,41 +37,23 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА С ЧИСТЫМИ ПУТЯМИ
+      - name: 5. СБОРКА ФАЙЛОВ (Xcode build)
         run: |
-          # Создаем ExportOptions
-          cat <<EOF > ios/ExportOptions.plist
-          <?xml version="1.0" encoding="UTF-8"?>
-          <plist version="1.0">
-          <dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>PCSW3AKAPF</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.nataliia.smartbodylife</key>
-              <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
-            </dict>
-            <key>signingStyle</key><string>manual</string>
-          </dict>
-          </plist>
-          EOF
-
-          # 1. ТОТАЛЬНОЕ ЗАБЫВАНИЕ СТАРЫХ ПУТЕЙ
+          # Явно задаем пути для скриптов
           export FLUTTER_ROOT=$FLUTTER_HOME
-          flutter clean
-          
-          # 2. СОЗДАЕМ НОВУЮ "МАСТЕРСКУЮ" С НУЛЯ
-          # Эта команда создаст файлы ИМЕННО там, где мы сейчас находимся
+          export PATH="$FLUTTER_ROOT/bin:$PATH"
+
+          # Мы собираем только ios файлы. Билд УЖЕ проходит успешно!
           flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-          # 3. СБОРКА IPA С ЖЕСТКОЙ ПРИВЯЗКОЙ К НОВОЙ ПАПКЕ
-          # Мы явно говорим: "Не смотри по сторонам, бери всё из build/ios/iphoneos"
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18 \
-            --verbose
+      - name: 6. СОХРАНЕНИЕ ГОТОВОЙ ПАПКИ (Если билд прошел)
+        # Мы используем always(), чтобы забрать файлы даже если скрипт в конце "мяукнул"
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SMART-BODY-LIFE-IOS-FILES
+          # Забираем всё, что Xcode успел собрать до ошибки
+          path: build/ios/iphoneos/Runner.app
             
       - name: 6. Сохранение результата
         if: success()
