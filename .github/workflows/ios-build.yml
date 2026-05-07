@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-DIRECT-PATH-BUILD
+name: SMART-BODY-LIFE-STABLE-BUILD
 
 on:
   workflow_dispatch:
@@ -10,10 +10,10 @@ jobs:
       - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter (3.29.0)
+      - name: 2. Настройка СТАБИЛЬНОГО Flutter (3.27.4)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
+          flutter-version: '3.27.4' # Уходим от бага 3.29.0
 
       - name: 3. Подготовка сертификатов (Ваша подпись)
         run: |
@@ -27,18 +27,15 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. УЗНАЕМ ТОЧНЫЙ АДРЕС У КОТИКА
+      - name: 4. Синхронизация и очистка
         run: |
           flutter pub get
-          # Спрашиваем у Flutter его корень и сохраняем его
-          echo "FLUTTER_ROOT=$(flutter doctor -v | grep "Flutter SDK at" | awk '{print $4}')" >> $GITHUB_ENV
-          
-          # Лечим проект под iOS 17
+          # Лечим проект под стабильную версию
           flutter create . --platforms=ios
           
           cd ios
           rm -rf Pods Podfile.lock
-          # Теперь используем ТОЧНЫЙ адрес для установки подов
+          # Подтягиваем библиотеки
           pod install --repo-update
           cd ..
 
@@ -60,15 +57,15 @@ jobs:
           </plist>
           EOF
 
-          # Собираем файл с явным указанием адреса
+          # Собираем архив и IPA
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
-            --build-number=18 \
-            --dart-define=FLUTTER_ROOT=${{ env.FLUTTER_ROOT }}
+            --build-number=18
 
-      - name: 6. Сохранение файла
+      - name: 6. Сохранение ГОТОВОГО IPA
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: smart-body-life-ready
