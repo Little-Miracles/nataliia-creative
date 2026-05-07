@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-STABLE-BUILD
+name: SMART-BODY-LIFE-FINAL-PACKAGING
 
 on:
   workflow_dispatch:
@@ -27,24 +27,18 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Чистая установка и синхронизация
+      - name: 4. Синхронизация и очистка
         run: |
-          # Очистка старого мусора
           flutter clean
           rm -f pubspec.lock
-          
-          # Получаем зависимости (создаст чистый pubspec.lock)
           flutter pub get
-          
-          # Пересобираем связи с iOS
           cd ios
           rm -rf Pods Podfile.lock
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA
+      - name: 5. УПАКОВКА IPA (Исправление Null Check)
         run: |
-          # Создаем файл настроек экспорта
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -61,17 +55,17 @@ jobs:
           </plist>
           EOF
 
-          # ВОТ ТУТ ГЛАВНОЕ ИСПРАВЛЕНИЕ: 
-          # Мы явно прописываем пути, чтобы скрипт xcode_backend не выдавал Null check error
+          # ВОТ ТУТ РЕШЕНИЕ: Явно прописываем пути для скриптов Xcode
           export FLUTTER_ROOT=$FLUTTER_HOME
-          
+          export PATH="$PATH:$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin"
+
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
             --build-number=18
-            
-      - name: 6. Сохранение файла
+
+      - name: 6. Сохранение IPA
         if: success()
         uses: actions/upload-artifact@v4
         with:
