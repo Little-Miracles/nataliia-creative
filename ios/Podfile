@@ -1,27 +1,16 @@
 platform :ios, '17.0'
 
-# Умный поиск пути к Flutter: сначала в системе, потом в файлах
-def flutter_root
-  # В облаке GitHub путь всегда есть здесь:
-  flutter_root = ENV['FLUTTER_ROOT'] || ENV['FLUTTER_HOME']
-  
-  # Если мы на ноутбуке и системыне пути не заданы, ищем в конфиге
-  if flutter_root.nil? || flutter_root.empty?
-    config_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-    if File.exist?(config_path)
-      File.foreach(config_path) do |line|
-        matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
-        flutter_root = matches[1].strip if matches
-      end
-    end
-  end
-  
-  flutter_root
+# Прямое указание Котику, где лежат инструменты Flutter
+# В облаке GitHub путь к SDK всегда доступен через переменную FLUTTER_ROOT
+flutter_install_path = ENV['FLUTTER_ROOT']
+
+if flutter_install_path.nil?
+  # Если мы на ноутбуке, используем стандартный относительный путь
+  flutter_install_path = File.expand_path(File.join('..', '..', 'flutter'), __FILE__)
 end
 
-# Подключаем инструменты Flutter (без риска аварийной остановки)
-path_to_helper = File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
-require path_to_helper
+# Подключаем помощник напрямую из движка Flutter
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_install_path)
 
 flutter_ios_podfile_setup
 
@@ -36,12 +25,12 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # Данные вашего профиля разработчика
+      # Ваша подпись и настройки iOS 17
       config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
       config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       
-      # Важно для современных версий Xcode
+      # Исправление для Xcode 16+
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
