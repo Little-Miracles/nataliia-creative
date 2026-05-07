@@ -1,10 +1,11 @@
-name: SMART-BODY-LIFE-GOLDEN-KEY-SDK26
+name: SMART-BODY-LIFE-GOLDEN-KEY-SDK26-FINAL
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
+    # Используем новейший сервер
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
@@ -15,12 +16,13 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. ПРИНУДИТЕЛЬНОЕ ВКЛЮЧЕНИЕ SDK 26 (Xcode 16.2)
+      - name: 3. ВКЛЮЧЕНИЕ НУЖНОГО XCODE (SDK 26)
         run: |
+          # Принудительно выбираем версию для Apple SDK 26
           sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
           xcodebuild -version
 
-      - name: 4. Подготовка Ключей (Distribution)
+      - name: 4. Подготовка Ключей (Именно Distribution)
         run: |
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
@@ -37,7 +39,7 @@ jobs:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 6. СБОРКА IPA (Ваш Ключик с исправленным путем)
+      - name: 6. СБОРКА IPA (Ваш Золотой Ключик + Исправленный путь)
         run: |
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -57,13 +59,16 @@ jobs:
           </plist>
           EOF
 
-          # МЫ ИСПРАВИЛИ ТУТ: передаем реальный путь к Flutter
+          # ВАЖНО: Мы берем ваш код, но принудительно передаем путь к Flutter
+          # Чтобы FLUTTER_ROOT больше не был пустым
+          export FLUTTER_ROOT=$FLUTTER_HOME
+          
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -sdk iphoneos \
             -configuration Release \
             archive -archivePath build/Runner.xcarchive \
-            FLUTTER_ROOT=$FLUTTER_HOME \
+            FLUTTER_ROOT=$FLUTTER_ROOT \
             ASSET_CATALOG_COMPILER_APPICON_NAME=AppIcon
 
           xcodebuild -exportArchive \
