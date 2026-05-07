@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    # Здесь мы берем новейший сервер, чтобы Apple не ругался на SDK
+    # Оставляем новейшую систему
     runs-on: macos-latest
     steps:
       - name: 1. Checkout
@@ -16,7 +16,13 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка Ключей (Именно Distribution)
+      - name: 3. ПРИНУДИТЕЛЬНОЕ ВКЛЮЧЕНИЕ SDK 26 (Xcode 16.2)
+        run: |
+          # Эта строка — секретный ингредиент, чтобы Apple принял файл
+          sudo xcode-select -s /Applications/Xcode_16.2.app/Contents/Developer
+          xcodebuild -version
+
+      - name: 4. Подготовка Ключей (Distribution)
         run: |
           security create-keychain -p "build_pass" build.keychain
           security default-keychain -s build.keychain
@@ -28,14 +34,14 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка зависимостей
+      - name: 5. Установка зависимостей
         run: |
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА IPA (Ваш Золотой Ключик)
+      - name: 6. СБОРКА IPA (Ваш Золотой Ключик)
         run: |
-          # Ваш сохраненный метод создания ExportOptions
+          # Создаем ExportOptions.plist
           cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -69,7 +75,7 @@ jobs:
             -exportOptionsPlist ExportOptions.plist \
             -exportPath build/ipa
 
-      - name: 6. ЗАБИРАЕМ IPA ДЛЯ APPLE
+      - name: 7. ЗАБИРАЕМ IPA ДЛЯ APPLE
         if: always()
         uses: actions/upload-artifact@v4
         with:
