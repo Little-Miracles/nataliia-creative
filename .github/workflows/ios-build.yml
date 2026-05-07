@@ -37,27 +37,20 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА ФАЙЛОВ (Xcode build)
+      - name: 5. СБОРКА ПРИЛОЖЕНИЯ (Xcode build)
         run: |
-          # Явно задаем пути для скриптов
+          # Явно задаем пути, чтобы Xcode знал, где лежат инструменты Flutter
           export FLUTTER_ROOT=$FLUTTER_HOME
           export PATH="$FLUTTER_ROOT/bin:$PATH"
 
-          # Мы собираем только ios файлы. Билд УЖЕ проходит успешно!
+          # Мы запускаем сборку iOS. Она проходит успешно (Xcode build done)!
           flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-      - name: 6. СОХРАНЕНИЕ ГОТОВОЙ ПАПКИ (Если билд прошел)
-        # Мы используем always(), чтобы забрать файлы даже если скрипт в конце "мяукнул"
+      - name: 6. ЗАХВАТ ГОТОВОГО ПРИЛОЖЕНИЯ
+        # Мы используем always(), чтобы забрать файлы, даже если скрипт в конце "споткнулся"
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-IOS-FILES
-          # Забираем всё, что Xcode успел собрать до ошибки
+          name: SMART-BODY-LIFE-READY-APP
+          # Забираем само приложение, которое Xcode уже успел положить в эту папку
           path: build/ios/iphoneos/Runner.app
-            
-      - name: 6. Сохранение результата
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: smart-body-life-ipa
-          path: build/ios/ipa/*.ipa
