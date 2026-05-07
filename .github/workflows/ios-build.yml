@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-PACKAGING
+name: SMART-BODY-LIFE-MANUAL-LOCK-BUILD
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов
+      - name: 3. Подготовка сертификатов и окружения
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,17 +27,16 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Синхронизация и очистка
+      - name: 4. Установка зависимостей (Используем ваш pubspec.lock)
         run: |
-          flutter clean
-          rm -f pubspec.lock
+          # Мы НЕ удаляем pubspec.lock, а просто подтягиваем пакеты
           flutter pub get
           cd ios
-          rm -rf Pods Podfile.lock
+          # Обновляем поды, но сохраняем структуру
           pod install --repo-update
           cd ..
 
-      - name: 5. УПАКОВКА IPA (Исправление Null Check)
+      - name: 5. Сборка и Упаковка IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -55,9 +54,9 @@ jobs:
           </plist>
           EOF
 
-          # ВОТ ТУТ РЕШЕНИЕ: Явно прописываем пути для скриптов Xcode
+          # Прописываем пути, чтобы исправить ошибку скрипта Flutter
           export FLUTTER_ROOT=$FLUTTER_HOME
-          export PATH="$PATH:$FLUTTER_ROOT/bin:$FLUTTER_ROOT/bin/cache/dart-sdk/bin"
+          export PATH="$FLUTTER_ROOT/bin:$PATH"
 
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
@@ -65,9 +64,9 @@ jobs:
             --build-name=3.0.0 \
             --build-number=18
 
-      - name: 6. Сохранение IPA
+      - name: 6. Сохранение готового файла
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: smart-body-life-ready
+          name: smart-body-life-ready-ipa
           path: build/ios/ipa/*.ipa
