@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FINAL-IPA-DELIVERY
+name: SMART-BODY-LIFE-DIRECT-IPA
 
 on:
   workflow_dispatch:
@@ -7,35 +7,34 @@ jobs:
   build:
     runs-on: macos-15
     steps:
-      - name: 1. Получение кода
+      - name: 1. Checkout
         uses: actions/checkout@v4
 
-      - name: 2. Настройка Flutter (3.27.4)
+      - name: 2. Настройка Flutter (только для кода)
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов (Строго для Apple)
+      - name: 3. Ключи и Профиль
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           echo "${{ secrets.P12_BASE64 }}" | base64 --decode > certificate.p12
           security import certificate.p12 -k build.keychain -P "${{ secrets.P12_PASSWORD }}" -T /usr/bin/codesign
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Установка подов
+      - name: 4. Подготовка кода
         run: |
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. ГЕНЕРАЦИЯ IPA ДЛЯ APPLE
+      - name: 5. ПРЯМАЯ СБОРКА IPA (Xcode-only)
         run: |
-          # Создаем ExportOptions.plist заново для уверенности
-          cat <<EOF > ios/ExportOptions.plist
+          # Создаем файл инструкций для Apple
+          cat <<EOF > ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
           <dict>
@@ -47,24 +46,24 @@ jobs:
               <string>f2e7364b-98c7-44ad-a0dc-84acd2d0fd80</string>
             </dict>
             <key>signingStyle</key><string>manual</string>
-            <key>stripSwiftSymbols</key><true/>
-            <key>compileBitcode</key><false/>
           </dict>
           </plist>
           EOF
 
-          # Собираем IPA. Мы добавили --verbose, чтобы видеть каждое движение
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18
+          # Собираем АРХИВ
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner -sdk iphoneos -configuration Release \
+            archive -archivePath build/Runner.xcarchive
 
-      - name: 6. ВЫГРУЗКА IPA (Артефакт)
+          # Генерируем IPA (Тот самый файл для Apple)
+          xcodebuild -exportArchive \
+            -archivePath build/Runner.xcarchive \
+            -exportOptionsPlist ExportOptions.plist \
+            -exportPath build/ipa
+
+      - name: 6. ЗАБИРАЕМ IPA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-FOR-APPLE
-          # Мы прописываем путь максимально широко, чтобы найти IPA в любой подпапке
-          path: build/ios/ipa/*.ipa
-          if-no-files-found: error
+          name: APP-FOR-APPLE-CONNECT
+          path: build/ipa/*.ipa
