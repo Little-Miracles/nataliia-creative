@@ -52,15 +52,17 @@ jobs:
           </plist>
           EOF
 
-          # Явно задаем переменные, которые требует Xcode
+          # Подготовка почвы для упаковщика
           export FLUTTER_ROOT=$FLUTTER_HOME
-          
+          export PATH="$FLUTTER_ROOT/bin:$PATH"
+
+          # Исправленная команда: --verbose вместо --vv
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
             --build-number=18 \
-            --vv # Включаем подробный лог, если вдруг что
+            --verbose
 
       - name: 6. Сохранение IPA
         if: success()
