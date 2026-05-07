@@ -20,7 +20,7 @@ packages:
     dependency: "direct main"
     description:
       name: collection
-      sha256: ee67fa0fa3df30237d0a29cca39aaeacac5301804d9b6264f3316694662d0598
+      sha256: "ee67fa0fa3df30237d0a29cca39aaeacac5301804d9b6264f3316694662d0598"
       url: "https://pub.dev"
     source: hosted
     version: "1.19.0"
@@ -28,7 +28,7 @@ packages:
     dependency: "direct main"
     description:
       name: cupertino_icons
-      sha256: ba7235485587719030b312a049e9f3900b52df3791004b7a1362e41829e33458
+      sha256: "ba7235485587719030b312a049e9f3900b52df3791004b7a1362e41829e33458"
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
@@ -49,7 +49,7 @@ packages:
     dependency: "direct main"
     description:
       name: google_fonts
-      sha256: "075908e7b99dae8f52f360e22792b027d91e6005d535e69e3ed8b6edba068159f810"
+      sha256: "075908e7b99dae8f52f360e22792b027d91e6005d535e69e3ed8b6edba068159"
       url: "https://pub.dev"
     source: hosted
     version: "6.3.0"
@@ -57,7 +57,7 @@ packages:
     dependency: "direct main"
     description:
       name: health
-      sha256: "171780514104273832bdb82efc49f9d865487235485587719030b312a049e9f39"
+      sha256: "7235485587719030b312a049e9f3900b52df3791004b7a1362e41829e33458ff"
       url: "https://pub.dev"
     source: hosted
     version: "10.2.0"
@@ -65,7 +65,7 @@ packages:
     dependency: "direct main"
     description:
       name: intl
-      sha256: "d6f56758b7d3014a48af97ec1085773d2a71e7930514104273832bdb82efc49f9"
+      sha256: "3d3246830501869e5d487293b1695427d14d3a2e3790514104273832bdb82efc"
       url: "https://pub.dev"
     source: hosted
     version: "0.19.0"
@@ -81,7 +81,7 @@ packages:
     dependency: transitive
     description:
       name: path
-      sha256: "083c004a4388147d33d939634d01b171780514104273832bdb82efc49f9d865"
+      sha256: "083c004a4388147d33d939634d01b171780514104273832bdb82efc49f9d865c"
       url: "https://pub.dev"
     source: hosted
     version: "1.9.0"
@@ -94,7 +94,7 @@ packages:
     dependency: transitive
     description:
       name: timezone
-      sha256: "183c004a4388147d33d939634d01b171780514104273832bdb82efc49f9d865"
+      sha256: "183c004a4388147d33d939634d01b171780514104273832bdb82efc49f9d865b"
       url: "https://pub.dev"
     source: hosted
     version: "0.9.2"
