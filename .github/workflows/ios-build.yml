@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-FOR-APPLE-CONNECT
+name: SMART-BODY-LIFE-DIRECT-XCODE
 
 on:
   workflow_dispatch:
@@ -32,8 +32,9 @@ jobs:
           flutter pub get
           cd ios && pod install --repo-update && cd ..
 
-      - name: 5. СБОРКА ДЛЯ APPLE (Создание IPA)
+      - name: 5. СБОРКА ЧЕРЕЗ XCODE (Минуя ошибки Flutter)
         run: |
+          # Создаем файл настроек упаковки
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <plist version="1.0">
@@ -50,17 +51,20 @@ jobs:
           </plist>
           EOF
 
-          # Собираем архив именно для отправки в Apple
-          flutter build ipa --release \
-            --export-options-plist=ios/ExportOptions.plist \
-            --dart-define-from-file=.env \
-            --build-name=3.0.0 \
-            --build-number=18
+          # Прямая сборка архива силами MacOS (не Flutter)
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner -sdk iphoneos -configuration Release \
+            archive -archivePath build/ios/Runner.xcarchive
 
-      - name: 6. ПУТЬ К ФАЙЛУ (Забираем IPA для Apple)
+          # Превращаем архив в IPA, который ждет Apple
+          xcodebuild -exportArchive \
+            -archivePath build/ios/Runner.xcarchive \
+            -exportOptionsPlist ios/ExportOptions.plist \
+            -exportPath build/ios/ipa
+
+      - name: 6. ЗАБИРАЕМ ГОТОВЫЙ IPA
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: SMART-BODY-LIFE-IPA-FOR-APPLE
-          # Мы берем результат из папки IPA, куда Flutter кладет готовый файл для Apple
+          name: FOR-APPLE-CONNECT
           path: build/ios/ipa/*.ipa
