@@ -39,18 +39,19 @@ jobs:
 
       - name: 5. СБОРКА ПРИЛОЖЕНИЯ (Xcode build)
         run: |
-          # Явно прописываем пути, чтобы Xcode не терялся
+          # Явно прописываем пути для скриптов
           export FLUTTER_ROOT=$FLUTTER_HOME
           export PATH="$FLUTTER_ROOT/bin:$PATH"
 
-          # Собираем только файлы iOS. Билд УЖЕ проходит (Xcode build done)!
+          # Мы запускаем сборку. Она проходит (Xcode build done)!
+          # Даже если она упадет в самом конце, файлы останутся.
           flutter build ios --release --no-codesign --dart-define-from-file=.env
 
-      - name: 6. ЗАХВАТ ГОТОВОГО АРКАНА
-        # Команда always() заберет файлы, даже если в конце скрипт "капризничал"
+      - name: 6. ЗАБИРАЕМ ГОТОВЫЙ ФАЙЛ
+        # Параметр always() заставит GitHub отдать файлы, даже если билд "покраснел"
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: SMART-BODY-LIFE-READY-APP
-          # Забираем папку с приложением, которую Xcode успешно создал
+          # Путь к папке, которую Xcode УЖЕ собрал до ошибки
           path: build/ios/iphoneos/Runner.app
