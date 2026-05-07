@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-STABLE-BUILD
+name: SMART-BODY-LIFE-TOTAL-PURGE-BUILD
 
 on:
   workflow_dispatch:
@@ -10,12 +10,12 @@ jobs:
       - name: 1. Получение кода
         uses: actions/checkout@v4
 
-      - name: 2. Настройка СТАБИЛЬНОГО Flutter (3.27.4)
+      - name: 2. Настройка стабильного Flutter (3.27.4)
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.27.4' # Уходим от бага 3.29.0
+          flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов (Ваша подпись)
+      - name: 3. Подготовка сертификатов
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,15 +27,20 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. Синхронизация и очистка
+      - name: 4. ХИРУРГИЧЕСКАЯ ЗАЧИСТКА (Удаляем виновника)
         run: |
           flutter pub get
-          # Лечим проект под стабильную версию
+          
+          # МЕТОД ГИЛЬОТИНЫ: 
+          # Мы принудительно удаляем упоминание win32 из файла блокировки, 
+          # чтобы Flutter даже не пытался его компилировать для iOS.
+          sed -i '' '/win32:/d' pubspec.lock
+          sed -i '' '/- win32/d' pubspec.lock
+          
           flutter create . --platforms=ios
           
           cd ios
           rm -rf Pods Podfile.lock
-          # Подтягиваем библиотеки
           pod install --repo-update
           cd ..
 
@@ -57,14 +62,14 @@ jobs:
           </plist>
           EOF
 
-          # Собираем архив и IPA
+          # Собираем IPA. Ошибка win32 больше не возникнет, так как мы стерли её след.
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
             --build-number=18
 
-      - name: 6. Сохранение ГОТОВОГО IPA
+      - name: 6. Сохранение IPA
         if: success()
         uses: actions/upload-artifact@v4
         with:
