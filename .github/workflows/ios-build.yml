@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-TOTAL-PURGE-BUILD
+name: SMART-BODY-LIFE-MANUAL-LOCK-BUILD
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
         with:
           flutter-version: '3.27.4'
 
-      - name: 3. Подготовка сертификатов
+      - name: 3. Подготовка сертификатов и окружения
         run: |
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
@@ -27,16 +27,12 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ХИРУРГИЧЕСКАЯ ЗАЧИСТКА (Удаляем виновника)
+      - name: 4. Сборка с вашим исправленным lock-файлом
         run: |
+          # Мы НЕ удаляем pubspec.lock, а используем тот, что вы вставили вручную
           flutter pub get
           
-          # МЕТОД ГИЛЬОТИНЫ: 
-          # Мы принудительно удаляем упоминание win32 из файла блокировки, 
-          # чтобы Flutter даже не пытался его компилировать для iOS.
-          sed -i '' '/win32:/d' pubspec.lock
-          sed -i '' '/- win32/d' pubspec.lock
-          
+          # Очистка папки iOS для свежей сборки
           flutter create . --platforms=ios
           
           cd ios
@@ -44,7 +40,7 @@ jobs:
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА ПОДПИСАННОГО IPA
+      - name: 5. Финальная упаковка IPA
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -62,14 +58,13 @@ jobs:
           </plist>
           EOF
 
-          # Собираем IPA. Ошибка win32 больше не возникнет, так как мы стерли её след.
           flutter build ipa --release \
             --export-options-plist=ios/ExportOptions.plist \
             --dart-define-from-file=.env \
             --build-name=3.0.0 \
             --build-number=18
 
-      - name: 6. Сохранение IPA
+      - name: 6. Выдача готового файла
         if: success()
         uses: actions/upload-artifact@v4
         with:
