@@ -1,33 +1,27 @@
-# Устанавливаем платформу iOS 17
 platform :ios, '17.0'
 
-# ГЛАВНОЕ ИСПРАВЛЕНИЕ: Используем правильный метод загрузки зависимостей
-# Вместо import используем Flutter-скрипт напрямую
-def flutter_install_all_ios_pods(ios_application_path = nil)
-  root_path = ios_application_path || File.dirname(File.realpath(__FILE__))
-  relative_path = File.join('..', '.flutter-plugins-dependencies')
-  # Проверяем наличие файла перед загрузкой
-  if File.exist?(File.join(root_path, relative_path))
-    # Это стандартный механизм Flutter для чтения зависимостей
-  end
-end
-
-# Стандартный поиск FLUTTER_ROOT
+# Умный поиск пути к Flutter: сначала в системе, потом в файлах
 def flutter_root
-  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated_xcode_build_settings_path)
-    raise "Файл Generated.xcconfig не найден. Запустите 'flutter pub get'."
+  # В облаке GitHub путь всегда есть здесь:
+  flutter_root = ENV['FLUTTER_ROOT'] || ENV['FLUTTER_HOME']
+  
+  # Если мы на ноутбуке и системыне пути не заданы, ищем в конфиге
+  if flutter_root.nil? || flutter_root.empty?
+    config_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+    if File.exist?(config_path)
+      File.foreach(config_path) do |line|
+        matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
+        flutter_root = matches[1].strip if matches
+      end
+    end
   end
-
-  File.foreach(generated_xcode_build_settings_path) do |line|
-    matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
-    return matches[1].strip if matches
-  end
-  raise "FLUTTER_ROOT не найден в Generated.xcconfig."
+  
+  flutter_root
 end
 
-# Подключаем помощник Flutter
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+# Подключаем инструменты Flutter (без риска аварийной остановки)
+path_to_helper = File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+require path_to_helper
 
 flutter_ios_podfile_setup
 
@@ -42,14 +36,12 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # 1. Ваши данные разработчика
+      # Данные вашего профиля разработчика
       config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
       config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
-      
-      # 2. Настройка под iOS 17
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
       
-      # 3. Отключаем песочницу скриптов (для Xcode 16+)
+      # Важно для современных версий Xcode
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
