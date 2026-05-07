@@ -1,4 +1,4 @@
-name: SMART-BODY-LIFE-GHOST-FIX-BUILD
+name: SMART-BODY-LIFE-FINAL-STABLE-BUILD
 
 on:
   workflow_dispatch:
@@ -27,28 +27,22 @@ jobs:
           echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/f2e7364b-98c7-44ad-a0dc-84acd2d0fd80.mobileprovision
           echo "${{ secrets.ENV_FILE }}" > .env
 
-      - name: 4. ТОТАЛЬНОЕ ОЧИЩЕНИЕ
+      - name: 4. Чистая установка и синхронизация
         run: |
-          # 1. Выметаем весь мусор и кэш
+          # Очистка старого мусора
           flutter clean
-          
-          # 2. Удаляем старые папки и призрачные файлы блокировки
-          rm -rf ios/
           rm -f pubspec.lock
           
-          # 3. Создаем структуру заново
-          flutter create . --platforms=ios
-          
-          # 4. Спрашиваем список запчастей С НУЛЯ
+          # Получаем зависимости (создаст чистый pubspec.lock)
           flutter pub get
           
-          # 5. Установка подов
+          # Пересобираем связи с iOS
           cd ios
           rm -rf Pods Podfile.lock
           pod install --repo-update
           cd ..
 
-      - name: 5. СБОРКА IPA
+      - name: 5. Сборка IPA (Ваш Аркан готов к выходу)
         run: |
           cat <<EOF > ios/ExportOptions.plist
           <?xml version="1.0" encoding="UTF-8"?>
@@ -72,7 +66,7 @@ jobs:
             --build-name=3.0.0 \
             --build-number=18
 
-      - name: 6. Сохранение результата
+      - name: 6. Сохранение файла
         if: success()
         uses: actions/upload-artifact@v4
         with:
