@@ -1,20 +1,27 @@
+# Устанавливаем платформу iOS 17
 platform :ios, '17.0'
 
-# Котик сам найдет, где лежит Flutter, через команду 'which flutter'
-def find_flutter_sdk
-  flutter_bin = `which flutter`.strip
-  if flutter_bin.empty?
-    raise "Котик не видит команду flutter. Проверьте установку в YAML."
+# Загружаем настройки Flutter
+import '../.flutter-plugins-dependencies'
+
+# Стандартный путь к помощнику Flutter
+def flutter_root
+  generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcode_build_settings_path)
+    raise "Файл Generated.xcconfig не найден. Запустите 'flutter pub get'."
   end
-  # Вычисляем путь к корню SDK из пути к исполняемому файлу
-  File.expand_path(File.join(File.dirname(flutter_bin), '..'))
+
+  File.foreach(generated_xcode_build_settings_path) do |line|
+    matches = line.match(/\AFLUTTER_ROOT=(.*)\z/)
+    return matches[1].strip if matches
+  end
+  raise "FLUTTER_ROOT не найден в Generated.xcconfig."
 end
 
-@flutter_root = find_flutter_sdk
-
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), @flutter_root)
+require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 flutter_ios_podfile_setup
+
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
@@ -26,16 +33,15 @@ post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
     target.build_configurations.each do |config|
-      # 1. Привязка к вашему сертификату и Team ID (из аудита)[cite: 7, 10]
+      # 1. Ваши данные разработчика
       config.build_settings['DEVELOPMENT_TEAM'] = 'PCSW3AKAPF'
       config.build_settings['CODE_SIGN_STYLE'] = 'Manual'
       
-      # 2. Технические настройки совместимости[cite: 5]
+      # 2. Настройка под iOS 17
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '17.0'
-      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
       
-      # 3. Очистка архитектур для корректной сборки
-      config.build_settings.delete 'EXCLUDED_ARCHS[sdk=iphonesimulator*]'
+      # 3. Отключаем песочницу скриптов (важно для Xcode 16+)
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
     end
   end
 end
