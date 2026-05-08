@@ -11,7 +11,7 @@ import 'package:smart_body_life/screens/settings_screen.dart';
 import 'package:video_player/video_player.dart';
 import 'package:smart_body_life/utils/translation_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'evolution_session_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainHubScreen extends StatefulWidget {
   const MainHubScreen({super.key});
@@ -24,6 +24,9 @@ class _MainHubScreenState extends State<MainHubScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
   double unit = 0;
+
+ // --- НОВАЯ ПЕРЕМЕННАЯ ДЛЯ ОБЛАЧКА ---
+  bool _showSupportCloud = false; 
 
   // --- ТЕКСТОВЫЕ ПЕРЕМЕННЫЕ ---
   String title = "EVOLUTION HUB";
@@ -66,7 +69,12 @@ class _MainHubScreenState extends State<MainHubScreen> {
         
         _controller.setLooping(false); 
         _controller.setVolume(1.0);    
-        _controller.play();            
+        _controller.play();   
+
+      // --- ЗАПУСКАЕМ ОБЛАЧКО ЧЕРЕЗ 4 СЕКУНДЫ ---
+        Future.delayed(const Duration(seconds: 4), () {
+          if (mounted) setState(() => _showSupportCloud = true);
+        });           
         
         _controller.addListener(() {
           if (_controller.value.position == _controller.value.duration) {
@@ -263,6 +271,26 @@ class _MainHubScreenState extends State<MainHubScreen> {
     );
   }
 
+  Future<void> _launchInstagram() async {
+  // Мы используем https:// обязательно
+  final Uri url = Uri.parse('https://www.instagram.com/smartbodylife_support/');
+  
+  try {
+    if (await canLaunchUrl(url)) {
+      await launchUrl(
+        url,
+        // Эта настройка заставляет открывать ссылку именно в БРАУЗЕРЕ,
+        // что гарантирует успех даже там, где нет приложения Instagram
+        mode: LaunchMode.externalApplication, 
+      );
+    } else {
+      debugPrint("Failed to start $url");
+    }
+  } catch (e) {
+    debugPrint("Transition error: $e");
+  }
+}
+
 Widget _infoBlock(String t, String s, IconData i) {
   return Padding(
     padding: EdgeInsets.only(bottom: unit * 5),
@@ -321,142 +349,178 @@ Widget _infoBlock(String t, String s, IconData i) {
   );
 }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     unit = MediaQuery.of(context).size.width / 100;
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
-        child: Column(
+        // Stack позволяет облачку быть ПОВЕРХ остального контента
+        child: Stack(
           children: [
-            // ВИДЕО
-            Container(
-              height: unit * 55,
-              child: _isInitialized 
-                ? GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        // Если видео играет — ставим паузу, если нет — запускаем!
-                        _controller.value.isPlaying 
-                            ? _controller.pause() 
-                            : _controller.play();
-                      });
-                    },
-                    child: AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio, 
-                      child: VideoPlayer(_controller),
+            Column(
+              children: [
+                // 1. ВИДЕО БЛОК
+                Container(
+                  height: unit * 55,
+                  child: _isInitialized 
+                    ? GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                          });
+                        },
+                        child: AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio, 
+                          child: VideoPlayer(_controller),
+                        ),
+                      ) 
+                    : Container(),
+                ),
+
+                // 2. ИНФО-ПАНЕЛЬ (Заголовок и кнопки языка)
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: unit * 5, vertical: unit * 2),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(subtitle, style: GoogleFonts.saira(color: Colors.white38, fontSize: unit * 3.5)),
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                title,
+                                maxLines: 2,
+                                style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 5, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(width: unit * 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(icon: Icon(Icons.language, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: _showLanguageDialog),
+                          IconButton(icon: Icon(Icons.cloud_sync, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: () {}),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 3. КНОПКА МАНУАЛА
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: unit * 10, vertical: unit * 2),
+                  child: GestureDetector(
+                    onTap: () => _showInstructions(context),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: unit * 4, vertical: unit * 2.5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(unit * 3),
+                        border: Border.all(color: const Color(0xFFD4AF37)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5),
+                          SizedBox(width: unit * 3),
+                          Expanded( 
+                            child: Text(
+                              manualBtn,
+                              textAlign: TextAlign.center,
+                              softWrap: true, 
+                              maxLines: 2,
+                              style: GoogleFonts.saira(
+                                color: const Color(0xFFD4AF37), 
+                                fontWeight: FontWeight.w500,
+                                fontSize: unit * 4.2,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ) 
-                : Container(),
+                  ),
+                ),
+
+                // 4. ПРОКРУЧИВАЕМЫЙ СПИСОК ВСЕХ КНОПОК
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        _hubTile(hubAnalytics, Icons.analytics_outlined, Colors.amber, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressScreen()))),
+                        _hubTile(hubBody, Icons.accessibility_new, const Color(0xFFD4AF37), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyScreen()))),
+                        _hubTile(hubGym, Icons.fitness_center, Colors.redAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GymScreen()))),
+                        _hubTile(hubNutrition, Icons.set_meal, Colors.lightGreenAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodScreen()))),
+                        _hubTile(hubLaboratory, Icons.biotech, Colors.purpleAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LaboratoryScreen()))),
+                        _hubTile(hubFoodDesigner, Icons.blur_on, Colors.orangeAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BioCreatorForm(mealName: 'Designer')))),
+                        
+                        _avatarVipTile(), // Ваша золотая плитка Аватара
+                        
+                        SizedBox(height: unit * 1),
+                        _hubTile(hubSettings, Icons.settings, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
+                        SizedBox(height: unit * 5),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
 
-// ИНФО-ПАНЕЛЬ (Текст отдельно, иконки отдельно)
-Padding(
-  padding: EdgeInsets.symmetric(horizontal: unit * 5, vertical: unit * 2),
-  child: Row(
-    children: [
-      // КОМНАТА 1: Весь текст слева
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(subtitle, style: GoogleFonts.saira(color: Colors.white38, fontSize: unit * 3.5)),
-            ),
-            // Текст заголовка зажат!
-            FittedBox(
-              fit: BoxFit.scaleDown, // Если не лезет — станет мелким
-              child: Text(
-                title,
-                maxLines: 2,
-                style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 5, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
+            // 5. ОБЛАЧКО ПОДДЕРЖКИ (Всплывает поверх всего)
+            if (_showSupportCloud)
+              Positioned(
+                top: unit * 45, // Позиция над кнопками
+                left: unit * 5,
+                right: unit * 5,
+                child: AnimatedOpacity(
+                  opacity: _showSupportCloud ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: unit * 4, vertical: unit * 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD4AF37).withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(unit * 4),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black54, blurRadius: unit * 3, offset: const Offset(0, 4)),
+                      ],
+                    ),
+                    child: Row(
+  children: [
+    Icon(Icons.ondemand_video, color: Colors.white, size: unit * 6),
+    SizedBox(width: unit * 3),
+    Expanded(
+      child: GestureDetector( // Добавляем этот обворот
+        onTap: _launchInstagram, // Вызываем переход по ссылке
+        child: Text(
+          "Confused? Watch video guides in our Instagram!",
+          style: GoogleFonts.saira(
+            color: Colors.white, 
+            fontSize: unit * 3.5, 
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline, // Можно добавить подчеркивание, чтобы было понятно, что это ссылка
+          ),
         ),
       ),
-      
-      SizedBox(width: unit * 2), // Забор между текстом и иконками
-
-      // КОМНАТА 2: Иконки глобуса и синхронизации справа
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(icon: Icon(Icons.language, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: _showLanguageDialog),
-          IconButton(icon: Icon(Icons.cloud_sync, color: const Color(0xFFD4AF37), size: unit * 6), onPressed: () {}),
-        ],
-      ),
-    ],
-  ),
-),
-// ИНСТРУКЦИЯ (Теперь реально резиновая под текст!)
-Padding(
-  padding: EdgeInsets.symmetric(horizontal: unit * 10, vertical: unit * 2),
-  child: GestureDetector(
-    onTap: () => _showInstructions(context),
-    child: Container(
-      // Убрали фиксированные отступы, даем контейнеру дышать
-      padding: EdgeInsets.symmetric(horizontal: unit * 4, vertical: unit * 2.5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFD4AF37).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(unit * 3),
-        border: Border.all(color: const Color(0xFFD4AF37)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center, // Центрируем иконку по вертикали, если строк будет много
-        children: [
-          // Иконка книжки (никуда не делась, стоит слева)
-          Icon(Icons.auto_stories, color: const Color(0xFFD4AF37), size: unit * 5),
-          
-          SizedBox(width: unit * 3),
-
-          // ТЕКСТ: Теперь он РЕЗИНОВЫЙ
-          Expanded( 
-            child: Text(
-              manualBtn,
-              textAlign: TextAlign.center,
-              // Убрали FittedBox! Теперь буквы будут крупными (unit * 4.2)
-              // Если текст длинный, он просто перепрыгнет на новую строку
-              softWrap: true, 
-              maxLines: 5, // Запас на 5 строк, чтобы влез любой перевод
-              style: GoogleFonts.saira(
-                color: const Color(0xFFD4AF37), 
-                fontWeight: FontWeight.w500,
-                fontSize: unit * 4.2, // Твой комфортный размер
-                height: 1.1, // Чтобы строки не слипались, но были компактными
-              ),
-            ),
-          ),
-        ],
-      ),
     ),
-  ),
+    GestureDetector(
+      onTap: () => setState(() => _showSupportCloud = false),
+      child: Icon(Icons.close, color: Colors.white.withOpacity(0.7), size: unit * 5),
+    ),
+  ],
 ),
-            // СПИСОК КНОПОК
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    // _avatarVipTile(), // <--- НАШ ГЕРОЙ В САМОМ ВЕРХУ
-                    _hubTile(hubAnalytics, Icons.analytics_outlined, Colors.amber, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressScreen()))),
-                    _hubTile(hubBody, Icons.accessibility_new, const Color(0xFFD4AF37), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BodyScreen()))),
-                    _hubTile(hubGym, Icons.fitness_center, Colors.redAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GymScreen()))),
-                    _hubTile(hubNutrition, Icons.set_meal, Colors.lightGreenAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodScreen()))),
-                    _hubTile(hubLaboratory, Icons.biotech, Colors.purpleAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LaboratoryScreen()))),
-                    _hubTile(hubFoodDesigner, Icons.blur_on, Colors.orangeAccent, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BioCreatorForm(mealName: 'Designer')))),
-                    // --- ВОТ ЗДЕСЬ ТЕПЕРЬ ТВОЯ ЗОЛОТАЯ КНОПКА ---
-                    // Ставим её после всех "рабочих" разделов
-                    _avatarVipTile(), 
-                    SizedBox(height: unit * 1), // Небольшой зазор для ритма
-                    _hubTile(hubSettings, Icons.settings, Colors.blueGrey, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
-                    SizedBox(height: unit * 5),
-                  ],
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
