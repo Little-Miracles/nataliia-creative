@@ -776,6 +776,11 @@ class ExerciseListScreen extends StatelessWidget {
                          activeSession.isInEvolution(title) || 
                          activeSession.isInProtocol(title);
 
+    // --- ПРОВЕРКА ПРЕДОХРАНИТЕЛЬ (СТАВИМ ПЕРЕД RETURN) ---
+    if (activeSession.currentMode == ActiveMode.none) {
+      return const SizedBox.shrink(); // Если ничего не запущено — возвращаем пустоту
+    }  
+
     return InkWell(
       onTap: () {
         final exerciseObj = Exercise(
