@@ -357,6 +357,19 @@ Widget _buildReactor(double unit, Color glowColor, int n, int a, int w) {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // --- ПЕРЕНОСИМ НАДПИСЬ СЮДА ---
+            const Text(
+              "Health and activity data are synced with Apple Health",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white38, // Яркость white38, как мы договаривались
+                fontSize: 9, // Маленький размер, чтобы не мешал
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            // ---------------------------------
+            // Ваш существующий заголовок (SELECT GENDER и т.д.)
+            SizedBox(height: unit * 1), // Чуть уменьшим отступ
             Text(_isSelectingGender ? "CONFIRM YOUR CHOICE" : (metrics.isMale == null ? "SELECT GENDER" : "EVOLUTION ACTIVE"), style: TextStyle(color: gold.withOpacity(0.5), fontSize: unit * 2.5, fontWeight: FontWeight.w900)),
             SizedBox(height: unit * 2),
             Row(mainAxisSize: MainAxisSize.min, children: [
