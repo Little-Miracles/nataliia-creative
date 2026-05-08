@@ -241,7 +241,20 @@ const SizedBox(height: 1),
                   ? _buildSaveButton() 
                   : _buildButtons(burned),
               ),
-            ],
+            // === ВСТАВЛЯТЬ СЮДА ===
+              const Padding(
+                padding: EdgeInsets.only(bottom: 15), // Отступ от самого низа экрана
+                child: Text(
+                  "Calories and activity are synced with Apple Health",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 9,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ], // Конец Column
           ),
         ),
       ),
