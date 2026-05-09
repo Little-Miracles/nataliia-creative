@@ -53,6 +53,8 @@ class _MainHubScreenState extends State<MainHubScreen> {
   String labDesc = "Can't find a machine? Create your own unique equipment in the Bio-Machine Designer.";
   String energyTitle = "ENERGY & AVATAR";
   String energyDesc = "Earn points and crystals. Watch your avatar evolve and unlock rare artifacts.";
+  String healthTitle = "APPLE HEALTH";
+  String healthDesc = "We sync your steps and activity via HealthKit to calculate energy and evolve your Avatar.";
   String foodDesignerTitle = "BIO-FOOD DESIGNER";
   String foodDesignerDesc = "Create your own unique dishes. Mix nutrients and save your personal recipes.All product names, logos, and brands are property of their respective owners. All company, product and service names used in this app are for identification purposes only. Use of these names, logos, and brands does not imply endorsement.";
 
@@ -118,7 +120,8 @@ class _MainHubScreenState extends State<MainHubScreen> {
 
     // 2. Переводим юридическую часть отдельно (так она точно пройдет через лимит)
     final tFoodDescPart2 = await TranslationService.translateText("All product names, logos, and brands are property of their respective owners. All company, product and service names used in this app are for identification purposes only. Use of these names, logos, and brands does not imply endorsement.", langCode);
-   
+   final mHealthTitle = await TranslationService.translateText("APPLE HEALTH", langCode);
+    final mHealthDesc = await TranslationService.translateText("We sync your steps and activity via HealthKit to calculate energy and evolve your Avatar.", langCode);
 
     if (mounted) {
       setState(() {
@@ -156,6 +159,8 @@ class _MainHubScreenState extends State<MainHubScreen> {
         
         // СОЕДИНЯЕМ ДВА ПЕРЕВОДА В ОДИН
         foodDesignerDesc = "$tFoodDescPart1\n\n$tFoodDescPart2";
+        healthTitle = mHealthTitle;
+        healthDesc = mHealthDesc;
       });
     }
   }
@@ -259,6 +264,7 @@ class _MainHubScreenState extends State<MainHubScreen> {
                   _infoBlock(builderTitle, builderDesc, Icons.architecture),
                   _infoBlock(workoutsTitle, workoutsDesc, Icons.fitness_center),
                   _infoBlock(energyTitle, energyDesc, Icons.auto_awesome),
+                  _infoBlock(healthTitle, healthDesc, Icons.favorite_border), // <--- ВОТ ОН!
                   _infoBlock(labTitle, labDesc, Icons.biotech),
                   _infoBlock(foodDesignerTitle, foodDesignerDesc, Icons.blur_on_outlined),
                   Center(child: TextButton(onPressed: () => Navigator.pop(context), child: Text("I UNDERSTAND", style: GoogleFonts.saira(color: const Color(0xFFD4AF37), fontSize: unit * 3)))),
