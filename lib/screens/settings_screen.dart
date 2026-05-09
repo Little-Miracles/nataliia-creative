@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class SettingsScreen extends StatefulWidget { // <--- Теперь он Stateful
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
@@ -41,67 +41,74 @@ class _SettingsScreenState extends State<SettingsScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // --- 1. VIP / SUBSCRIPTION CARD (На перспективу) ---
+            // --- 1. VIP / SUBSCRIPTION CARD ---
             _buildVipCard(),
             const SizedBox(height: 30),
 
-            // --- 2. CONTROL SECTION ---
-            _sectionHeader("SYSTEM CONTROL"),
-            // Для уведомлений
-_buildToggleItem(
-  Icons.notifications_active, 
-  "Artifact Notifications", 
-  _notifsEnabled, 
-  (bool newValue) {
-    setState(() => _notifsEnabled = newValue);
-  }
-),
+            // --- 2. НОВЫЙ БЛОК ДЛЯ APPLE (HEALTHKIT COMPLIANCE) ---
+            _sectionHeader("HEALTH INTEGRATION"),
+            ListTile(
+              tileColor: Colors.white.withOpacity(0.05),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              leading: const Icon(Icons.favorite, color: Colors.redAccent, size: 24),
+              title: const Text("Apple Health Sync", 
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              subtitle: const Text("Active connection via HealthKit for activity tracking", 
+                style: TextStyle(color: Colors.white30, fontSize: 10)),
+              trailing: const Icon(Icons.check_circle_outline, color: Colors.greenAccent, size: 20),
+            ),
+            const SizedBox(height: 30),
 
-// Для звука
-_buildToggleItem(
-  Icons.volume_up, 
-  "System Sounds", 
-  _soundsEnabled, 
-  (bool newValue) {
-    setState(() => _soundsEnabled = newValue);
-  }
-),
+            // --- 3. CONTROL SECTION ---
+            _sectionHeader("SYSTEM CONTROL"),
+            _buildToggleItem(
+              Icons.notifications_active, 
+              "Artifact Notifications", 
+              _notifsEnabled, 
+              (bool newValue) {
+                setState(() => _notifsEnabled = newValue);
+              }
+            ),
+            _buildToggleItem(
+              Icons.volume_up, 
+              "System Sounds", 
+              _soundsEnabled, 
+              (bool newValue) {
+                setState(() => _soundsEnabled = newValue);
+              }
+            ),
             
             const SizedBox(height: 25),
 
-            // --- 3. LEGAL & LICENSES ---
+            // --- 4. LEGAL & LICENSES ---
             _sectionHeader("LEGAL ARCHIVE"),
             
-            // 1. НОВАЯ КНОПКА ДЛЯ APPLE (Guideline 1.4.1)
             _buildLinkItem(Icons.menu_book_outlined, "Sources & Medical Compliance", () {
               _launchURL("https://docs.google.com/document/d/1LmneGc114rQR377FYS_9ZMcW7QKNVPC5ie5z9CTzhck/edit?usp=sharing");
             }),
 
-            // 2. Для DISCLAIMER (твоя старая кнопка)
             _buildLinkItem(Icons.info_outline, "Medical Disclaimer", () {
               _launchURL("https://docs.google.com/document/d/13SpfXwEeclOg03Am-zhLI30-Jd8h9Y4_Rh_dqURuySM/edit?usp=sharing");
             }),
 
-            // 3. Для PRIVACY POLICY
             _buildLinkItem(Icons.verified_user, "Privacy Policy", () {
               _launchURL("https://docs.google.com/document/d/1UpywYt9ir7gwUdrHVNyZvusF8WIawe4_sT2XyeL8Jjs/edit?usp=sharing");
             }),
 
-            // 4. Для EULA (Terms of Service)
             _buildLinkItem(Icons.gavel, "Terms of Service (EULA)", () {
               _launchURL("https://docs.google.com/document/d/19bF_TbqJheMKHpsu0jRHWB18zAJOdnHFN-kSVFrXsHc/edit?usp=sharing");
             }),
 
             const SizedBox(height: 40),
 
-            // --- 4. VERSION INFO ---
+            // --- 5. VERSION INFO ---
             Center(
               child: Column(
                 children: [
-                  Text("BIO-SYSTEM VERSION 1.0.1", 
+                  Text("BIO-SYSTEM VERSION 1.0.20", 
                     style: TextStyle(color: gold.withOpacity(0.5), fontSize: 10, letterSpacing: 2)),
                   const SizedBox(height: 8),
-                  Text("Device: Neural-Linked Model 2017", // Твоя "пасхалка" про ноутбук
+                  Text("Device: Neural-Linked Model 2017", 
                     style: TextStyle(color: Colors.white24, fontSize: 9)),
                 ],
               ),
@@ -112,7 +119,7 @@ _buildToggleItem(
     );
   }
 
-Widget _buildVipCard() {
+  Widget _buildVipCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -128,7 +135,7 @@ Widget _buildVipCard() {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("ACCESS LEVEL: FULL", style: TextStyle(color: gold, fontWeight: FontWeight.bold)),
-              const Text("All current bio-modules are active", // Заменили "Upgrade to PRO"
+              const Text("All current bio-modules are active",
                 style: TextStyle(color: Colors.white54, fontSize: 11)),
             ],
           ),
@@ -144,18 +151,18 @@ Widget _buildVipCard() {
     );
   }
 
-Widget _buildToggleItem(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
-  return ListTile(
-    leading: Icon(icon, color: gold, size: 20),
-    title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
-    trailing: Switch(
-      value: value,
-      onChanged: onChanged, // <--- Теперь она слушает твоё нажатие!
-      activeColor: gold,
-      activeTrackColor: gold.withOpacity(0.3),
-    ),
-  );
-}
+  Widget _buildToggleItem(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
+    return ListTile(
+      leading: Icon(icon, color: gold, size: 20),
+      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
+      trailing: Switch(
+        value: value,
+        onChanged: onChanged,
+        activeColor: gold,
+        activeTrackColor: gold.withOpacity(0.3),
+      ),
+    );
+  }
 
   Widget _buildLinkItem(IconData icon, String title, VoidCallback onTap) {
     return ListTile(
@@ -165,29 +172,11 @@ Widget _buildToggleItem(IconData icon, String title, bool value, ValueChanged<bo
       trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white24, size: 14),
     );
   }
-  void _showLegalDialog(BuildContext context, String title, String text) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: const Color(0xFF1A1A1A),
-      title: Text(title, style: TextStyle(color: gold)),
-      content: SingleChildScrollView(
-        child: Text(text, style: const TextStyle(color: Colors.white70)),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text("CLOSE", style: TextStyle(color: gold)),
-        ),
-      ],
-    ),
-  );
-}
-Future<void> _launchURL(String urlString) async {
-  final Uri url = Uri.parse(urlString);
-  // Мы используем встроенный механизм Flutter для открытия ссылок
-  if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-    throw Exception('Could not launch $url');
+
+  Future<void> _launchURL(String urlString) async {
+    final Uri url = Uri.parse(urlString);
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
   }
-}
 }
