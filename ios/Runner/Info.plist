@@ -8,12 +8,12 @@
     <true/>
     <key>CFBundleDisplayName</key>
     <string>Smart Body Life</string>
-    <key>CFBundleExecutable</key>
+    <key>CFBundleExecutable</key>                                                                          
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
     <string>com.nataliia.smartbodylife</string>
     <key>CFBundleInfoDictionaryVersion</key>
-    <string>20.0</string>
+    <string>6.0</string>
     <key>CFBundleName</key>
     <string>Smart Body Life</string>
     <key>CFBundlePackageType</key>
@@ -23,7 +23,7 @@
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleVersion</key>
-    <string>20</string>
+    <string>21</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.healthcare-fitness</string>
     <key>LSRequiresIPhoneOS</key>
@@ -34,17 +34,17 @@
         <true/>
     </dict>
     <key>NSCameraUsageDescription</key>
-    <string>The app needs camera access for Bio-Scanning food items.</string>
+    <string>Smart Body Life uses the camera only for scanning food items to calculate calories. Images are processed locally and never uploaded to a server.</string>
     <key>NSHealthShareUsageDescription</key>
-    <string>We need access to your health data to track your progress.</string>
+    <string>We use your steps and activity data to display your progress. All health data is processed locally on your device and is never uploaded to any external server.</string>
     <key>NSHealthUpdateUsageDescription</key>
-    <string>We need permission to save your fitness results to HealthKit.</string>
+    <string>We save your workout results to HealthKit to keep your fitness history consistent. Your data remains private and is not shared with any third-party servers.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>This app needs access to the microphone for voice features.</string>
+    <string>This app needs access to the microphone for voice features within the bio-interface.</string>
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>The app needs access to the gallery to select photos.</string>
+    <string>The app needs access to the gallery to select photos for your bio-profile. Data stays on your device.</string>
     <key>NSPhotoLibraryAddUsageDescription</key>
-    <string>The app needs permission to save photos to the gallery.</string>
+    <string>The app needs permission to save progress photos to your local gallery.</string>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     <key>UILaunchStoryboardName</key>
